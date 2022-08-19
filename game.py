@@ -1,5 +1,12 @@
-class Nonogram:
-    def __init__(self, csv_file=None, rows=None, columns=None, colors=BLACK_AND_WHITE, size=(5, 5), always_solvable=True):
+BLACK_WHITE = 0
+
+
+class Cell:
+    pass
+
+
+class Game:
+    def __init__(self, csv_file=None, rows=None, columns=None, colors=BLACK_WHITE, size=(5, 5), always_solvable=True):
         if csv_file:
             # create a board from csv file
             # todo init row and col
