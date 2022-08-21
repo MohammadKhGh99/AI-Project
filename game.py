@@ -13,7 +13,7 @@ class Cell:
 
 class Game:
     def __init__(self, csv_file=None, rows_constraints=None, cols_constraints=None, colors=BLACK_WHITE,
-                 size=(5, 5), always_solvable=True, agent=None):
+                 size=(5, 5), agent=None):
         """
         Initializing the board of the game, we have 3 different ways:
         1) from CSV file
@@ -26,7 +26,6 @@ class Game:
         colors: we have two options - BLACK_WHITE: black and white board (two colors) [DEFAULT option]
                                     - COLORFUL: red, black and white board (three colors)
         size: if the given board is random, with specific size, then we change the size here [DEFAULT is 5x5]
-        always_solvable: this will give us if the random board should have a solution or maybe.
 
         expected constraints format: if BLACK_WHITE: ^\d+[bB](?:-\d+[bB])*$|^\d+(?:-\d+)*$     examples: 5b-8b, 12, 5-84
                                      if COLORFUL: ^\d+[bBrR](?:-\d+[bBrR])*$    examples: 3b, 5r-15B.
@@ -35,20 +34,25 @@ class Game:
         self.agent = agent  # check: i'm not sure what is this
         self.state = None   # check: i'm not sure what is this
 
+        self.colors = colors
+
         if csv_file:
             # create a board from csv file.
             self.__csv_building(csv_file)
 
         elif rows_constraints and cols_constraints:
             # create a board from a giving rows and cols constraints lists.
+            self.rows_constraints = rows_constraints
+            self.cols_constraints = cols_constraints
+
             self.num_of_rows = len(rows_constraints)
             self.num_of_cols = len(cols_constraints)
 
             self.board = [[0 for _ in range(self.num_of_cols)] for _ in range(self.num_of_rows)]
 
         else:
-            # create a random board from giving size and do it as: always_solvable or not.
-            self.__random_building(colors, size, always_solvable)
+            # create a random board from giving size and color
+            self.__random_building(colors, size)
 
     def __csv_building(self, csv_file):
         """
@@ -80,22 +84,22 @@ class Game:
 
         self.rows_constraints = temp_rows_constraints
 
-        self.rows = len(self.rows_constraints)
-        self.cols = len(self.cols_constraints)
+        self.num_of_rows = len(self.rows_constraints)
+        self.num_of_cols = len(self.cols_constraints)
 
-        self.board = [[0 for _ in range(self.cols)] for _ in range(self.rows)]
+        self.board = [[0 for _ in range(self.num_of_cols)] for _ in range(self.num_of_rows)]
 
-    def __random_building(self, colors, size, always_solvable):
+    def __random_building(self, colors, size):
+        """
+        building a board randomly from giving size and colors
+        """
+        self.num_of_rows = size[0]
+        self.num_of_cols = size[1]
 
-        if size:
+        self.board = [[0 for _ in range(self.num_of_cols)] for _ in range(self.num_of_rows)]
 
-        self.rows = random.randint(1, 25)
-        self.cols = random.randint(1, 25)
-
-        self.board = [[0 for _ in range(self.cols)] for _ in range(self.rows)]
-
-        self.rows_constraints = Game.__build_constraints(random.randint(1, self.rows), random.randint(1, self.cols))
-        self.cols_constraints = Game.__build_constraints(random.randint(1, self.cols), random.randint(1, self.rows))
+        self.rows_constraints = Game.__build_constraints(random.randint(1, self.num_of_rows), random.randint(1, self.num_of_cols))
+        self.cols_constraints = Game.__build_constraints(random.randint(1, self.num_of_cols), random.randint(1, self.num_of_rows))
 
     @staticmethod
     def __build_constraints(n, m):
