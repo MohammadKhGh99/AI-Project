@@ -1,5 +1,6 @@
 import random
 from config import *
+import agent
 
 
 class Constraint:
@@ -32,19 +33,19 @@ class Cell:
     """
     def __init__(self, color=EMPTY):
         self.color = color
-        self.c = ""
-        if self.color == EMPTY:
-            self.c = " "
-        elif self.color == WHITE:
-            self.c = "w"
-        elif self.color == BLACK:
-            self.c = "b"
-        elif self.color == RED:
-            self.c = "r"
+        # self.c = ""
+        # if self.color == EMPTY:
+        #     self.c = " "
+        # elif self.color == WHITE:
+        #     self.c = "w"
+        # elif self.color == BLACK:
+        #     self.c = "b"
+        # elif self.color == RED:
+        #     self.c = "r"
         self.current_state = 0  # check: idk what is this | me neither
 
     def __str__(self):
-        return self.c
+        return str(self.color)
 
 
 class Game:
@@ -134,7 +135,8 @@ class Game:
 
         # take the second row in csv file, the columns constraints and put each constraint in a list in a
         # list of columns constraints.
-        temp_cols_constraints = list(map(lambda x: x.split('-'), lines[1][4:].strip().split(',')))
+        # print(lines[1][1:])
+        temp_cols_constraints = list(map(lambda x: x.split('-'), lines[1][1:].strip().split(',')))
         temp_cols_constraints = list(map(lambda l: [Constraint(x) for x in l], temp_cols_constraints))
 
         self.cols_constraints = temp_cols_constraints
@@ -219,7 +221,8 @@ class Game:
 
         text += " " * (len(max_row) * 6)
         row_space = text
-        text += "| "
+        text += ("-" * (6 * self.num_of_cols + 2)) + f"\n{row_space}"
+        text += "|| "
 
         for i in range(n - 1, -1, -1):
             for col in self.cols_constraints:
@@ -231,9 +234,9 @@ class Game:
                     text += (str(col[i]) + " | ")
 
             if i == 0:
-                text += f"\n" + ("-" * (len(row_space) + self.num_of_cols * 6 + 1)) + f"\n{row_space}| "
+                text += f"\n" + ("=" * (len(row_space) + self.num_of_cols * 6 + 2)) + f"\n{row_space}| "
             else:
-                text += f"\n{row_space}" + ("-" * (self.num_of_cols * 6 + 1)) + f"\n{row_space}| "
+                text += f"\n{row_space}" + ("-" * (self.num_of_cols * 6 + 2)) + f"\n{row_space}|| "
         text = text[:-1]
         text = text[:len(text) - len(row_space) - 1] + "|"
 
@@ -245,96 +248,31 @@ class Game:
                     text += f" {row[i]}  |"
                 elif len(row[i]) == 3:
                     text += f" {row[i]} |"
-            for x in self.board[j]:
-                text += f"  {x}  |"
-            tmp = 1 + (m + self.num_of_cols) * 6
+            text += "|"
+            for y in self.board[j]:
+                x = str(y)
+                if int(x) == EMPTY:
+                    text += "     |"
+                elif int(x) == WHITE:
+                    text += f"  w  |"
+                elif int(x) == BLACK:
+                    text += f"  b  |"
+                elif int(x) == RED:
+                    text += f"  r  |"
+                # text += f"  {x}  |"
+            tmp = 2 + (m + self.num_of_cols) * 6
             text += "\n" + ("-" * tmp) + "\n|"
 
         return text[:-1]
 
+    def run(self):
+        self.board = agent.brute_force(self.rows_constraints, self.cols_constraints, self.board)
+
 
 if __name__ == "__main__":
     print("Hello World!")
-    game = Game(size=(15, 15))
+    game = Game(csv_file="example1.csv")
+
+    game.run()
     print(game.print_board())
 
-
-    # with open('example1.csv', 'r') as f:
-    #     lines = f.readlines()
-    # print(lines[0][3:6])
-
-    # def convert(c):
-    #     color = c[-1]
-    #     number = int(c[:-1])
-    #     cell = Cell(number, color)
-    #     return cell
-    #
-    #
-    # cols_constraints = list(map(lambda x: x.split('-'), lines[0][4:].strip().split(',')))
-    # cols_constraints = list(map(lambda l: [convert(x) for x in l], cols_constraints))
-    #
-    # rows_constraints = list(map(lambda x: x[:x.index(',')].split('-'), lines[1:]))
-    # rows_constraints = list(map(lambda l: [convert(x) for x in l], rows_constraints))
-    # # rows_constraints = list
-    #
-    # # print([[(x.number, x.color) for x in r] for r in rows_constraints])
-    # # print([[(x.number, x.color) for x in r] for r in cols_constraints])
-    # #
-    #
-    # # rows = len(rows_constraints)
-    # # cols = len(cols_constraints)
-    #
-    # rows = random.randint(1, 25)
-    # cols = random.randint(1, 25)
-    #
-    # rand_rows = random.randint(1, rows)
-    # rand_cols = random.randint(1, cols)
-    #
-    # clst = []
-    # for j in range(cols):
-    #     i = 0
-    #     lst = []
-    #     while i < rows:
-    #         num = random.randint(1, rows - i)
-    #         color = random.choice(['b', 'r'])
-    #         if len(lst) > 1 and lst[-1][-1] == color:
-    #             if i + num + 1 >= rows:
-    #                 continue
-    #         lst.append(str(num) + color)
-    #         # if num == rows:
-    #         #     break
-    #         if len(lst) > 1:
-    #             if lst[-2][-1] == color:
-    #                 i += (num + 1)
-    #             else:
-    #                 i += num
-    #         else:
-    #             i += num
-    #     clst.append(lst)
-    #
-    # rlst = []
-    # for j in range(rows):
-    #     i = 0
-    #     lst = []
-    #     while i < cols:
-    #         num = random.randint(1, cols - i)
-    #         color = random.choice(['b', 'r'])
-    #         if len(lst) > 1 and lst[-1][-1] == color:
-    #             if i + num + 1 >= cols:
-    #                 continue
-    #         lst.append(str(num) + color)
-    #         # if num == cols:
-    #         #     break
-    #         if len(lst) > 1:
-    #             if lst[-2][-1] == color:
-    #                 i += (num + 1)
-    #             else:
-    #                 i += num
-    #         else:
-    #             i += num
-    #     rlst.append(lst)
-    #
-    # print(f"({rows}, {cols})")
-    #
-    # print(rlst)
-    # print(clst)
