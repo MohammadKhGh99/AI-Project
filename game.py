@@ -11,15 +11,18 @@ class Constraint:
     def __init__(self, constraint):
         try:
             self.number = int(constraint[:-1])
-            self.color = constraint[-1]
         except Exception:
             raise Exception("constraint structure should be like this")
 
-        if self.color not in COLORS:
+        self.c = constraint[-1]
+
+        if self.c.lower() not in COLORS:
             raise Exception("error in choosing color for constraint")
+        else:
+            self.color = BLACK if self.c.lower() == 'b' else RED
 
     def __str__(self):
-        return str(self.number) + self.color
+        return str(self.number) + self.c
 
     def __len__(self):
         return len(self.__str__())
@@ -153,59 +156,62 @@ class Game:
             all_constraints.append(constraint_lst)
         return all_constraints
 
-    # def print_board(self):
-    #     text = ""
-    #
-    #     max_row, max_col = None, None
-    #     m, n = 0, 0
-    #     for row in self.rows_constraints:
-    #         if len(row) > m:
-    #             m = len(row)
-    #             max_row = row
-    #     for col in self.cols_constraints:
-    #         if len(col) > n:
-    #             n = len(col)
-    #             max_col = col
-    #
-    #     for _ in max_row:
-    #         text += " " * (3 + 1)
-    #     row_space = text
-    #     text += "| "
-    #     # text -= " "
-    #
-    #     # text += " " * m
-    #     for i in range(n - 1, -1, -1):
-    #         for col in self.cols_constraints:
-    #             if i >= len(col):
-    #                 text += "    | "
-    #             elif len(col[i]) == 2:
-    #                 text += (str(col[i]) + "  | ")
-    #             elif len(col[i]) == 3:
-    #                 text += (str(col[i]) + " | ")
-    #
-    #         text += f"\n{row_space}" + ("-" * 91) + f"\n{row_space}| "
-    #     text = text[:len(text) - len(row_space) - 2]
-    #
-    #     for row in self.rows_constraints:
-    #         # text += "|"
-    #         for i in range(m - 1, -1, -1):
-    #             if i >= len(row):
-    #                 text += "    | "
-    #             elif len(row[i]) == 2:
-    #                 text += f" {row[i]}  | "
-    #             elif len(row[i]) == 3:
-    #                 text += f" {row[i]} |"
-    #         text += ("  w  |" * self.num_of_cols) + "\n" + ("-" * 91) + "\n| "
-    #
-    #     return text
-    #
+    def print_board(self):
+        text = ""
+
+        max_row, max_col = None, None
+        m, n = 0, 0
+        for row in self.rows_constraints:
+            if len(row) > m:
+                m = len(row)
+                max_row = row
+        for col in self.cols_constraints:
+            if len(col) > n:
+                n = len(col)
+                max_col = col
+
+        # for _ in max_row:
+        text += " " * (len(max_row) * 6)
+        row_space = text
+        text += "| "
+        # text -= " "
+
+        # text += " " * m
+        for i in range(n - 1, -1, -1):
+            for col in self.cols_constraints:
+                if i >= len(col):
+                    text += "    | "
+                elif len(col[i]) == 2:
+                    text += (str(col[i]) + "  | ")
+                elif len(col[i]) == 3:
+                    text += (str(col[i]) + " | ")
+
+            if i == 0:
+                text += f"\n" + ("-" * (len(row_space) + self.num_of_cols * 6 + 1)) + f"\n{row_space}| "
+            else:
+                text += f"\n{row_space}" + ("-" * (self.num_of_cols * 6 + 1)) + f"\n{row_space}| "
+        text = text[:-1]
+        text = text[:len(text) - len(row_space) - 1] + "|"
+
+        for row in self.rows_constraints:
+            # text += "|"
+            for i in range(m - 1, -1, -1):
+                if i >= len(row):
+                    text += "     |"
+                elif len(row[i]) == 2:
+                    text += f" {row[i]}  |"
+                elif len(row[i]) == 3:
+                    text += f" {row[i]} |"
+            l = 1 + (m + self.num_of_cols) * 6
+            text += ("  w  |" * self.num_of_cols) + "\n" + ("-" * l) + "\n|"
+
+        return text[:-1]
+
 
 if __name__ == "__main__":
     print("Hello World!")
     game = Game(size=(15, 15))
     print(game.print_board())
-
-
 
 
 
