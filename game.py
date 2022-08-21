@@ -48,7 +48,7 @@ class Game:
             self.num_of_rows = len(rows_constraints)
             self.num_of_cols = len(cols_constraints)
 
-            self.board = [[0 for _ in range(self.num_of_cols)] for _ in range(self.num_of_rows)]
+            self.board = [[Cell() for _ in range(self.num_of_cols)] for _ in range(self.num_of_rows)]
 
         else:
             # create a random board from giving size and color
@@ -87,7 +87,7 @@ class Game:
         self.num_of_rows = len(self.rows_constraints)
         self.num_of_cols = len(self.cols_constraints)
 
-        self.board = [[0 for _ in range(self.num_of_cols)] for _ in range(self.num_of_rows)]
+        self.board = [[Cell() for _ in range(self.num_of_cols)] for _ in range(self.num_of_rows)]
 
     def __random_building(self, colors, size):
         """
@@ -96,7 +96,7 @@ class Game:
         self.num_of_rows = size[0]
         self.num_of_cols = size[1]
 
-        self.board = [[0 for _ in range(self.num_of_cols)] for _ in range(self.num_of_rows)]
+        self.board = [[Cell() for _ in range(self.num_of_cols)] for _ in range(self.num_of_rows)]
 
         self.rows_constraints = Game.__build_constraints(random.randint(1, self.num_of_rows), random.randint(1, self.num_of_cols))
         self.cols_constraints = Game.__build_constraints(random.randint(1, self.num_of_cols), random.randint(1, self.num_of_rows))
@@ -127,87 +127,11 @@ class Game:
         return rlst
 
 
+
+
 if __name__ == "__main__":
     print("Hello World!")
+    x = Game()
+    print()
 
 
-
-    # with open('example1.csv', 'r') as f:
-    #     lines = f.readlines()
-    #
-    #
-    # def convert(c):
-    #     color = c[-1]
-    #     number = int(c[:-1])
-    #     cell = Cell(number, color)
-    #     return cell
-    #
-    #
-    # cols_constraints = list(map(lambda x: x.split('-'), lines[0][4:].strip().split(',')))
-    # cols_constraints = list(map(lambda l: [convert(x) for x in l], cols_constraints))
-    #
-    # rows_constraints = list(map(lambda x: x[:x.index(',')].split('-'), lines[1:]))
-    # rows_constraints = list(map(lambda l: [convert(x) for x in l], rows_constraints))
-    # # rows_constraints = list
-    #
-    # # print([[(x.number, x.color) for x in r] for r in rows_constraints])
-    # # print([[(x.number, x.color) for x in r] for r in cols_constraints])
-    # #
-    #
-    # # rows = len(rows_constraints)
-    # # cols = len(cols_constraints)
-    #
-    # rows = random.randint(1, 25)
-    # cols = random.randint(1, 25)
-    #
-    # rand_rows = random.randint(1, rows)
-    # rand_cols = random.randint(1, cols)
-    #
-    # clst = []
-    # for j in range(cols):
-    #     i = 0
-    #     lst = []
-    #     while i < rows:
-    #         num = random.randint(1, rows - i)
-    #         color = random.choice(['b', 'r'])
-    #         if len(lst) > 1 and lst[-1][-1] == color:
-    #             if i + num + 1 >= rows:
-    #                 continue
-    #         lst.append(str(num) + color)
-    #         # if num == rows:
-    #         #     break
-    #         if len(lst) > 1:
-    #             if lst[-2][-1] == color:
-    #                 i += (num + 1)
-    #             else:
-    #                 i += num
-    #         else:
-    #             i += num
-    #     clst.append(lst)
-    #
-    # rlst = []
-    # for j in range(rows):
-    #     i = 0
-    #     lst = []
-    #     while i < cols:
-    #         num = random.randint(1, cols - i)
-    #         color = random.choice(['b', 'r'])
-    #         if len(lst) > 1 and lst[-1][-1] == color:
-    #             if i + num + 1 >= cols:
-    #                 continue
-    #         lst.append(str(num) + color)
-    #         # if num == cols:
-    #         #     break
-    #         if len(lst) > 1:
-    #             if lst[-2][-1] == color:
-    #                 i += (num + 1)
-    #             else:
-    #                 i += num
-    #         else:
-    #             i += num
-    #     rlst.append(lst)
-    #
-    # print(f"({rows}, {cols})")
-    #
-    # print(rlst)
-    # print(clst)
