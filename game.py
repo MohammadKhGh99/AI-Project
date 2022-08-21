@@ -101,6 +101,7 @@ class Game:
         self.rows_constraints = Game.__build_constraints(random.randint(1, self.num_of_rows), random.randint(1, self.num_of_cols))
         self.cols_constraints = Game.__build_constraints(random.randint(1, self.num_of_cols), random.randint(1, self.num_of_rows))
 
+        x = "kill your self"
     @staticmethod
     def __build_constraints(n, m):
         rlst = []
