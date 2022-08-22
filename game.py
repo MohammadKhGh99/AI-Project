@@ -262,17 +262,18 @@ class Game:
         text += "|| "
 
         # adding the column constraints.
-        for i in range(n):
+        for i in range(n - 1, -1, -1):
             for col in self.board.cols_constraints:
-                if i >= len(col):
+                cur = col[::-1]
+                if i >= len(cur):
                     text += "    | "
-                elif len(col[i]) == 2:
-                    text += (str(col[i]) + "  | ")
-                elif len(col[i]) == 3:
-                    text += (str(col[i]) + " | ")
+                elif len(cur[i]) == 2:
+                    text += f"{cur[i]}  | "
+                elif len(cur[i]) == 3:
+                    text += f"{cur[i]} | "
 
             # adding a line separator between the column constraints and the board itself.
-            if i == n - 1:
+            if i == 0:
                 text += f"\n" + ("=" * (len(row_space) + self.board.num_cols * 6 + 2)) + f"\n{row_space}| "
             else:
                 text += f"\n{row_space}" + ("-" * (self.board.num_cols * 6 + 2)) + f"\n{row_space}|| "
@@ -282,13 +283,14 @@ class Game:
 
         # adding the structure of each row with the current content of the board beside the rows constraints.
         for j, row in enumerate(self.board.rows_constraints):
-            for i in range(m):
-                if i >= len(row):
+            for i in range(m - 1, -1, -1):
+                cur = row[::-1]
+                if i >= len(cur):
                     text += "     |"
-                elif len(row[i]) == 2:
-                    text += f" {row[i]}  |"
-                elif len(row[i]) == 3:
-                    text += f" {row[i]} |"
+                elif len(cur[i]) == 2:
+                    text += f" {cur[i]}  |"
+                elif len(cur[i]) == 3:
+                    text += f" {cur[i]} |"
             text += "|"
             for y in self.board.board[j]:
                 x = str(y)
