@@ -272,7 +272,7 @@ class Game:
                     text += (str(col[i]) + " | ")
 
             # adding a line separator between the column constraints and the board itself.
-            if i == 0:
+            if i == n - 1:
                 text += f"\n" + ("=" * (len(row_space) + self.board.num_cols * 6 + 2)) + f"\n{row_space}| "
             else:
                 text += f"\n{row_space}" + ("-" * (self.board.num_cols * 6 + 2)) + f"\n{row_space}|| "
