@@ -8,3 +8,7 @@ RED = 2  # could be COLOR
 
 NONO_COLORS = {"bw", "wb", "bwr", "brw", "wbr", "wrb", "rbw", "rwb"}
 COLORS = {'b', 'r'}
+
+
+COMPLETE = True
+NOT_COMPLETE = False
