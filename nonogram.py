@@ -68,9 +68,8 @@ def row_variations_helper(row, blocks, empty_indexes, combination_list, index):
 
 
 def check_validity(row, blocks):
-
     '''this function returns True if row matches the block's requirements'''
-    if row.count(1)!=sum(blocks):
+    if row.count(1) != sum(blocks):
         return False
     if UNSOLVED_SPOT in row:
         return False
@@ -90,7 +89,7 @@ def check_validity(row, blocks):
 
 
 def intersection_row(rows):
-    if rows==[]: return []
+    if rows == []: return []
     lst = rows[0][:]
     for j in range(len(rows[0])):
         for i in range(len(rows) - 1):
@@ -139,7 +138,6 @@ def is_board_completed(board):
     return True
 
 
-
 def solve_with_given_board(constraints, board):
     '''this function takes an existing board and solves it '''
     new_board = move_one_time(constraints, board)
@@ -147,35 +145,37 @@ def solve_with_given_board(constraints, board):
         return
     if new_board == board:
         return board
-    board=solve_with_given_board(constraints,new_board)
+    board = solve_with_given_board(constraints, new_board)
 
     return board
+
 
 def _intersection_shortcut(row, blocks):
     ''' if the row is empty , and twice the sum of constraints is less than length of the row;
     then the intersection if the variation will be the same row, there's no need to go to
      variation and intersection functions.'''
-    if row.count(UNSOLVED_SPOT)==len(row) and 2*sum(blocks)<=len(row):
+    if row.count(UNSOLVED_SPOT) == len(row) and 2 * sum(blocks) <= len(row):
         return True
     return False
+
+
 def _intersection_shortcut2(row, blocks):
     '''if the row is empty and the blocks is one number, so we can easily know what the intersection is.'''
-    length=len(row)
-    num=blocks[0]
-    return row[:length-num]+[BLACK_SPOT]*(2*num-length)+row[num:]
-
+    length = len(row)
+    num = blocks[0]
+    return row[:length - num] + [BLACK_SPOT] * (2 * num - length) + row[num:]
 
 
 def move_one_time(constraints, original_board):
     '''this function checks one time the rows and the columns and updates it'''
     board = copy.deepcopy(original_board)
-    #cheking the rows...
+    # cheking the rows...
     for i in range(len(board)):
         # trying to shortcut..
         if _intersection_shortcut(board[i], constraints[0][i]):
             continue
         if board[i].count(UNSOLVED_SPOT) == len(board[i]) and len(constraints[0][i]) == 1:
-            board[i]=_intersection_shortcut2(board[i], constraints[0][i])
+            board[i] = _intersection_shortcut2(board[i], constraints[0][i])
             continue
         ####
         combination_list = row_variations(board[i], constraints[0][i])
@@ -186,13 +186,13 @@ def move_one_time(constraints, original_board):
 
     board = inverse(board)
     '''switching rows to columns and do the same things...'''
-    #checking the colmuns (which are the new rows)...
+    # checking the colmuns (which are the new rows)...
     for i in range(len(board)):
         # trying to shortcut..
         if _intersection_shortcut(board[i], constraints[1][i]):
             continue
         if board[i].count(UNSOLVED_SPOT) == len(board[i]) and len(constraints[1][i]) == 1:
-            board[i]=_intersection_shortcut2(board[i], constraints[1][i])
+            board[i] = _intersection_shortcut2(board[i], constraints[1][i])
             continue
         ####
         combination_list = row_variations(board[i], constraints[1][i])
@@ -200,7 +200,7 @@ def move_one_time(constraints, original_board):
             return
         final_row = intersection_row(combination_list)
         board[i] = final_row
-    board = inverse(board) # returning the board to it's original shape.
+    board = inverse(board)  # returning the board to it's original shape.
     return board
 
 
@@ -234,5 +234,3 @@ def solve_nonogram_helper(constraints, sol_list, board, i):
 
 if __name__ == "__main__":
     print(solve_nonogram([[[1], [1]], [[1], [1]]]))
-
-
