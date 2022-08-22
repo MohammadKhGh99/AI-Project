@@ -3,11 +3,37 @@ from config import *
 import agent
 
 
+# rows and columns constraints
+# board list of lists
+# fill cell
+class Board:
+    def __init__(self, rows_constraints, cols_constraints, randomly=False, size=(5, 5)):
+        self.rows_constraints = rows_constraints
+        self.cols_constraints = cols_constraints
+        if not randomly:
+            self.num_rows = len(self.rows_constraints)
+            self.num_cols = len(self.cols_constraints)
+        else:
+            self.num_rows, self.num_cols = size
+        self.board = [[Cell() for _ in range(self.num_cols)] for _ in range(self.num_rows)]
+        self.flipped = [[Cell() for _ in range(self.num_rows)] for _ in range(self.num_cols)]
+
+    def fill(self, r, c, color):
+        self.board[r][c].color = color
+        self.flipped[c][r].color = color
+
+    def get_cell(self, r, c, flipped=False):
+        return self.board[r][c] if not flipped else self.flipped[c][r]
+
+
+# todo - add True and False if holds or not
 class Constraint:
     """
     This class describes the constraints cells with number and color (Black, Red).
     """
     def __init__(self, constraint):
+        self.status = False
+
         try:
             self.number = int(constraint[:-1])
         except Exception:
@@ -92,7 +118,7 @@ class Game:
 
             self.__random_building(size, colors)
 
-        self.__flipped = list(map(list, zip(*self.board)))
+        # self.__flipped = list(map(list, zip(*self.board)))
 
     def __our_building(self, colors, rows_constraints, cols_constraints):
         """
@@ -104,19 +130,21 @@ class Game:
         """
         self.colors = colors
 
-        self.rows_constraints = rows_constraints
-        self.cols_constraints = cols_constraints
+        temp_rows_constraints = rows_constraints
+        temp_cols_constraints = cols_constraints
 
         # remove the '-' between each constraint and put it in a cell in a list of a row constraints.
-        self.rows_constraints = [list(map(lambda x: Constraint(x), row.split('-'))) for row in self.rows_constraints]
+        temp_rows_constraints = [list(map(lambda x: Constraint(x), row.split('-'))) for row in temp_rows_constraints]
 
         # remove the '-' between each constraint and put it in a cell in a list of a column constraints.
-        self.cols_constraints = [list(map(lambda x: Constraint(x), col.split('-'))) for col in self.cols_constraints]
+        temp_cols_constraints = [list(map(lambda x: Constraint(x), col.split('-'))) for col in temp_cols_constraints]
 
-        self.num_of_rows = len(rows_constraints)
-        self.num_of_cols = len(cols_constraints)
+        # self.num_of_rows = len(rows_constraints)
+        # self.num_of_cols = len(cols_constraints)
 
-        self.board = [[Cell() for _ in range(self.num_of_cols)] for _ in range(self.num_of_rows)]
+        self.board = Board(temp_rows_constraints, temp_cols_constraints)
+
+        # self.board = [[Cell() for _ in range(self.num_of_cols)] for _ in range(self.num_of_rows)]
 
     def __csv_building(self, csv_file):
         """
@@ -139,35 +167,39 @@ class Game:
         temp_cols_constraints = list(map(lambda x: x.split('-'), lines[1][1:].strip().split(',')))
         temp_cols_constraints = list(map(lambda l: [Constraint(x) for x in l], temp_cols_constraints))
 
-        self.cols_constraints = temp_cols_constraints
+        # self.cols_constraints = temp_cols_constraints
 
         # take the third row and so on in csv file, the rows constraints and put each constraint in a list in a
         # list of rows constraints.
         temp_rows_constraints = list(map(lambda x: x[:x.index(',')].split('-'), lines[2:]))
         temp_rows_constraints = list(map(lambda l: [Constraint(x) for x in l], temp_rows_constraints))
 
-        self.rows_constraints = temp_rows_constraints
-
-        self.num_of_rows = len(self.rows_constraints)
-        self.num_of_cols = len(self.cols_constraints)
+        # self.rows_constraints = temp_rows_constraints
+        #
+        # self.num_of_rows = len(self.rows_constraints)
+        # self.num_of_cols = len(self.cols_constraints)
 
         # build the board as empty board.# build the board as empty board.
-        self.board = [[Cell() for _ in range(self.num_of_cols)] for _ in range(self.num_of_rows)]
+        self.board = Board(temp_rows_constraints, temp_cols_constraints)
+
+        # self.board = [[Cell() for _ in range(self.num_of_cols)] for _ in range(self.num_of_rows)]
 
     def __random_building(self, size, colors):
         """
                 building a board randomly from giving size and colors
                 """
         self.colors = colors
-        self.num_of_rows = size[0]
-        self.num_of_cols = size[1]
+        # self.num_of_rows = size[0]
+        # self.num_of_cols = size[1]
 
         # build the board as empty board.# build the board as empty board.
-        self.board = [[Cell() for _ in range(self.num_of_cols)] for _ in range(self.num_of_rows)]
+        # self.board = [[Cell() for _ in range(self.num_of_cols)] for _ in range(self.num_of_rows)]
 
         # build the random constraints of columns and rows.
-        self.rows_constraints = self.__build_constraints(self.num_of_rows, random.randint(1, self.num_of_cols))
-        self.cols_constraints = self.__build_constraints(self.num_of_cols, random.randint(1, self.num_of_rows))
+        temp_rows_constraints = self.__build_constraints(size[0], random.randint(1, size[1]))
+        temp_cols_constraints = self.__build_constraints(size[1], random.randint(1, size[0]))
+
+        self.board = Board(temp_rows_constraints, temp_cols_constraints, randomly=True, size=size)
 
     # @staticmethod
     def __build_constraints(self, n, m):
@@ -206,26 +238,32 @@ class Game:
         return all_constraints
 
     def print_board(self):
+        # if we got None from an agent, this means that there is no solution for the board.
+        if self.board.board is None:
+            return None
         text = ""
 
+        # gets the longest row's length
         max_row, max_col = None, None
         m, n = 0, 0
-        for row in self.rows_constraints:
+        for row in self.board.rows_constraints:
             if len(row) > m:
                 m = len(row)
                 max_row = row
-        for col in self.cols_constraints:
+        # gets the longest column's length
+        for col in self.board.cols_constraints:
             if len(col) > n:
                 n = len(col)
-                max_col = col
 
+        # this thing just for the design 😁.
         text += " " * (len(max_row) * 6)
         row_space = text
-        text += ("-" * (6 * self.num_of_cols + 2)) + f"\n{row_space}"
+        text += ("-" * (6 * self.board.num_cols + 2)) + f"\n{row_space}"
         text += "|| "
 
-        for i in range(n - 1, -1, -1):
-            for col in self.cols_constraints:
+        # adding the column constraints.
+        for i in range(n):
+            for col in self.board.cols_constraints:
                 if i >= len(col):
                     text += "    | "
                 elif len(col[i]) == 2:
@@ -233,15 +271,18 @@ class Game:
                 elif len(col[i]) == 3:
                     text += (str(col[i]) + " | ")
 
+            # adding a line separator between the column constraints and the board itself.
             if i == 0:
-                text += f"\n" + ("=" * (len(row_space) + self.num_of_cols * 6 + 2)) + f"\n{row_space}| "
+                text += f"\n" + ("=" * (len(row_space) + self.board.num_cols * 6 + 2)) + f"\n{row_space}| "
             else:
-                text += f"\n{row_space}" + ("-" * (self.num_of_cols * 6 + 2)) + f"\n{row_space}|| "
+                text += f"\n{row_space}" + ("-" * (self.board.num_cols * 6 + 2)) + f"\n{row_space}|| "
+        # remove the last unnecessary '|'
         text = text[:-1]
         text = text[:len(text) - len(row_space) - 1] + "|"
 
-        for j, row in enumerate(self.rows_constraints):
-            for i in range(m - 1, -1, -1):
+        # adding the structure of each row with the current content of the board beside the rows constraints.
+        for j, row in enumerate(self.board.rows_constraints):
+            for i in range(m):
                 if i >= len(row):
                     text += "     |"
                 elif len(row[i]) == 2:
@@ -249,7 +290,7 @@ class Game:
                 elif len(row[i]) == 3:
                     text += f" {row[i]} |"
             text += "|"
-            for y in self.board[j]:
+            for y in self.board.board[j]:
                 x = str(y)
                 if int(x) == EMPTY:
                     text += "     |"
@@ -259,14 +300,14 @@ class Game:
                     text += f"  b  |"
                 elif int(x) == RED:
                     text += f"  r  |"
-                # text += f"  {x}  |"
-            tmp = 2 + (m + self.num_of_cols) * 6
+            tmp = 2 + (m + self.board.num_cols) * 6
             text += "\n" + ("-" * tmp) + "\n|"
 
         return text[:-1]
 
     def run(self):
-        self.board = agent.brute_force(self.rows_constraints, self.cols_constraints, self.board)
+        # runs the brute force algorithm on the board.
+        self.board.board = agent.brute_force(self.board.rows_constraints, self.board.cols_constraints, self.board.board)
 
 
 if __name__ == "__main__":
