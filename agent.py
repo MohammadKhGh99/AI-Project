@@ -75,11 +75,7 @@ class NonogramProblem(SearchProblem):
         # Action is the number of cells we colored to get a new state.
         return sum(action.number for action in actions)
 
-# Make a change on the board. @how to
-# What is Constraint class.
-# Add a boolean value if we did this constraint.
-# What is our search problem? A Game object?
-# Current state in Cell class.
+
 from game import *
 
 def brute_force(row_con, col_con, board):

@@ -4,9 +4,6 @@ import agent
 from copy import deepcopy
 
 
-# rows and columns constraints
-# board list of lists
-# fill cell
 class Board:
     def __init__(self, rows_constraints, cols_constraints, randomly=False, size=(5, 5)):
         self.rows_constraints = rows_constraints
@@ -51,9 +48,9 @@ class Board:
         con_j: the index of the working constrain in the group.
         """
         if constrain_type:
-            self.cols_constraints[con_i][con_j].completed = True
+            self.cols_constraints[con_i][con_j].complete = True
         else:
-            self.rows_constraints[con_i][con_j].completed = True
+            self.rows_constraints[con_i][con_j].complete = True
 
     def fill_n_cells(self, con_i, con_j, start_index, constrain_type=True):
         """
@@ -83,14 +80,11 @@ class Board:
                     break
         return child
 
-
-# todo - add True and False if holds or not
 class Constraint:
     """
     This class describes the constraints cells with number, status and color (Black, Red).
     """
     def __init__(self, constraint):
-        self.status = False
         self.complete = False
 
         try:
