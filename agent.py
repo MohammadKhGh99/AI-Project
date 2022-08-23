@@ -46,8 +46,7 @@ class NonogramProblem(SearchProblem):
     """
         Class that defining the nonogram game as a problem.
     """
-    def __init__(self, board):  # , constraints_row, constraints_col):
-        # self.board = Board(constraints_row, constraints_col)
+    def __init__(self, board):
         self.board = board
 
     def get_start_state(self):
@@ -59,23 +58,24 @@ class NonogramProblem(SearchProblem):
 
     def get_successors(self, state):
         successors = []
-        constraint = state.get_first_incomplete_constraint(COLUMNS)
+        constraint_coord = state.get_first_incomplete_constraint(COLUMNS)
 
-        if constraint is None:
-            # We have done all the constraints
+        if constraint_coord is None:
+            # We done all the constraints
             return successors
 
         for start_index in range(state.num_rows):
-            child = state.fill_n_cells(constraint[0], constraint[1], start_index)
+            child = state.fill_n_cells(constraint_coord[0], constraint_coord[1], start_index, COLUMNS)
             if child is not None:
-                i, j = constraint
-                successors.append((child, constraint, abs(state.board[i][j].number - state.num_rows)))
+                constraint = self.board.cols_constraints[constraint_coord[0]][constraint_coord[1]]
+                successors.append((child, constraint, abs(constraint.number - state.num_rows)))
+                print(child.print_board())
 
         return successors
 
     def get_cost_of_actions(self, actions):
         # Action is the number of cells we colored to get a new state.
-        return sum(action.number for action in actions)
+        return sum(action.number for action in actions if action.completed)
 
 
 from game import *
