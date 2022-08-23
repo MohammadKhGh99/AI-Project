@@ -1,3 +1,81 @@
+class SearchProblem:
+    """
+    This class outlines the structure of a search problem, but doesn't implement
+    any of the methods (in object-oriented terminology: an abstract class).
+
+    You do not need to change anything in this class, ever.
+    """
+
+    def get_start_state(self):
+        """
+        Returns the start state for the search problem
+        """
+        raise Exception("Not implemented.")
+
+    def is_goal_state(self, state):
+        """
+        state: Search state
+
+        Returns True if and only if the state is a valid goal state
+        """
+        raise Exception("Not implemented.")
+
+    def get_successors(self, state):
+        """
+        state: Search state
+
+        For a given state, this should return a list of triples,
+        (successor, action, stepCost), where 'successor' is a
+        successor to the current state, 'action' is the action
+        required to get there, and 'stepCost' is the incremental
+        cost of expanding to that successor
+        """
+        raise Exception("Not implemented.")
+
+    def get_cost_of_actions(self, actions):
+        """
+        actions: A list of actions to take
+
+        This method returns the total cost of a particular sequence of actions.  The sequence must
+        be composed of legal moves
+        """
+        raise Exception("Not implemented.")
+
+
+class NonogramProblem(SearchProblem):
+    """
+        Class that defining the nonogram game as a problem.
+    """
+    def __init__(self, constraints_row, constraints_col):
+        self.board = Board(constraints_row, constraints_col)
+
+    def get_start_state(self):
+        return self.board
+
+    def is_goal_state(self, state):
+        return (state.get_first_incomplete_constrain(True) is None) and \
+               (state.get_first_incomplete_constrain(False) is None)
+
+    def get_successors(self, state):
+        successors = []
+        constrain = state.get_first_incomplete_constrain(True)
+
+        if constrain is None:
+            # We done all the constrains
+            return successors
+
+        for start_index in range(state.board_h): #
+            child = state.fill_n_cells(constrain[0], constrain[1], start_index)
+            if child is not None:
+                successors.append((child, constrain, abs(constrain.number - state.board_h)))
+
+        return successors
+
+    def get_cost_of_actions(self, actions):
+        # Action is the number of cells we colored to get a new state.
+        return sum(action.number for action in actions)
+
+
 from game import *
 
 

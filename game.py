@@ -1,11 +1,9 @@
 import random
 from config import *
 import agent
+from copy import deepcopy
 
 
-# rows and columns constraints
-# board list of lists
-# fill cell
 class Board:
     def __init__(self, rows_constraints, cols_constraints, randomly=False, size=(5, 5)):
         self.rows_constraints = rows_constraints
@@ -25,14 +23,69 @@ class Board:
     def get_cell(self, r, c, flipped=False):
         return self.board[r][c] if not flipped else self.flipped[c][r]
 
+    def get_first_incomplete_constrain(self, constrain_type=True):
+        """
+        Find first incomplete constrain in columns or rows constrains.
+        constrain_type: on which constrains list we will work, true if on columns, False on rows
+        Return the coordinates of the incomplete constrains, None, if all constrains are completed
+        """
+        if constrain_type:
+            constrains_group = self.cols_constraints
+        else:
+            constrains_group = self.rows_constraints
 
-# todo - add True and False if holds or not
+        for i in range(len(constrains_group)):
+            for j in range(len(constrains_group[i])):
+                if not constrains_group[i][j].complete:
+                    return i, j
+        return None
+
+    def complete_constrains(self, con_i, con_j, constrain_type=True):
+        """
+        Function change the status of the given constrain to completed (True)
+        constrain_type: on which constrains list we will work, true if on columns, False on rows.
+        con_i: the index of the working constrains group.
+        con_j: the index of the working constrain in the group.
+        """
+        if constrain_type:
+            self.cols_constraints[con_i][con_j].complete = True
+        else:
+            self.rows_constraints[con_i][con_j].complete = True
+
+    def fill_n_cells(self, con_i, con_j, start_index, constrain_type=True):
+        """
+        Function fill the board, in a valid way. It fills n cells according to the given constrain.
+        constrain_type: on which constrains list we will work, true if on columns, False on rows.
+        con_i: the index of the working constrains group.
+        con_j: the index of the working constrain in the group.
+        start_index: from where to start to fill (row/column)
+        """
+        child = deepcopy(self)
+        child.complete_constrains(constrain_type, con_i, con_j)
+        if constrain_type:
+            constrain = child.cols_constraints[con_i][con_j]
+            for i in range(constrain.number):
+                if agent.check_move\
+                            (child.rows_constraints, child.cols_constraints, child.board, i + start_index, con_i):
+                    child.fill(i + start_index, con_i, constrain.c)
+                else:
+                    break
+        else:
+            constrain = child.rows_constraints[con_i][con_j]
+            for i in range(constrain.number):
+                if agent.check_move\
+                            (child.rows_constraints, child.cols_constraints, child.board, con_i, i + start_index):
+                    child.fill(con_i, i + start_index, constrain.c)
+                else:
+                    break
+        return child
+
 class Constraint:
     """
-    This class describes the constraints cells with number and color (Black, Red).
+    This class describes the constraints cells with number, status and color (Black, Red).
     """
     def __init__(self, constraint):
-        self.status = False
+        self.complete = False
 
         try:
             self.number = int(constraint[:-1])
@@ -51,7 +104,6 @@ class Constraint:
 
     def __len__(self):
         return len(self.__str__())
-
 
 class Cell:
     """
@@ -72,7 +124,6 @@ class Cell:
 
     def __str__(self):
         return str(self.color)
-
 
 class Game:
     def __init__(self, csv_file=None, rows_constraints=None, cols_constraints=None, colors=BLACK_WHITE,
