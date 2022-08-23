@@ -46,8 +46,9 @@ class NonogramProblem(SearchProblem):
     """
         Class that defining the nonogram game as a problem.
     """
-    def __init__(self, constraints_row, constraints_col):
-        self.board = Board(constraints_row, constraints_col)
+    def __init__(self, board):  # , constraints_row, constraints_col):
+        # self.board = Board(constraints_row, constraints_col)
+        self.board = board
 
     def get_start_state(self):
         return self.board
@@ -61,13 +62,14 @@ class NonogramProblem(SearchProblem):
         constraint = state.get_first_incomplete_constraint(COLUMNS)
 
         if constraint is None:
-            # We done all the constraints
+            # We have done all the constraints
             return successors
 
-        for start_index in range(state.board_h): #
+        for start_index in range(state.num_rows):
             child = state.fill_n_cells(constraint[0], constraint[1], start_index)
             if child is not None:
-                successors.append((child, constraint, abs(constraint.number - state.board_h)))
+                i, j = constraint
+                successors.append((child, constraint, abs(state.board[i][j].number - state.num_rows)))
 
         return successors
 
