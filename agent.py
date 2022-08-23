@@ -1,5 +1,8 @@
 from game import *
 
+
+# todo - fix the design and the problems that Ibraheem made
+
 def brute_force(row_con, col_con, board):
     """
     try to solve a board of nonogram by trying everything (brute force)
@@ -92,7 +95,8 @@ def _check_move_helper_with_constrain_check(row, board, row_id):
             cell_id += 1
             continue
 
-        elif cell_color == curr_constraint_color and (must_color == curr_constraint_color or must_color == EMPTY) and blocked_color != curr_constraint_color:
+        elif cell_color == curr_constraint_color and (
+                must_color == curr_constraint_color or must_color == EMPTY) and blocked_color != curr_constraint_color:
             if curr_constraint_status:
                 # this constraint already filled and done, so move to next situation as we finished this status
                 cell_id += curr_num_of_cells_to_fill
@@ -217,5 +221,3 @@ def __invert_board(board):
     transpose the board
     """
     return list(map(list, zip(*board)))
-
-
