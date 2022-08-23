@@ -90,20 +90,23 @@ class Constraint:
     """
     This class describes the constraints cells with number, status and color (Black, Red).
     """
-    def __init__(self, constraint):
+    def __init__(self, constraint, m=None):
         self.completed = False
-
-        try:
-            self.number = int(constraint[:-1])
-        except Exception:
-            raise Exception("constraint structure should be like this")
-
-        self.c = constraint[-1]
-
-        if self.c.lower() not in COLORS:
-            raise Exception("error in choosing color for constraint")
+        if constraint == '':
+            self.number = None
         else:
-            self.color = BLACK if self.c.lower() == 'b' else RED
+            try:
+                self.number = int(constraint[:-1])
+            except Exception:
+                # print(constraint)
+                raise Exception("constraint structure should be like this")
+
+            self.c = constraint[-1]
+
+            if self.c.lower() not in COLORS:
+                raise Exception("error in choosing color for constraint")
+            else:
+                self.color = BLACK if self.c.lower() == 'b' else RED
 
     def __str__(self):
         return str(self.number) + self.c
@@ -310,7 +313,7 @@ class Game:
 
     def print_board(self):
         # if we got None from an agent, this means that there is no solution for the board.
-        if self.board.board is None:
+        if self.board is None:
             return None
         text = ""
 
@@ -393,6 +396,7 @@ class Game:
 
 if __name__ == "__main__":
     print("Hello World!")
+    # game = Game(csv_file='example1.csv')
     game = Game(colors=COLORFUL)
 
     # import graphics
