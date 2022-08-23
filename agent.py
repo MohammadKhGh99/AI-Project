@@ -53,21 +53,21 @@ class NonogramProblem(SearchProblem):
         return self.board
 
     def is_goal_state(self, state):
-        return (state.get_first_incomplete_constrain(True) is None) and \
-               (state.get_first_incomplete_constrain(False) is None)
+        return (state.get_first_incomplete_constraint(True) is None) and \
+               (state.get_first_incomplete_constraint(False) is None)
 
     def get_successors(self, state):
         successors = []
-        constrain = state.get_first_incomplete_constrain(True)
+        constraint = state.get_first_incomplete_constraint(True)
 
-        if constrain is None:
-            # We done all the constrains
+        if constraint is None:
+            # We done all the constraints
             return successors
 
         for start_index in range(state.board_h): #
-            child = state.fill_n_cells(constrain[0], constrain[1], start_index)
+            child = state.fill_n_cells(constraint[0], constraint[1], start_index)
             if child is not None:
-                successors.append((child, constrain, abs(constrain.number - state.board_h)))
+                successors.append((child, constraint, abs(constraint.number - state.board_h)))
 
         return successors
 
@@ -119,18 +119,18 @@ def check_move(row_con, col_con, board, row_id, col_id):
     check if the move in this row_id/col_id is legit.
     """
     # checking for the rows
-    if not _check_move_helper_with_constrain_check(row_con, board, col_id):
+    if not _check_move_helper_with_constraint_check(row_con, board, col_id):
         return False
 
     flipped = __invert_board(board)
     # checking for the columns (as rows)
-    if not _check_move_helper_with_constrain_check(col_con, flipped, row_id):
+    if not _check_move_helper_with_constraint_check(col_con, flipped, row_id):
         return False
 
     return True
 
 
-def _check_move_helper_with_constrain_check(row, board, row_id):
+def _check_move_helper_with_constraint_check(row, board, row_id):
     """
     check if the move in this row_id/col_id is legit.
     return True if this move works and legit, false otherwise
@@ -146,7 +146,7 @@ def _check_move_helper_with_constrain_check(row, board, row_id):
     curr_constraint = constraints_for_row[curr_constraint_id]
     curr_num_of_cells_to_fill = curr_constraint.number
     curr_constraint_color = curr_constraint.color
-    curr_constraint_status = curr_constraint.status
+    curr_constraint_status = curr_constraint.completed
 
     must_color = EMPTY  # the color must be for the next cell
     blocked_color = EMPTY  # sometimes we need to block a color from next cell (example: 1b-1b - we can't put two black near each other) - white can't be forbidden
@@ -166,7 +166,7 @@ def _check_move_helper_with_constrain_check(row, board, row_id):
 
         elif cell_color == WHITE and (must_color == WHITE or must_color == EMPTY):
             # that's good
-            # if must color is white - that means we finished all constrains, and all remaining cells should stay white
+            # if must color is white - that means we finished all constraints, and all remaining cells should stay white
 
             # we reset the forbid color
             blocked_color = EMPTY
@@ -203,7 +203,7 @@ def _check_move_helper_with_constrain_check(row, board, row_id):
                     curr_constraint_color = curr_constraint.color
 
                 else:
-                    # we finished every constrain, next cells should be white only
+                    # we finished every constraint, next cells should be white only
                     constraints_complete = True
                     must_color = WHITE
             else:
@@ -249,14 +249,14 @@ def _check_move_helper_with_constrain_check(row, board, row_id):
 #             continue
 #         elif cell_color == WHITE and (must_color == WHITE or must_color == EMPTY):
 #             # that's good
-#             # if must color is white - that means we finished all constrains, and all remaining cells should stay white
+#             # if must color is white - that means we finished all constraints, and all remaining cells should stay white
 #
 #             # we reset the forbid color
 #             blocked_color = EMPTY
 #             continue
 #
 #         elif cell_color == curr_constraint_color and (must_color == curr_constraint_color or must_color == EMPTY) and blocked_color != curr_constraint_color:
-#             # that's good, check if we need to change constrain
+#             # that's good, check if we need to change constraint
 #             curr_num_of_cells_to_fill -= 1
 #
 #             # if we still didn't finish filling this constraint, we want the next color to be same color as the constraint:
@@ -277,7 +277,7 @@ def _check_move_helper_with_constrain_check(row, board, row_id):
 #                     curr_constraint_color = curr_constraint.color
 #
 #                 else:
-#                     # we finished every constrain, next cells should be white only
+#                     # we finished every constraint, next cells should be white only
 #                     must_color = WHITE
 #             else:
 #                 raise Exception("this is an impossible situation, hmmmmmm")

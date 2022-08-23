@@ -8,11 +8,13 @@ class Board:
     def __init__(self, rows_constraints, cols_constraints, randomly=False, size=(5, 5)):
         self.rows_constraints = rows_constraints
         self.cols_constraints = cols_constraints
+
         if not randomly:
             self.num_rows = len(self.rows_constraints)
             self.num_cols = len(self.cols_constraints)
         else:
             self.num_rows, self.num_cols = size
+
         self.board = [[Cell() for _ in range(self.num_cols)] for _ in range(self.num_rows)]
         self.flipped = [[Cell() for _ in range(self.num_rows)] for _ in range(self.num_cols)]
 
@@ -23,69 +25,70 @@ class Board:
     def get_cell(self, r, c, flipped=False):
         return self.board[r][c] if not flipped else self.flipped[c][r]
 
-    def get_first_incomplete_constrain(self, constrain_type=True):
+    def get_first_incomplete_constraint(self, constraint_type=True):
         """
-        Find first incomplete constrain in columns or rows constrains.
-        constrain_type: on which constrains list we will work, true if on columns, False on rows
-        Return the coordinates of the incomplete constrains, None, if all constrains are completed
+        Find first incomplete constraint in columns or rows constraints.
+        constrain_type: on which constraints list we will work, true if on columns, False on rows
+        Return the coordinates of the incomplete constraints, None, if all constraints are completed
         """
-        if constrain_type:
-            constrains_group = self.cols_constraints
+        if constraint_type:
+            constraints_group = self.cols_constraints
         else:
-            constrains_group = self.rows_constraints
+            constraints_group = self.rows_constraints
 
-        for i in range(len(constrains_group)):
-            for j in range(len(constrains_group[i])):
-                if not constrains_group[i][j].complete:
+        for i in range(len(constraints_group)):
+            for j in range(len(constraints_group[i])):
+                if not constraints_group[i][j].completed:
                     return i, j
         return None
 
-    def complete_constrains(self, con_i, con_j, constrain_type=True):
+    def complete_constraints(self, con_i, con_j, constraint_type=True):
         """
-        Function change the status of the given constrain to completed (True)
-        constrain_type: on which constrains list we will work, true if on columns, False on rows.
-        con_i: the index of the working constrains group.
-        con_j: the index of the working constrain in the group.
+        Function change the status of the given constraint to completed (True)
+        constraint_type: on which constraints list we will work, true if on columns, False on rows.
+        con_i: the index of the working constraints group.
+        con_j: the index of the working constraint in the group.
         """
-        if constrain_type:
-            self.cols_constraints[con_i][con_j].complete = True
+        if constraint_type:
+            self.cols_constraints[con_i][con_j].completed = True
         else:
-            self.rows_constraints[con_i][con_j].complete = True
+            self.rows_constraints[con_i][con_j].completed = True
 
-    def fill_n_cells(self, con_i, con_j, start_index, constrain_type=True):
+    def fill_n_cells(self, con_i, con_j, start_index, constraint_type=True):
         """
-        Function fill the board, in a valid way. It fills n cells according to the given constrain.
-        constrain_type: on which constrains list we will work, true if on columns, False on rows.
-        con_i: the index of the working constrains group.
-        con_j: the index of the working constrain in the group.
+        Function fill the board, in a valid way. It fills n cells according to the given constraint.
+        constraint_type: on which constraints list we will work, true if on columns, False on rows.
+        con_i: the index of the working constraints group.
+        con_j: the index of the working constraint in the group.
         start_index: from where to start to fill (row/column)
         """
         child = deepcopy(self)
-        child.complete_constrains(constrain_type, con_i, con_j)
-        if constrain_type:
-            constrain = child.cols_constraints[con_i][con_j]
-            for i in range(constrain.number):
+        child.complete_constraints(constraint_type, con_i, con_j)
+        if constraint_type:
+            constraint = child.cols_constraints[con_i][con_j]
+            for i in range(constraint.number):
                 if agent.check_move\
                             (child.rows_constraints, child.cols_constraints, child.board, i + start_index, con_i):
-                    child.fill(i + start_index, con_i, constrain.c)
+                    child.fill(i + start_index, con_i, constraint.c)
                 else:
                     break
         else:
-            constrain = child.rows_constraints[con_i][con_j]
-            for i in range(constrain.number):
+            constraint = child.rows_constraints[con_i][con_j]
+            for i in range(constraint.number):
                 if agent.check_move\
                             (child.rows_constraints, child.cols_constraints, child.board, con_i, i + start_index):
-                    child.fill(con_i, i + start_index, constrain.c)
+                    child.fill(con_i, i + start_index, constraint.c)
                 else:
                     break
         return child
+
 
 class Constraint:
     """
     This class describes the constraints cells with number, status and color (Black, Red).
     """
     def __init__(self, constraint):
-        self.complete = False
+        self.completed = False
 
         try:
             self.number = int(constraint[:-1])
@@ -127,7 +130,7 @@ class Cell:
 
 class Game:
     def __init__(self, csv_file=None, rows_constraints=None, cols_constraints=None, colors=BLACK_WHITE,
-                 size=(5, 5), agent=None):
+                 size=(5, 5), agent=None, always_solvable=True):
         """
         Initializing the board of the game, we have 3 different ways:
         1) from CSV file
@@ -147,6 +150,7 @@ class Game:
         """
         self.agent = agent  # check: i'm not sure what is this
         self.state = None   # check: i'm not sure what is this
+        self.always_solvable = always_solvable
 
         if csv_file:
             # create a board from csv file.
@@ -240,15 +244,24 @@ class Game:
                 building a board randomly from giving size and colors
                 """
         self.colors = colors
-        # self.num_of_rows = size[0]
-        # self.num_of_cols = size[1]
+        self.num_rows = size[0]
+        self.num_cols = size[1]
 
         # build the board as empty board.# build the board as empty board.
         # self.board = [[Cell() for _ in range(self.num_of_cols)] for _ in range(self.num_of_rows)]
 
-        # build the random constraints of columns and rows.
-        temp_rows_constraints = self.__build_constraints(size[0], random.randint(1, size[1]))
-        temp_cols_constraints = self.__build_constraints(size[1], random.randint(1, size[0]))
+        if not self.always_solvable:
+            # build the random constraints of columns and rows.
+            temp_rows_constraints = self.__build_constraints(size[0], random.randint(1, size[1]))
+            temp_cols_constraints = self.__build_constraints(size[1], random.randint(1, size[0]))
+        else:
+            # build an always solvable board, then build its constraints.
+            temp_board = [[Cell(color=random.choice([WHITE, BLACK, RED])) for _ in range(self.num_cols)] for _ in range(self.num_rows)]
+            temp_rows_constraints, temp_cols_constraints = [], []
+            for row in range(self.num_rows):
+                for col in range(self.num_cols):
+                    pass
+
 
         self.board = Board(temp_rows_constraints, temp_cols_constraints, randomly=True, size=size)
 
@@ -366,6 +379,11 @@ class Game:
 if __name__ == "__main__":
     print("Hello World!")
     game = Game(csv_file="example1.csv")
+
+    # import graphics
+    # gui = graphics.NonogramGUI("Nonogram")
+    # gui.draw_board(game.board.board)
+    # gui.master.mainloop()
 
     game.run()
     print(game.print_board())
