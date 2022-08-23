@@ -28,6 +28,7 @@ class Board:
             return False
         self.board[r][c].color = color
         self.flipped[c][r].color = color
+
         return True
 
     def get_cell(self, r, c, flipped=False):

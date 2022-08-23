@@ -2,6 +2,7 @@ import util
 
 
 def search_helper(problem, fringe):
+
     fringe.push((problem.get_start_state(), []))
     visited = set()
     while not fringe.isEmpty():

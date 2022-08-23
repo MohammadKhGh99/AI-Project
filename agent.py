@@ -42,12 +42,14 @@ class SearchProblem:
         raise Exception("Not implemented.")
 
 
+
 class NonogramProblem(SearchProblem):
     """
         Class that defining the nonogram game as a problem.
     """
     def __init__(self, board):
         self.board = board
+
 
     def get_start_state(self):
         return self.board
