@@ -96,7 +96,6 @@ def _brute_force_helper(board, row_id, col_id):
     """
     for color in [RED, BLACK, WHITE]:
         board.fill(row_id, col_id, color)
-        # board[row_id][col_id].color = color
         # check if this move works, if yes go to next cell.
         if check_move(board, col_id, row_id):
             if col_id + 1 < len(board.cols_constraints):
@@ -112,7 +111,6 @@ def _brute_force_helper(board, row_id, col_id):
                 return board
     # no color is correct
     board.fill(row_id, col_id, EMPTY)
-    # board[row_id][col_id].color = EMPTY
     return
 
 
@@ -144,14 +142,16 @@ def _check_move_helper_with_constraint_check(board, row_id, flipped=False):
 
     # constraint:
     curr_constraint_id = 0
-    # print(constraints_for_row)
     curr_constraint = constraints_for_row[curr_constraint_id]
     curr_num_of_cells_to_fill = curr_constraint.number
     curr_constraint_color = curr_constraint.color
     curr_constraint_status = curr_constraint.completed
 
-    must_color = EMPTY  # the color must be for the next cell
-    blocked_color = EMPTY  # sometimes we need to block a color from next cell (example: 1b-1b - we can't put two black near each other) - white can't be forbidden
+    # the color must be for the next cell
+    must_color = EMPTY
+    # sometimes we need to block a color from next cell (example: 1b-1b - we can't put two black near each other)
+    # - white can't be forbidden
+    blocked_color = EMPTY
 
     constraints_complete = False  # all constraints are fulfilled
     empty_flag = False  # there is an empty cell in this row
