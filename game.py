@@ -5,7 +5,8 @@ from copy import deepcopy
 
 
 class Board:
-    def __init__(self, rows_constraints, cols_constraints, randomly=False, size=(5, 5)):
+    # delete - board argument, it's just for testing bro!
+    def __init__(self, rows_constraints, cols_constraints, randomly=False, size=(5, 5), board=None):
         self.rows_constraints = rows_constraints
         self.cols_constraints = cols_constraints
 
@@ -15,7 +16,8 @@ class Board:
         else:
             self.num_rows, self.num_cols = size
 
-        self.board = [[Cell() for _ in range(self.num_cols)] for _ in range(self.num_rows)]
+        self.board = board if board else [[Cell() for _ in range(self.num_cols)] for _ in range(self.num_rows)]
+        # self.board = [[Cell() for _ in range(self.num_cols)] for _ in range(self.num_rows)]
         self.flipped = [[Cell() for _ in range(self.num_rows)] for _ in range(self.num_cols)]
 
     def fill(self, r, c, color):
@@ -25,10 +27,10 @@ class Board:
     def get_cell(self, r, c, flipped=False):
         return self.board[r][c] if not flipped else self.flipped[c][r]
 
-    def get_first_incomplete_constraint(self, constraint_type=True):
+    def get_first_incomplete_constraint(self, constraint_type):
         """
         Find first incomplete constraint in columns or rows constraints.
-        constrain_type: on which constraints list we will work, true if on columns, False on rows
+        constrain_type: on which constraints list we will work: columns or rows
         Return the coordinates of the incomplete constraints, None, if all constraints are completed
         """
         if constraint_type:
@@ -67,7 +69,7 @@ class Board:
         if constraint_type:
             constraint = child.cols_constraints[con_i][con_j]
             for i in range(constraint.number):
-                if agent.check_move\
+                if agent.check_move \
                             (child.rows_constraints, child.cols_constraints, child.board, i + start_index, con_i):
                     child.fill(i + start_index, con_i, constraint.c)
                 else:
@@ -75,7 +77,7 @@ class Board:
         else:
             constraint = child.rows_constraints[con_i][con_j]
             for i in range(constraint.number):
-                if agent.check_move\
+                if agent.check_move \
                             (child.rows_constraints, child.cols_constraints, child.board, con_i, i + start_index):
                     child.fill(con_i, i + start_index, constraint.c)
                 else:
@@ -87,6 +89,7 @@ class Constraint:
     """
     This class describes the constraints cells with number, status and color (Black, Red).
     """
+
     def __init__(self, constraint):
         self.completed = False
 
@@ -108,10 +111,12 @@ class Constraint:
     def __len__(self):
         return len(self.__str__())
 
+
 class Cell:
     """
     the cells of the board. each cell has a color: WHITE, Black or RED. (DEFAULT=WHITE)
     """
+
     def __init__(self, color=EMPTY):
         self.color = color
         # self.c = ""
@@ -127,6 +132,7 @@ class Cell:
 
     def __str__(self):
         return str(self.color)
+
 
 class Game:
     def __init__(self, csv_file=None, rows_constraints=None, cols_constraints=None, colors=BLACK_WHITE,
@@ -149,8 +155,9 @@ class Game:
 
         """
         self.agent = agent  # check: i'm not sure what is this
-        self.state = None   # check: i'm not sure what is this
+        self.state = None  # check: i'm not sure what is this
         self.always_solvable = always_solvable
+        self.board = None
 
         if csv_file:
             # create a board from csv file.
@@ -185,32 +192,25 @@ class Game:
         """
         self.colors = colors
 
-        temp_rows_constraints = rows_constraints
-        temp_cols_constraints = cols_constraints
-
         # remove the '-' between each constraint and put it in a cell in a list of a row constraints.
-        temp_rows_constraints = [list(map(lambda x: Constraint(x), row.split('-'))) for row in temp_rows_constraints]
+        temp_rows_constraints = [list(map(lambda x: Constraint(x), row.split('-'))) for row in rows_constraints]
 
         # remove the '-' between each constraint and put it in a cell in a list of a column constraints.
-        temp_cols_constraints = [list(map(lambda x: Constraint(x), col.split('-'))) for col in temp_cols_constraints]
+        temp_cols_constraints = [list(map(lambda x: Constraint(x), col.split('-'))) for col in cols_constraints]
 
-        # self.num_of_rows = len(rows_constraints)
-        # self.num_of_cols = len(cols_constraints)
-
+        # build a new empty board with the given constraints.
         self.board = Board(temp_rows_constraints, temp_cols_constraints)
-
-        # self.board = [[Cell() for _ in range(self.num_of_cols)] for _ in range(self.num_of_rows)]
 
     def __csv_building(self, csv_file):
         """
-                                building the board from a csv file
-                                expecting format to be: brw
-                                                        ,3b,2r-3b,1b
-                                                        2r,,,,
-                                                        3b,,,,
-                                                        1b-3r,,,,
+            building the board from a csv file
+            expecting format to be: brw
+                                    ,3b,2r-3b,1b
+                                    2r,,,,
+                                    3b,,,,
+                                    1b-3r,,,,
 
-                                """
+        """
         with open(csv_file, 'r') as f:
             lines = f.readlines()
 
@@ -218,26 +218,16 @@ class Game:
 
         # take the second row in csv file, the columns constraints and put each constraint in a list in a
         # list of columns constraints.
-        # print(lines[1][1:])
         temp_cols_constraints = list(map(lambda x: x.split('-'), lines[1][1:].strip().split(',')))
         temp_cols_constraints = list(map(lambda l: [Constraint(x) for x in l], temp_cols_constraints))
-
-        # self.cols_constraints = temp_cols_constraints
 
         # take the third row and so on in csv file, the rows constraints and put each constraint in a list in a
         # list of rows constraints.
         temp_rows_constraints = list(map(lambda x: x[:x.index(',')].split('-'), lines[2:]))
         temp_rows_constraints = list(map(lambda l: [Constraint(x) for x in l], temp_rows_constraints))
 
-        # self.rows_constraints = temp_rows_constraints
-        #
-        # self.num_of_rows = len(self.rows_constraints)
-        # self.num_of_cols = len(self.cols_constraints)
-
         # build the board as empty board.# build the board as empty board.
         self.board = Board(temp_rows_constraints, temp_cols_constraints)
-
-        # self.board = [[Cell() for _ in range(self.num_of_cols)] for _ in range(self.num_of_rows)]
 
     def __random_building(self, size, colors):
         """
@@ -248,7 +238,6 @@ class Game:
         self.num_cols = size[1]
 
         # build the board as empty board.# build the board as empty board.
-        # self.board = [[Cell() for _ in range(self.num_of_cols)] for _ in range(self.num_of_rows)]
 
         if not self.always_solvable:
             # build the random constraints of columns and rows.
@@ -256,17 +245,44 @@ class Game:
             temp_cols_constraints = self.__build_constraints(size[1], random.randint(1, size[0]))
         else:
             # build an always solvable board, then build its constraints.
-            temp_board = [[Cell(color=random.choice([WHITE, BLACK, RED])) for _ in range(self.num_cols)] for _ in range(self.num_rows)]
+            temp_board = [[Cell(color=random.choice([WHITE, BLACK, RED])) for _ in range(self.num_cols)] for _ in
+                          range(self.num_rows)]
             temp_rows_constraints, temp_cols_constraints = [], []
             for row in range(self.num_rows):
+                seq = 1
+                row_constraints = []
                 for col in range(self.num_cols):
-                    pass
+                    if temp_board[row][col].color != WHITE:
+                        cur_color = 'b' if temp_board[row][col].color == BLACK else 'r'
+                        if col < self.num_cols - 1:
+                            if temp_board[row][col].color == temp_board[row][col + 1].color:
+                                seq += 1
+                            else:
+                                row_constraints.append(Constraint(str(seq) + cur_color))
+                                seq = 1
+                        else:
+                            row_constraints.append(Constraint(str(seq) + cur_color))
+                temp_rows_constraints.append(row_constraints)
 
+            for col in range(self.num_cols):
+                seq = 1
+                col_constraints = []
+                for row in range(self.num_rows):
+                    if temp_board[row][col].color != WHITE:
+                        cur_color = 'b' if temp_board[row][col].color == BLACK else 'r'
+                        if row < self.num_rows - 1:
+                            if temp_board[row][col].color == temp_board[row + 1][col].color:
+                                seq += 1
+                            else:
+                                col_constraints.append(Constraint(str(seq) + cur_color))
+                                seq = 1
+                        else:
+                            col_constraints.append(Constraint(str(seq) + cur_color))
+                temp_cols_constraints.append(col_constraints)
 
         self.board = Board(temp_rows_constraints, temp_cols_constraints, randomly=True, size=size)
 
-    # @staticmethod
-    def __build_constraints(self, n, m):
+    def __build_constraints(self, m, n):
         all_constraints = []
         colors_lst = []
         if self.colors == BLACK_WHITE:
@@ -274,17 +290,17 @@ class Game:
         elif self.colors == COLORFUL:
             colors_lst = ['b', 'r']
 
-        for j in range(n):
+        for j in range(m):
             i = 0
             constraint_lst = []
-            while i < m:
-                num = random.randint(1, m - i)
+            while i < n:
+                num = random.randint(1, n - i)
                 color = random.choice(colors_lst)
 
                 # if the current color is the same as the previous color and there is no room for it,
                 # we should try again and choose another color or number of colored cells by this color.
                 if len(constraint_lst) >= 1 and constraint_lst[-1].color == color:
-                    if i + num + 1 >= m:
+                    if i + num + 1 >= n:
                         continue
 
                 constraint_lst.append(Constraint(str(num) + color))
@@ -373,12 +389,12 @@ class Game:
 
     def run(self):
         # runs the brute force algorithm on the board.
-        self.board.board = agent.brute_force(self.board.rows_constraints, self.board.cols_constraints, self.board.board)
+        self.board = agent.brute_force(self.board)
 
 
 if __name__ == "__main__":
     print("Hello World!")
-    game = Game(csv_file="example1.csv")
+    game = Game(colors=COLORFUL)
 
     # import graphics
     # gui = graphics.NonogramGUI("Nonogram")
@@ -387,4 +403,3 @@ if __name__ == "__main__":
 
     game.run()
     print(game.print_board())
-
