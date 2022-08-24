@@ -3,6 +3,8 @@ from config import *
 import agent
 import csp
 from copy import deepcopy
+import search
+import GUI
 from typing import Dict, List
 
 class Cell:
@@ -26,11 +28,8 @@ class Constraint:
     """
     This class describes the constraints cells with number, status and color (Black, Red).
     """
-
     # def __init__(self, constraint, constraint_type, row_or_col_id, order):
     def __init__(self, constraint):
-
-
         try:
             self.length = int(constraint[:-1])
         except Exception:
@@ -60,6 +59,7 @@ class Constraint:
         return len(self.__str__())
 
 class Board:
+
     # delete - board argument, it's just for testing bro!
     def __init__(self, rows_constraints: List[List[Constraint]], cols_constraints: List[List[Constraint]], randomly=False, size=(5, 5), board=None):
         self.rows_constraints = rows_constraints
@@ -101,10 +101,10 @@ class Board:
                     return i, j
         return None
 
-    def complete_constraints(self, con_i, con_j, constraint_type=True):
+    def complete_constraints(self, con_i, con_j, constraint_type=COLUMNS):
         """
         Function change the status of the given constraint to completed (True)
-        constraint_type: on which constraints list we will work, true if on columns, False on rows.
+        constraint_type: on which constraints list we will work: columns or rows.
         con_i: the index of the working constraints group.
         con_j: the index of the working constraint in the group.
         """
@@ -113,10 +113,10 @@ class Board:
         else:
             self.rows_constraints[con_i][con_j].completed = True
 
-    def fill_n_cells(self, con_i, con_j, start_index, constraint_type=True):
+    def fill_n_cells(self, con_i, con_j, start_index, constraint_type=COLUMNS):
         """
         Function fill the board, in a valid way. It fills n cells according to the given constraint.
-        constraint_type: on which constraints list we will work, true if on columns, False on rows.
+        constraint_type: on which constraints list we will work: columns or rows.
         con_i: the index of the working constraints group.
         con_j: the index of the working constraint in the group.
         start_index: from where to start to fill (row/column)
@@ -126,21 +126,18 @@ class Board:
         if constraint_type:
             constraint = child.cols_constraints[con_i][con_j]
             for i in range(constraint.length):
-                if agent.check_move \
-                            (child.rows_constraints, child.cols_constraints, child.board, i + start_index, con_i):
-                    child.fill(i + start_index, con_i, constraint.c)
+                if agent.check_move(child, i + start_index, con_i):
+                    child.fill(i + start_index, con_i, constraint.color)
                 else:
                     break
         else:
             constraint = child.rows_constraints[con_i][con_j]
             for i in range(constraint.length):
-                if agent.check_move \
-                            (child.rows_constraints, child.cols_constraints, child.board, con_i, i + start_index):
-                    child.fill(con_i, i + start_index, constraint.c)
+                if agent.check_move(child, con_i, i + start_index):
+                    child.fill(con_i, i + start_index, constraint.color)
                 else:
                     break
         return child
-
 
 class Game:
     def __init__(self, csv_file=None, rows_constraints=None, cols_constraints=None, colors=BLACK_WHITE,
@@ -341,7 +338,7 @@ class Game:
 
     def print_board(self):
         # if we got None from an agent, this means that there is no solution for the board.
-        if self.board.board is None:
+        if self.board is None:
             return None
         text = ""
 
@@ -411,14 +408,25 @@ class Game:
 
     def run(self):
         # runs the brute force algorithm on the board.
+        print("Brute Force")
         self.board = agent.brute_force(self.board)
+        # print("BFS")
+        # nonogram_problem = agent.NonogramProblem(self.board)
+        # print(search.breadth_first_search(nonogram_problem))
+        # print("DFS")
+        # print(search.depth_first_search(nonogram_problem))
+        # print("A*")
+        # print(search.a_star_search(problem=nonogram_problem))
 
 
 if __name__ == "__main__":
     print("Hello World!")
+    
     # game = Game(colors=COLORFUL, size=(2, 2))
     # game = Game(colors=COLORFUL, size=(5, 5))
-    game = Game(colors=COLORFUL, size=(15, 15))
+    # game = Game(colors=COLORFUL, size=(15, 15))
+    game = Game(csv_file='example1.csv')
+    # game = Game(colors=COLORFUL)
 
     # import graphics
     # gui = graphics.NonogramGUI("Nonogram")
