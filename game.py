@@ -451,7 +451,8 @@ class Game:
 if __name__ == "__main__":
     print("Hello World!")
 
-    # game = Game(colors=COLORFUL, size=(2, 2))
+    game = Game(colors=COLORFUL, size=(3, 3))
+    # game = Game(colors=COLORFUL, size=(3, 3))
     # game = Game(colors=COLORFUL, size=(5, 5))
     # game = Game(colors=COLORFUL, size=(15, 15))
     game = Game(csv_file='example1.csv')
