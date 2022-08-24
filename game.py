@@ -3,6 +3,7 @@ from config import *
 import agent
 from copy import deepcopy
 import search
+import GUI
 
 
 class Board:
@@ -396,8 +397,8 @@ class Game:
 
 if __name__ == "__main__":
     print("Hello World!")
-    # game = Game(csv_file='example1.csv')
-    game = Game(colors=COLORFUL)
+    game = Game(csv_file='example1.csv')
+    # game = Game(colors=COLORFUL)
 
     # import graphics
     # gui = graphics.NonogramGUI("Nonogram")
