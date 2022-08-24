@@ -75,13 +75,13 @@ class NonogramProblem(SearchProblem):
 
     def get_cost_of_actions(self, actions):
         # Action is the number of cells we colored to get a new state.
-        return sum(action.number for action in actions)
+        return sum(action.length for action in actions)
 
 
 from game import *
 
-
 # todo - fix the design and the problems that Ibraheem made
+
 
 def brute_force(board):
     """
@@ -145,9 +145,7 @@ def _check_move_helper_with_constraint_check(board, row_id, flipped=False):
     # constraint:
     curr_constraint_id = 0
     curr_constraint = constraints_for_row[curr_constraint_id]
-    curr_num_of_cells_to_fill = curr_constraint.number
-    # if curr_num_of_cells_to_fill is None:
-    #     return True
+    curr_num_of_cells_to_fill = curr_constraint.length
     curr_constraint_color = curr_constraint.color
     curr_constraint_status = curr_constraint.completed
 
@@ -205,7 +203,7 @@ def _check_move_helper_with_constraint_check(board, row_id, flipped=False):
                 curr_constraint_id += 1
                 if curr_constraint_id < len(constraints_for_row):
                     curr_constraint = constraints_for_row[curr_constraint_id]
-                    curr_num_of_cells_to_fill = curr_constraint.number
+                    curr_num_of_cells_to_fill = curr_constraint.length
                     curr_constraint_color = curr_constraint.color
 
                 else:
