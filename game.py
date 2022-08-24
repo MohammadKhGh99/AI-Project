@@ -7,6 +7,7 @@ import search
 import GUI
 from typing import Dict, List
 
+
 class Cell:
     """
     the cells of the board. each cell has a color: WHITE, Black or RED. (DEFAULT=WHITE)
@@ -17,19 +18,20 @@ class Cell:
 
         self.current_state = 0  # check: idk what is this | me neither
 
-        # i'll try if this help me:
+        # i'll try if this help me: OK
         self.row = row_id
         self.col = col_id
 
     def __str__(self):
         return str(self.color)
 
+
 class Constraint:
     """
     This class describes the constraints cells with number, status and color (Black, Red).
     """
-    # def __init__(self, constraint, constraint_type, row_or_col_id, order):
     def __init__(self, constraint):
+        # todo - add the situation if the constraint is empty or not?
         try:
             self.length = int(constraint[:-1])
         except Exception:
@@ -46,11 +48,6 @@ class Constraint:
         self.completed = False
         self.status = NOT_COMPLETE
 
-        # i'll try if this help me:
-        # self.constraint_type = constraint_type
-        # self.row_or_col_id = row_or_col_id
-        # self.order = order
-
     def __str__(self):
         c = 'b' if self.color == BLACK else 'r'
         return str(self.length) + c
@@ -58,10 +55,12 @@ class Constraint:
     def __len__(self):
         return len(self.__str__())
 
+
 class Board:
 
     # delete - board argument, it's just for testing bro!
-    def __init__(self, rows_constraints: List[List[Constraint]], cols_constraints: List[List[Constraint]], randomly=False, size=(5, 5), board=None):
+    def __init__(self, rows_constraints: List[List[Constraint]], cols_constraints: List[List[Constraint]],
+                 randomly=False, size=(5, 5), board=None):
         self.rows_constraints = rows_constraints
         self.cols_constraints = cols_constraints
 
@@ -73,9 +72,7 @@ class Board:
 
         self.board = board if board else [[Cell(r, c) for c in range(self.num_cols)] for r in range(self.num_rows)]
         # todo i guess now to have same cells we need to flip this board manually
-        self.flipped = [[Cell(c,r) for r in range(self.num_rows)] for c in range(self.num_cols)]
-
-
+        self.flipped = [[Cell(c, r) for r in range(self.num_rows)] for c in range(self.num_cols)]
 
     def fill(self, r, c, color):
         self.board[r][c].color = color
@@ -138,6 +135,7 @@ class Board:
                 else:
                     break
         return child
+
 
 class Game:
     def __init__(self, csv_file=None, rows_constraints=None, cols_constraints=None, colors=BLACK_WHITE,
@@ -205,7 +203,6 @@ class Game:
             for i, con in enumerate(row.split('-')):
                 small_row_constraints.append(Constraint(con, ROWS, row_id, i))
             temp_rows_constraints.append(small_row_constraints)
-
 
         # remove the '-' between each constraint and put it in a cell in a list of a column constraints.
         # temp_cols_constraints = [list(map(lambda x: Constraint(x), col.split('-'))) for col in cols_constraints]
@@ -421,7 +418,7 @@ class Game:
 
 if __name__ == "__main__":
     print("Hello World!")
-    
+
     # game = Game(colors=COLORFUL, size=(2, 2))
     # game = Game(colors=COLORFUL, size=(5, 5))
     # game = Game(colors=COLORFUL, size=(15, 15))
