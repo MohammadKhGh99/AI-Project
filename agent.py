@@ -71,7 +71,6 @@ class NonogramProblem(SearchProblem):
             if child is not None:
                 constraint = self.board.cols_constraints[constraint_coord[0]][constraint_coord[1]]
                 successors.append((child, constraint, abs(constraint.number - state.num_rows)))
-                print(child.print_board())
 
         return successors
 
@@ -169,6 +168,7 @@ def _check_move_helper_with_constraint_check(board, row_id, flipped=False):
 
         if cell_color == EMPTY:  # we didn't fill it yet
             empty_flag = True
+            blocked_color = EMPTY  # Nothing blocked after an empty cell.
             cell_id += 1
             continue
 
@@ -202,6 +202,7 @@ def _check_move_helper_with_constraint_check(board, row_id, flipped=False):
             elif curr_num_of_cells_to_fill == 0:
                 must_color = EMPTY  # nothing is a must
                 blocked_color = curr_constraint_color
+                constraints_for_row[curr_constraint_id].completed = True  # Change the status for a future checks.
 
                 # move to next constraint
                 curr_constraint_id += 1

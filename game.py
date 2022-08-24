@@ -24,12 +24,11 @@ class Board:
         self.flipped = [[Cell() for _ in range(self.num_rows)] for _ in range(self.num_cols)]
 
     def fill(self, r, c, color):
-        if r > self.num_rows or c > self.num_cols or self.get_cell(r, c).color != EMPTY:
-            return False
-        self.board[r][c].color = color
-        self.flipped[c][r].color = color
-
-        return True
+        if r < self.num_rows and c < self.num_cols and self.get_cell(r, c).color == EMPTY:
+            self.board[r][c].color = color
+            self.flipped[c][r].color = color
+            return True
+        return False
 
     def get_cell(self, r, c, flipped=False):
         return self.board[r][c] if not flipped else self.flipped[c][r]
@@ -398,7 +397,7 @@ class Game:
         nonogram_problem = agent.NonogramProblem(self.board)
         # print(search.breadth_first_search(nonogram_problem))
         print("DFS")
-        print(search.depth_first_search(nonogram_problem))
+        print(search.depth_first_search(nonogram_problem).print_board())
         # print("A*")
         # print(search.a_star_search(problem=nonogram_problem))
 
