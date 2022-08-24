@@ -42,14 +42,12 @@ class SearchProblem:
         raise Exception("Not implemented.")
 
 
-
 class NonogramProblem(SearchProblem):
     """
         Class that defining the nonogram game as a problem.
     """
     def __init__(self, board):
         self.board = board
-
 
     def get_start_state(self):
         return self.board
@@ -117,22 +115,22 @@ def _brute_force_helper(board, row_id, col_id):
     return
 
 
-def check_move(board, row_id, col_id):
+def check_move(board, row_id, col_id, brute_force=True):
     """
     check if the move in this row_id/col_id is legit.
     """
     # checking for the rows
-    if not _check_move_helper_with_constraint_check(board, col_id):
+    if not _check_move_helper_with_constraint_check(board, col_id, flipped=False, brute_force=brute_force):
         return False
 
     # checking for the columns (as rows)
-    if not _check_move_helper_with_constraint_check(board, row_id, flipped=True):
+    if not _check_move_helper_with_constraint_check(board, row_id, flipped=True, brute_force=brute_force):
         return False
 
     return True
 
 
-def _check_move_helper_with_constraint_check(board, row_id, flipped=False):
+def _check_move_helper_with_constraint_check(board, row_id, flipped=False, brute_force=True):
     """
     check if the move in this row_id/col_id is legit.
     return True if this move works and legit, false otherwise
@@ -202,7 +200,8 @@ def _check_move_helper_with_constraint_check(board, row_id, flipped=False):
             elif curr_num_of_cells_to_fill == 0:
                 must_color = EMPTY  # nothing is a must
                 blocked_color = curr_constraint_color
-                constraints_for_row[curr_constraint_id].completed = True  # Change the status for a future checks.
+                if not brute_force:
+                    constraints_for_row[curr_constraint_id].completed = True  # Change the status for a future checks.
 
                 # move to next constraint
                 curr_constraint_id += 1

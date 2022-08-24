@@ -24,11 +24,52 @@ class Board:
         self.flipped = [[Cell() for _ in range(self.num_rows)] for _ in range(self.num_cols)]
 
     def fill(self, r, c, color):
-        if r < self.num_rows and c < self.num_cols and self.get_cell(r, c).color == EMPTY:
+        if r < self.num_rows and c < self.num_cols:
             self.board[r][c].color = color
             self.flipped[c][r].color = color
             return True
         return False
+
+    def fill_n_cells(self, con_i, con_j, start_index, constraint_type=COLUMNS):
+        """
+        Function fill the board, in a valid way. It fills n cells according to the given constraint.
+        constraint_type: on which constraints list we will work: columns or rows.
+        con_i: the index of the working constraints group.
+        con_j: the index of the working constraint in the group.
+        start_index: from where to start to fill (row/column)
+        """
+        child = deepcopy(self)
+        if constraint_type:
+            constraint = child.cols_constraints[con_i][con_j]
+            for i in range(start_index):
+                # Assign the cells that must be white.
+                if child.get_cell(i, con_i).color == EMPTY:
+                    child.fill(i, con_i, WHITE)
+
+            for i in range(constraint.number):
+                if child.fill(i + start_index, con_i, constraint.color) \
+                        and agent.check_move(child, con_i, i + start_index, brute_force=False):
+                    continue
+                else:
+                    return None
+        # Todo make it support the row constrains
+        # else:
+        #     constraint = child.rows_constraints[con_i][con_j]
+        #     for i in range(constraint.number):
+        #         if child.fill(con_i, i + start_index, constraint.color) \
+        #                 and agent.check_move(child, con_i, i + start_index):
+        #             continue
+        #         else:
+        #             return None
+        #     for i in range(start_index):
+        #         # Assign the cells that must be white.
+        #         if child.get_cell(con_i, i).color == EMPTY:
+        #             child.fill(con_i, i, WHITE)
+        child.complete_constraints(con_i, con_j, constraint_type)
+        return child
+
+    def switch_empty_to(self):
+        pass
 
     def get_cell(self, r, c, flipped=False):
         return self.board[r][c] if not flipped else self.flipped[c][r]
@@ -132,35 +173,6 @@ class Board:
         else:
             self.rows_constraints[con_i][con_j].completed = True
 
-    def fill_n_cells(self, con_i, con_j, start_index, constraint_type=COLUMNS):
-        """
-        Function fill the board, in a valid way. It fills n cells according to the given constraint.
-        constraint_type: on which constraints list we will work: columns or rows.
-        con_i: the index of the working constraints group.
-        con_j: the index of the working constraint in the group.
-        start_index: from where to start to fill (row/column)
-        """
-        child = deepcopy(self)
-        if constraint_type:
-            constraint = child.cols_constraints[con_i][con_j]
-            for i in range(constraint.number):
-                if child.fill(i + start_index, con_i, constraint.color) \
-                        and agent.check_move(child, con_i, i + start_index):
-                    continue
-                else:
-                    return None
-
-        else:
-            constraint = child.rows_constraints[con_i][con_j]
-            for i in range(constraint.number):
-                if child.fill(con_i, i + start_index, constraint.color) \
-                        and agent.check_move(child, con_i, i + start_index):
-                    continue
-                else:
-                    return None
-        child.complete_constraints(con_i, con_j, constraint_type)
-        return child
-
 
 class Constraint:
     """
@@ -186,7 +198,8 @@ class Constraint:
                 self.color = BLACK if self.c.lower() == 'b' else RED
 
     def __str__(self):
-        return str(self.number) + self.c
+        str_comp = "T" if self.completed else "F"
+        return str(self.number) + self.c + str_comp
 
     def __len__(self):
         return len(self.__str__())
@@ -391,8 +404,7 @@ class Game:
     def run(self):
         # runs the brute force algorithm on the board.
         print("Brute Force")
-        # self.board = agent.brute_force(self.board)
-        # print(self.board.print_board())
+        # print(agent.brute_force(deepcopy(self.board)).print_board())
         # print("BFS")
         nonogram_problem = agent.NonogramProblem(self.board)
         # print(search.breadth_first_search(nonogram_problem))

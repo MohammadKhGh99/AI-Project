@@ -14,6 +14,7 @@ def search_helper(problem, fringe):
                 temp = current[1] + [child[1]]
                 fringe.push((child[0], temp))
             visited.add(current[0])
+            print(child[0].print_board())
     return -1  # Error
 
 
@@ -82,9 +83,10 @@ def a_star_search(problem, heuristic=null_heuristic):
             for child in problem.get_successors(current.state):
                 temp = current.actions + [child[1]]
                 child_cost = problem.get_cost_of_actions(current.actions) + child[2]
-                heuristic_cost = child_cost + heuristic(child[0], problem)
+                heuristic_cost = child_cost + heuristic(child[0], problem)  # todo heuristic
                 fringe.push(StateAndActions(child[0], temp), heuristic_cost)
             visited.add(current.state)
+
 
 def local_beam_search(k_problems, k):
     """
@@ -108,7 +110,6 @@ def local_beam_search(k_problems, k):
     if len(k_successors) == 0:
         return None
     return local_beam_search(k_successors, k)
-
 
 
 # Abbreviations
