@@ -51,6 +51,8 @@ class Constraint:
     def __str__(self):
         c = 'b' if self.color == BLACK else 'r'
         return str(self.length) + c
+        # str_comp = "T" if self.completed else "F"
+        # return str(self.number) + self.c + str_comp
 
     def __len__(self):
         return len(self.__str__())
@@ -75,11 +77,152 @@ class Board:
         self.flipped = [[Cell(c, r) for r in range(self.num_rows)] for c in range(self.num_cols)]
 
     def fill(self, r, c, color):
-        self.board[r][c].color = color
-        self.flipped[c][r].color = color
+        if r < self.num_rows and c < self.num_cols:
+            self.board[r][c].color = color
+            self.flipped[c][r].color = color
+            return True
+        return False
+
+    # todo - BEFORE MERGING WITH ADAM
+    # def fill_n_cells(self, con_i, con_j, start_index, constraint_type=COLUMNS):
+    #     """
+    #     Function fill the board, in a valid way. It fills n cells according to the given constraint.
+    #     constraint_type: on which constraints list we will work: columns or rows.
+    #     con_i: the index of the working constraints group.
+    #     con_j: the index of the working constraint in the group.
+    #     start_index: from where to start to fill (row/column)
+    #     """
+    #     child = deepcopy(self)
+    #     child.complete_constraints(constraint_type, con_i, con_j)
+    #     if constraint_type:
+    #         constraint = child.cols_constraints[con_i][con_j]
+    #         for i in range(constraint.length):
+    #             if agent.check_move(child, i + start_index, con_i):
+    #                 child.fill(i + start_index, con_i, constraint.color)
+    #             else:
+    #                 break
+    #     else:
+    #         constraint = child.rows_constraints[con_i][con_j]
+    #         for i in range(constraint.length):
+    #             if agent.check_move(child, con_i, i + start_index):
+    #                 child.fill(con_i, i + start_index, constraint.color)
+    #             else:
+    #                 break
+    #     return child
+
+    def fill_n_cells(self, con_i, con_j, start_index, constraint_type=COLUMNS):
+        """
+        Function fill the board, in a valid way. It fills n cells according to the given constraint.
+        constraint_type: on which constraints list we will work: columns or rows.
+        con_i: the index of the working constraints group.
+        con_j: the index of the working constraint in the group.
+        start_index: from where to start to fill (row/column)
+        """
+        child = deepcopy(self)
+        if constraint_type:
+            constraint = child.cols_constraints[con_i][con_j]
+            for i in range(start_index):
+                # Assign the cells that must be white.
+                if child.get_cell(i, con_i).color == EMPTY:
+                    child.fill(i, con_i, WHITE)
+
+            for i in range(constraint.length):
+                if child.fill(i + start_index, con_i, constraint.color) \
+                        and agent.check_move(child, con_i, i + start_index, brute_force=False):
+                    continue
+                else:
+                    return None
+        # Todo make it support the row constrains
+        # else:
+        #     constraint = child.rows_constraints[con_i][con_j]
+        #     for i in range(constraint.number):
+        #         if child.fill(con_i, i + start_index, constraint.color) \
+        #                 and agent.check_move(child, con_i, i + start_index):
+        #             continue
+        #         else:
+        #             return None
+        #     for i in range(start_index):
+        #         # Assign the cells that must be white.
+        #         if child.get_cell(con_i, i).color == EMPTY:
+        #             child.fill(con_i, i, WHITE)
+        child.complete_constraints(con_i, con_j, constraint_type)
+        return child
+
+    def switch_empty_to(self):
+        pass
 
     def get_cell(self, r, c, flipped=False):
         return self.board[r][c] if not flipped else self.flipped[c][r]
+
+    def print_board(self):
+        # if we got None from an agent, this means that there is no solution for the board.
+        # if self.board is None:
+        #     return None
+        text = ""
+
+        # gets the longest row's length
+        max_row, max_col = None, None
+        m, n = 0, 0
+        for row in self.rows_constraints:
+            if len(row) > m:
+                m = len(row)
+                max_row = row
+        # gets the longest column's length
+        for col in self.cols_constraints:
+            if len(col) > n:
+                n = len(col)
+
+        # this thing just for the design 😁.
+        text += " " * (len(max_row) * 6)
+        row_space = text
+        text += ("-" * (6 * self.num_cols + 2)) + f"\n{row_space}"
+        text += "|| "
+
+        # adding the column constraints.
+        for i in range(n - 1, -1, -1):
+            for col in self.cols_constraints:
+                cur = col[::-1]
+                if i >= len(cur):
+                    text += "    | "
+                elif len(cur[i]) == 2:
+                    text += f"{cur[i]}  | "
+                elif len(cur[i]) == 3:
+                    text += f"{cur[i]} | "
+
+            # adding a line separator between the column constraints and the board itself.
+            if i == 0:
+                text += f"\n" + ("=" * (len(row_space) + self.num_cols * 6 + 2)) + f"\n{row_space}| "
+            else:
+                text += f"\n{row_space}" + ("-" * (self.num_cols * 6 + 2)) + f"\n{row_space}|| "
+        # remove the last unnecessary '|'
+        text = text[:-1]
+        text = text[:len(text) - len(row_space) - 1] + "|"
+
+        # adding the structure of each row with the current content of the board beside the rows constraints.
+        for j, row in enumerate(self.rows_constraints):
+            for i in range(m - 1, -1, -1):
+                cur = row[::-1]
+                if i >= len(cur):
+                    text += "     |"
+                elif len(cur[i]) == 2:
+                    text += f" {cur[i]}  |"
+                elif len(cur[i]) == 3:
+                    text += f" {cur[i]} |"
+            text += "|"
+            for y in self.board[j]:
+                x = str(y)
+                if int(x) == EMPTY:
+                    text += "     |"
+                elif int(x) == WHITE:
+                    text += f"  w  |"
+                elif int(x) == BLACK:
+                    text += f"  b  |"
+                elif int(x) == RED:
+                    text += f"  r  |"
+            tmp = 2 + (m + self.num_cols) * 6
+            text += "\n" + ("-" * tmp) + "\n|"
+
+        return text[:-1]
 
     def get_first_incomplete_constraint(self, constraint_type):
         """
@@ -87,10 +230,10 @@ class Board:
         constrain_type: on which constraints list we will work: columns or rows
         Return the coordinates of the incomplete constraints, None, if all constraints are completed
         """
-        if constraint_type:
-            constraints_group = self.cols_constraints
-        else:
-            constraints_group = self.rows_constraints
+        # if constraint_type:
+        constraints_group = self.cols_constraints if constraint_type else self.rows_constraints
+        # else:
+        #     constraints_group = self.rows_constraints
 
         for i in range(len(constraints_group)):
             for j in range(len(constraints_group[i])):
@@ -110,36 +253,10 @@ class Board:
         else:
             self.rows_constraints[con_i][con_j].completed = True
 
-    def fill_n_cells(self, con_i, con_j, start_index, constraint_type=COLUMNS):
-        """
-        Function fill the board, in a valid way. It fills n cells according to the given constraint.
-        constraint_type: on which constraints list we will work: columns or rows.
-        con_i: the index of the working constraints group.
-        con_j: the index of the working constraint in the group.
-        start_index: from where to start to fill (row/column)
-        """
-        child = deepcopy(self)
-        child.complete_constraints(constraint_type, con_i, con_j)
-        if constraint_type:
-            constraint = child.cols_constraints[con_i][con_j]
-            for i in range(constraint.length):
-                if agent.check_move(child, i + start_index, con_i):
-                    child.fill(i + start_index, con_i, constraint.color)
-                else:
-                    break
-        else:
-            constraint = child.rows_constraints[con_i][con_j]
-            for i in range(constraint.length):
-                if agent.check_move(child, con_i, i + start_index):
-                    child.fill(con_i, i + start_index, constraint.color)
-                else:
-                    break
-        return child
-
 
 class Game:
     def __init__(self, csv_file=None, rows_constraints=None, cols_constraints=None, colors=BLACK_WHITE,
-                 size=(5, 5), agent=None, always_solvable=True):
+                 size=(5, 5), my_agent=None, always_solvable=True):
         """
         Initializing the board of the game, we have 3 different ways:
         1) from CSV file
@@ -157,8 +274,8 @@ class Game:
                                      if COLORFUL: ^\d+[bBrR](?:-\d+[bBrR])*$    examples: 3b, 5r-15B.
 
         """
-        self.agent = agent  # check: i'm not sure what is this
-        self.state = None  # check: i'm not sure what is this
+        self.agent = my_agent
+        self.state = None
         self.always_solvable = always_solvable
         self.board = None
 
@@ -172,17 +289,13 @@ class Game:
             #       cols_constraints = ["column 1 constraint", "column 2 constraint",...,"column n constraint"]
             # this means that each one of rows_constraints and cols_constraints should be as list of strings and each
             # string is the constraint of the row in its place.
-
             self.__our_building(colors, rows_constraints, cols_constraints)
         else:
             # create a random board from giving size and color
             # in this situation the user or us will enter the colors of the Nonogram Game
             # (Back&White or Black&Red&White) and the dimensions of the board, the default size will be 5x5 and
-            # the default colors will be Black&White.
-
+            # the default colors will be Black & White.
             self.__random_building(size, colors)
-
-        # self.__flipped = list(map(list, zip(*self.board)))
 
     def __our_building(self, colors, rows_constraints, cols_constraints):
         """
@@ -195,24 +308,10 @@ class Game:
         self.colors = colors
 
         # remove the '-' between each constraint and put it in a cell in a list of a row constraints.
-        # temp_rows_constraints = [list(map(lambda x: Constraint(x), row.split('-'))) for row in rows_constraints]
-
-        temp_rows_constraints = []
-        for row_id, row in enumerate(rows_constraints):
-            small_row_constraints = []
-            for i, con in enumerate(row.split('-')):
-                small_row_constraints.append(Constraint(con, ROWS, row_id, i))
-            temp_rows_constraints.append(small_row_constraints)
+        temp_rows_constraints = [list(map(lambda x: Constraint(x), row.split('-'))) for row in rows_constraints]
 
         # remove the '-' between each constraint and put it in a cell in a list of a column constraints.
-        # temp_cols_constraints = [list(map(lambda x: Constraint(x), col.split('-'))) for col in cols_constraints]
-
-        temp_cols_constraints = []
-        for col_id, col in enumerate(cols_constraints):
-            small_col_constraints = []
-            for j, con in enumerate(col.split('-')):
-                small_col_constraints.append(Constraint(con, COLUMNS, col_id, j))
-            temp_cols_constraints.append(small_col_constraints)
+        temp_cols_constraints = [list(map(lambda x: Constraint(x), col.split('-'))) for col in cols_constraints]
 
         # build a new empty board with the given constraints.
         self.board = Board(temp_rows_constraints, temp_cols_constraints)
@@ -228,7 +327,11 @@ class Game:
 
         """
         with open(csv_file, 'r') as f:
-            lines = f.readlines()
+            all_lines = f.readlines()
+
+        # todo - this tries to take just the lines that have something in them and not empty lines.
+        # check - so check it !
+        lines = [line for line in all_lines if line.replace(' ', '') != '']
 
         self.colors = lines[3:6]
 
@@ -300,11 +403,9 @@ class Game:
 
     def __build_constraints(self, m, n):
         all_constraints = []
-        colors_lst = []
-        if self.colors == BLACK_WHITE:
-            colors_lst = ['b']
-        elif self.colors == COLORFUL:
-            colors_lst = ['b', 'r']
+        colors_lst = ['b']
+        if self.colors == COLORFUL:
+            colors_lst.append('r')
 
         for j in range(m):
             i = 0
@@ -333,76 +434,6 @@ class Game:
             all_constraints.append(constraint_lst)
         return all_constraints
 
-    def print_board(self):
-        # if we got None from an agent, this means that there is no solution for the board.
-        if self.board is None:
-            return None
-        text = ""
-
-        # gets the longest row's length
-        max_row, max_col = None, None
-        m, n = 0, 0
-        for row in self.board.rows_constraints:
-            if len(row) > m:
-                m = len(row)
-                max_row = row
-        # gets the longest column's length
-        for col in self.board.cols_constraints:
-            if len(col) > n:
-                n = len(col)
-
-        # this thing just for the design 😁.
-        text += " " * (len(max_row) * 6)
-        row_space = text
-        text += ("-" * (6 * self.board.num_cols + 2)) + f"\n{row_space}"
-        text += "|| "
-
-        # adding the column constraints.
-        for i in range(n - 1, -1, -1):
-            for col in self.board.cols_constraints:
-                cur = col[::-1]
-                if i >= len(cur):
-                    text += "    | "
-                elif len(cur[i]) == 2:
-                    text += f"{cur[i]}  | "
-                elif len(cur[i]) == 3:
-                    text += f"{cur[i]} | "
-
-            # adding a line separator between the column constraints and the board itself.
-            if i == 0:
-                text += f"\n" + ("=" * (len(row_space) + self.board.num_cols * 6 + 2)) + f"\n{row_space}| "
-            else:
-                text += f"\n{row_space}" + ("-" * (self.board.num_cols * 6 + 2)) + f"\n{row_space}|| "
-        # remove the last unnecessary '|'
-        text = text[:-1]
-        text = text[:len(text) - len(row_space) - 1] + "|"
-
-        # adding the structure of each row with the current content of the board beside the rows constraints.
-        for j, row in enumerate(self.board.rows_constraints):
-            for i in range(m - 1, -1, -1):
-                cur = row[::-1]
-                if i >= len(cur):
-                    text += "     |"
-                elif len(cur[i]) == 2:
-                    text += f" {cur[i]}  |"
-                elif len(cur[i]) == 3:
-                    text += f" {cur[i]} |"
-            text += "|"
-            for y in self.board.board[j]:
-                x = str(y)
-                if int(x) == EMPTY:
-                    text += "     |"
-                elif int(x) == WHITE:
-                    text += f"  w  |"
-                elif int(x) == BLACK:
-                    text += f"  b  |"
-                elif int(x) == RED:
-                    text += f"  r  |"
-            tmp = 2 + (m + self.board.num_cols) * 6
-            text += "\n" + ("-" * tmp) + "\n|"
-
-        return text[:-1]
-
     def run(self):
         # runs the brute force algorithm on the board.
         print("Brute Force")
@@ -411,6 +442,7 @@ class Game:
         # nonogram_problem = agent.NonogramProblem(self.board)
         # print(search.breadth_first_search(nonogram_problem))
         # print("DFS")
+        # print(search.depth_first_search(nonogram_problem).print_board())
         # print(search.depth_first_search(nonogram_problem))
         # print("A*")
         # print(search.a_star_search(problem=nonogram_problem))
@@ -432,3 +464,8 @@ if __name__ == "__main__":
     csp.run_CSP(game.board)
     game.run()
     # print(game.print_board())
+
+    # todo - for Shakra's testing
+    # print(game.board.print_board())
+    # game.run()
+    # print(game.board.print_board())

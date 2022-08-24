@@ -7,12 +7,14 @@ def search_helper(problem, fringe):
     while not fringe.isEmpty():
         current = fringe.pop()
         if problem.is_goal_state(current[0]):
-            return current[1]
+            # todo - was return current[1] before Shakra
+            return current[0]
         elif current[0] not in visited:
             for child in problem.get_successors(current[0]):
                 temp = current[1] + [child[1]]
                 fringe.push((child[0], temp))
             visited.add(current[0])
+            # print(child[0].print_board())
     return -1  # Error
 
 
@@ -84,6 +86,30 @@ def a_star_search(problem, heuristic=null_heuristic):
                 heuristic_cost = child_cost + heuristic(child[0], problem)
                 fringe.push(StateAndActions(child[0], temp), heuristic_cost)
             visited.add(current.state)
+
+
+def local_beam_search(k_problems, k):
+    """
+    Local beam search, starting with k-random stats, searching for a goal state in this k states.
+    If no goal state, we pick the best k-stats from all successors (of starting states), and repeat.
+    """
+    all_successors = util.PriorityQueue()
+    for problem in k_problems:
+        if problem.is_goal_state():
+            return problem
+    for problem in k_problems:
+        for successor in problem.get_successors():
+            all_successors.push(successor, -1 * (successor[0].get_cost_of_actions(successor[0].cols_constraints)))
+            # todo Adam will check this later - he said that, also he mentioned how excited he is for the video
+    k_successors = []
+    for i in range(k):
+        try:
+            k_successors.append(all_successors.pop())
+        except IndexError:
+            break
+    if len(k_successors) == 0:
+        return None
+    return local_beam_search(k_successors, k)
 
 
 # Abbreviations

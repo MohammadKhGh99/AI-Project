@@ -1,3 +1,6 @@
+from game import *
+
+
 class SearchProblem:
     """
     This class outlines the structure of a search problem, but doesn't implement
@@ -46,8 +49,7 @@ class NonogramProblem(SearchProblem):
     """
         Class that defining the nonogram game as a problem.
     """
-    def __init__(self, board):  # , constraints_row, constraints_col):
-        # self.board = Board(constraints_row, constraints_col)
+    def __init__(self, board):
         self.board = board
 
     def get_start_state(self):
@@ -59,26 +61,27 @@ class NonogramProblem(SearchProblem):
 
     def get_successors(self, state):
         successors = []
-        constraint = state.get_first_incomplete_constraint(COLUMNS)
+        constraint_coord = state.get_first_incomplete_constraint(COLUMNS)
 
-        if constraint is None:
+        if constraint_coord is None:
             # We have done all the constraints
             return successors
 
         for start_index in range(state.num_rows):
-            child = state.fill_n_cells(constraint[0], constraint[1], start_index)
+            child = state.fill_n_cells(constraint_coord[0], constraint_coord[1], start_index, COLUMNS)
             if child is not None:
-                i, j = constraint
-                successors.append((child, constraint, abs(state.board[i][j].number - state.num_rows)))
+                constraint = self.board.cols_constraints[constraint_coord[0]][constraint_coord[1]]
+                successors.append((child, constraint, abs(constraint.number - state.num_rows)))
+
+                # i, j = constraint_coord
+                # successors.append((child, constraint_coord, abs(state.board[i][j].number - state.num_rows)))
 
         return successors
 
     def get_cost_of_actions(self, actions):
         # Action is the number of cells we colored to get a new state.
-        return sum(action.length for action in actions)
+        return sum(action.length for action in actions if action.completed)
 
-
-from game import *
 
 # todo - fix the design and the problems that Ibraheem made
 
@@ -165,6 +168,8 @@ def _check_move_helper_with_constraint_check(board, row_id, flipped=False):
 
         if cell_color == EMPTY:  # we didn't fill it yet
             empty_flag = True
+            # todo - Shakra
+            blocked_color = EMPTY  # Nothing blocked after an empty cell.
             cell_id += 1
             continue
 
@@ -198,6 +203,8 @@ def _check_move_helper_with_constraint_check(board, row_id, flipped=False):
             elif curr_num_of_cells_to_fill == 0:
                 must_color = EMPTY  # nothing is a must
                 blocked_color = curr_constraint_color
+                if not brute_force:
+                    constraints_for_row[curr_constraint_id].completed = True  # Change the status for a future checks.
 
                 # move to next constraint
                 curr_constraint_id += 1
