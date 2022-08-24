@@ -1,5 +1,7 @@
 # CSP
+import game
 from game import *
+
 from abc import abstractmethod
 from typing import Dict, List
 
@@ -36,8 +38,10 @@ class CSP:
                 return False
         return True
 
-    def backtracking_search_rec(self, assignment={}):
+    def backtracking_search_rec(self, assignment=None):
         # assignment is complete if every variable is assigned (our base case)
+        if assignment is None:
+            assignment = {}
         if len(assignment) == len(self.variables):
             return assignment
 
@@ -112,6 +116,7 @@ def get_variables_and_domains(board):
     # get all cells in board
     for row in board.board:
         for cell in row:
+
             variables.append(cell)
             domains[cell] = all_colors
 
@@ -143,12 +148,14 @@ def get_constrains(board):
                 constraints.append(ColBlockNotEqualConstraint(col_constraints[k], col_constraints[k + 1]))
             k += 1
 
+
     # Rows color contained check
     i = 0
     while i < board.num_rows:  # 3amodi
         j = 0
         while j < board.num_cols:  # ofoke
-            constraints.append(RowColorContained(board.board[i][j], *board.rows_constraints[i]))
+            if board.rows_constraints[i]:
+                constraints.append(RowColorContained(board.board[i][j], *board.rows_constraints[i]))
             j += 1
         i += 1
 
@@ -157,8 +164,8 @@ def get_constrains(board):
     while i < board.num_rows:  # 3amodi
         j = 0
         while j < board.num_cols:  # ofoke
-            for constraint in board.cols_constraints[j]:
-                constraints.append(ColColorContained(board.board[i][j], constraint))
+            if board.cols_constraints[j]:
+                constraints.append(ColColorContained(board.board[i][j], *board.cols_constraints[j]))
             j += 1
         i += 1
 
@@ -170,40 +177,91 @@ def get_constrains(board):
 #############
 class RowColorContained(ConstraintForVariable):
     def __init__(self, v1, *v2):
-        super().__init__([v1, v2])
+        super().__init__([v1, *v2])
         self.cell_i_j: Cell = v1  # Cell
-        self.constraints_i_k = v2  # Constraint
+        self.tuple_constraints_i_k = v2  # Tuple Constraint
 
     def satisfied(self, assignment) -> bool:
-        if self.cell_i_j not in assignment or self.constraint_i_k not in assignment:
+        if self.cell_i_j not in assignment:
+            return True
+        assigned_constraints = [con for con in self.tuple_constraints_i_k if con in assignment]
+        if not assigned_constraints:
             return True
 
         # list of constraints
+        #Old mostly wrong
+        # intersection = []
+        # for ass_con in assigned_constraints:
+        #     if (assignment[ass_con] <= self.cell_i_j.col) and (self.cell_i_j.col < ass_con.length + assignment[ass_con]):
+        #         intersection.append(ass_con)
+        #         if ass_con.color == assignment[self.cell_i_j]:
+        #             return True
+        #
+        # for ass_con in assigned_constraints:
+        #     if ass_con.color != assignment[self.cell_i_j]:
+        #         if (assignment[ass_con] > self.cell_i_j.col) or (self.cell_i_j.col >= ass_con.length + assignment[ass_con]):
+        #             return True
+        # return False      #todo not that sure about it - i know we assigned all constraints before cells - so for the iff
+        #-------------------------------------------------#
+        #TRY 1
+        negation = []
+        for ass_con in assigned_constraints:
+            if ass_con.color == assignment[self.cell_i_j]:
+                if (assignment[ass_con] <= self.cell_i_j.col) and (self.cell_i_j.col < ass_con.length + assignment[ass_con]):
+                    return True
+            else:
+                if (assignment[ass_con] > self.cell_i_j.col) or (self.cell_i_j.col >= ass_con.length + assignment[ass_con]):
+                    negation.append(ass_con)
 
-        if assignment[self.cell_i_j] == self.constraint_i_k.color:
-            return (assignment[self.constraint_i_k] <= self.cell_i_j.col) and \
-                   (self.cell_i_j.col < self.constraint_i_k.length + assignment[self.constraint_i_k])
-        else:
-            return (assignment[self.constraint_i_k] > self.cell_i_j.col) or \
-                   (self.cell_i_j.col >= self.constraint_i_k.length + assignment[self.constraint_i_k])
+        return len(negation) == len(assigned_constraints)
+
+        #______________________________________________
+        # TRY 2
+        # negation = []
+        # for ass_con in assigned_constraints:
+        #     if ass_con.color == assignment[self.cell_i_j] and (assignment[ass_con] <= self.cell_i_j.col) and (
+        #                 self.cell_i_j.col < ass_con.length + assignment[ass_con]):
+        #             return True
+        #     else:
+        #             negation.append(ass_con)
+        #
+        # return len(negation) == len(assigned_constraints)
 
 
 class ColColorContained(ConstraintForVariable):
-    def __init__(self, v1, v2):
-        super().__init__([v1, v2])
+    def __init__(self, v1, *v2):
+        super().__init__([v1, *v2])
         self.cell_i_j: Cell = v1  # Cell
-        self.constraint_j_k: Constraint = v2  # Constraint
+        self.tuple_constraints_j_k = v2  # Tuple Constraint
 
     def satisfied(self, assignment) -> bool:
-        if self.cell_i_j not in assignment or self.constraint_j_k not in assignment:
+        if self.cell_i_j not in assignment:
             return True
+        assigned_constraints = [con for con in self.tuple_constraints_j_k if con in assignment]
+        if not assigned_constraints:
+            return True
+        #
+        # # list of constraints
+        # for ass_con in assigned_constraints:
+        #     if (assignment[ass_con] <= self.cell_i_j.row) and (self.cell_i_j.row < ass_con.length + assignment[ass_con]):
+        #         if ass_con.color == assignment[self.cell_i_j]:
+        #             return True
+        #     else:
+        #         if ass_con.color != assignment[self.cell_i_j]:
+        #             return True
+        # return False     #todo not that sure about it - i know we assigned all constraints before cells - so for the iff
 
-        if assignment[self.cell_i_j] == self.constraint_j_k.color:
-            return (assignment[self.constraint_j_k] <= self.cell_i_j.row) and \
-                   (self.cell_i_j.row < self.constraint_j_k.length + assignment[self.constraint_j_k])
-        else:
-            return (assignment[self.constraint_j_k] > self.cell_i_j.row) or \
-                   (self.cell_i_j.row >= self.constraint_j_k.length + assignment[self.constraint_j_k])
+        # TRY 2
+        negation = []
+        for ass_con in assigned_constraints:
+            if ass_con.color == assignment[self.cell_i_j] and (assignment[ass_con] <= self.cell_i_j.row) and (
+                        self.cell_i_j.row < ass_con.length + assignment[ass_con]):
+                return True
+            else:
+                if (assignment[ass_con] > self.cell_i_j.row) or (self.cell_i_j.row >= ass_con.length + assignment[ass_con]):
+                    negation.append(ass_con)
+
+        return len(negation) == len(assigned_constraints)
 
 
 class RowBlockEqualConstraint(ConstraintForVariable):
@@ -264,6 +322,7 @@ def run_CSP(board):
     for con in the_constraints:
         our_csp.add_constraint(con)
 
-    test = our_csp.backtracking_search_rec({})
+    test = our_csp.backtracking_search_rec()
     if test:
+        test2 = our_csp.backtracking_search_rec()
         print()
