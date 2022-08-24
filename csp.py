@@ -3,14 +3,11 @@ from game import *
 from abc import abstractmethod
 from typing import Dict, List
 
-#--------------------------#
+
+# --------------------------#
 
 
-
-
-
-
-#FAKE
+# FAKE
 class ConstraintForVariable:
     def __init__(self, variables: List) -> None:
         self.variables = variables
@@ -39,7 +36,7 @@ class CSP:
                 return False
         return True
 
-    def backtracking_search_rec(self, assignment = {}):
+    def backtracking_search_rec(self, assignment={}):
         # assignment is complete if every variable is assigned (our base case)
         if len(assignment) == len(self.variables):
             return assignment
@@ -78,7 +75,8 @@ class CSP:
         """
         return unassigned
 
-#----------
+
+# ----------
 
 # in board - we can use shakra's constraints complete thing
 def is_board_filled(board):
@@ -89,7 +87,6 @@ def is_board_filled(board):
     return True
 
 
-
 def get_variables_and_domains(board):
     """
     get variables and domains for CSP.
@@ -97,26 +94,26 @@ def get_variables_and_domains(board):
     variables = []
     domains = {}
 
-    all_colors = [_ for _ in range(len(COLORS_LST) )]  # without WHITE
-    # get all cells in board
-    for row in board.board:
-        for cell in row:
-            variables.append(cell)
-            domains[cell] = all_colors
-
     # get constraint most left position (Row)
-    for row_constraints in board.rows_constraints :
+    for row_constraints in board.rows_constraints:
         for constraint in row_constraints:
-            value = list(range(board.num_cols-constraint.length + 1))
+            value = list(range(board.num_cols - constraint.length + 1))
             variables.append(constraint)
             domains[constraint] = value
 
     # get constraint most top position (Column)
     for col_constraints in board.cols_constraints:
         for constraint in col_constraints:
-            value = list(range(board.num_rows-constraint.length + 1))
+            value = list(range(board.num_rows - constraint.length + 1))
             variables.append(constraint)
             domains[constraint] = value
+
+    all_colors = [_ for _ in range(len(COLORS_LST))]
+    # get all cells in board
+    for row in board.board:
+        for cell in row:
+            variables.append(cell)
+            domains[cell] = all_colors
 
     return variables, domains
 
@@ -130,31 +127,28 @@ def get_constrains(board):
     for row_constraints in board.rows_constraints:
         k = 0
         while k < len(row_constraints) - 1:
-            if row_constraints[k].color == row_constraints[k+1].color:
-                constraints.append(RowBlockEqualConstraint(row_constraints[k],row_constraints[k+1]))
+            if row_constraints[k].color == row_constraints[k + 1].color:
+                constraints.append(RowBlockEqualConstraint(row_constraints[k], row_constraints[k + 1]))
             else:
                 constraints.append(RowBlockNotEqualConstraint(row_constraints[k], row_constraints[k + 1]))
             k += 1
-
 
     # col blocks
     for col_constraints in board.cols_constraints:
         k = 0
         while k < len(col_constraints) - 1:
-            if col_constraints[k].color == col_constraints[k+1].color:
-                constraints.append(ColBlockEqualConstraint(col_constraints[k],col_constraints[k+1]))
+            if col_constraints[k].color == col_constraints[k + 1].color:
+                constraints.append(ColBlockEqualConstraint(col_constraints[k], col_constraints[k + 1]))
             else:
                 constraints.append(ColBlockNotEqualConstraint(col_constraints[k], col_constraints[k + 1]))
             k += 1
-
 
     # Rows color contained check
     i = 0
     while i < board.num_rows:  # 3amodi
         j = 0
-        while j < board.num_cols:   # ofoke
-            for constraint in board.rows_constraints[i]:
-                constraints.append(RowColorContained(board.board[i][j], constraint))
+        while j < board.num_cols:  # ofoke
+            constraints.append(RowColorContained(board.board[i][j], *board.rows_constraints[i]))
             j += 1
         i += 1
 
@@ -162,54 +156,54 @@ def get_constrains(board):
     i = 0
     while i < board.num_rows:  # 3amodi
         j = 0
-        while j < board.num_cols:   # ofoke
+        while j < board.num_cols:  # ofoke
             for constraint in board.cols_constraints[j]:
-                    constraints.append(ColColorContained(board.board[i][j], constraint))
+                constraints.append(ColColorContained(board.board[i][j], constraint))
             j += 1
         i += 1
 
     return constraints
 
 
-
 ############
 # ALL CONSTRAINTS FOR CSP OF BOARD
 #############
 class RowColorContained(ConstraintForVariable):
-    def __init__(self, v1, v2):
+    def __init__(self, v1, *v2):
         super().__init__([v1, v2])
-        self.cell_i_j: Cell = v1     # Cell
-        self.constrain_i_k: Constraint = v2   # Constraint
+        self.cell_i_j: Cell = v1  # Cell
+        self.constraints_i_k = v2  # Constraint
 
     def satisfied(self, assignment) -> bool:
-        if self.cell_i_j not in assignment or self.constrain_i_k not in assignment:
+        if self.cell_i_j not in assignment or self.constraint_i_k not in assignment:
             return True
 
-        if assignment[self.cell_i_j] == self.constrain_i_k.color:
-            return (assignment[self.constrain_i_k] <= self.cell_i_j.col) and \
-                   (self.cell_i_j.col < self.constrain_i_k.length + assignment[self.constrain_i_k])
+        # list of constraints
+
+        if assignment[self.cell_i_j] == self.constraint_i_k.color:
+            return (assignment[self.constraint_i_k] <= self.cell_i_j.col) and \
+                   (self.cell_i_j.col < self.constraint_i_k.length + assignment[self.constraint_i_k])
         else:
-            return (assignment[self.constrain_i_k] > self.cell_i_j.col) or \
-                   (self.cell_i_j.col >= self.constrain_i_k.length + assignment[self.constrain_i_k])
+            return (assignment[self.constraint_i_k] > self.cell_i_j.col) or \
+                   (self.cell_i_j.col >= self.constraint_i_k.length + assignment[self.constraint_i_k])
 
 
 class ColColorContained(ConstraintForVariable):
     def __init__(self, v1, v2):
         super().__init__([v1, v2])
-        self.cell_i_j: Cell = v1     # Cell
-        self.constrain_j_k: Constraint = v2   # Constraint
+        self.cell_i_j: Cell = v1  # Cell
+        self.constraint_j_k: Constraint = v2  # Constraint
 
     def satisfied(self, assignment) -> bool:
-        if self.cell_i_j not in assignment or self.constrain_j_k not in assignment:
+        if self.cell_i_j not in assignment or self.constraint_j_k not in assignment:
             return True
 
-        if assignment[self.cell_i_j] == self.constrain_j_k.color:
-            return (assignment[self.constrain_j_k] <= self.cell_i_j.row) and \
-                   (self.cell_i_j.row < self.constrain_j_k.length + assignment[self.constrain_j_k])
+        if assignment[self.cell_i_j] == self.constraint_j_k.color:
+            return (assignment[self.constraint_j_k] <= self.cell_i_j.row) and \
+                   (self.cell_i_j.row < self.constraint_j_k.length + assignment[self.constraint_j_k])
         else:
-            return (assignment[self.constrain_j_k] > self.cell_i_j.row) or \
-                   (self.cell_i_j.row >= self.constrain_j_k.length + assignment[self.constrain_j_k])
-
+            return (assignment[self.constraint_j_k] > self.cell_i_j.row) or \
+                   (self.cell_i_j.row >= self.constraint_j_k.length + assignment[self.constraint_j_k])
 
 
 class RowBlockEqualConstraint(ConstraintForVariable):
@@ -258,7 +252,6 @@ class ColBlockNotEqualConstraint(ConstraintForVariable):
         if self.c_i_k not in assignment or self.c_i_k_1 not in assignment:
             return True
         return self.c_i_k.length + assignment[self.c_i_k] <= assignment[self.c_i_k_1]
-
 
 
 def run_CSP(board):
