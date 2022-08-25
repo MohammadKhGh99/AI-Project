@@ -52,9 +52,9 @@ class Constraint:
 
     def __str__(self):
         c = 'b' if self.color == BLACK else 'r'
-        return str(self.length) + c
-        # str_comp = "T" if self.completed else "F"
-        # return str(self.number) + self.c + str_comp
+        # return str(self.length) + c
+        str_comp = "T" if self.completed else "F"
+        return str(self.length) + c + str_comp
 
     def __len__(self):
         return len(self.__str__())
@@ -79,41 +79,14 @@ class Board:
         self.flipped = [[Cell(c, r) for r in range(self.num_rows)] for c in range(self.num_cols)]
 
     def fill(self, r, c, color):
-        time.sleep(1)
-        sys.stdout.flush()
+        # time.sleep(1)
+        # sys.stdout.flush()
         if r < self.num_rows and c < self.num_cols:
             self.board[r][c].color = color
             self.flipped[c][r].color = color
-            print(self.print_board())
+            # print(self.print_board())
             return True
         return False
-
-    # todo - BEFORE MERGING WITH ADAM
-    # def fill_n_cells(self, con_i, con_j, start_index, constraint_type=COLUMNS):
-    #     """
-    #     Function fill the board, in a valid way. It fills n cells according to the given constraint.
-    #     constraint_type: on which constraints list we will work: columns or rows.
-    #     con_i: the index of the working constraints group.
-    #     con_j: the index of the working constraint in the group.
-    #     start_index: from where to start to fill (row/column)
-    #     """
-    #     child = deepcopy(self)
-    #     child.complete_constraints(constraint_type, con_i, con_j)
-    #     if constraint_type:
-    #         constraint = child.cols_constraints[con_i][con_j]
-    #         for i in range(constraint.length):
-    #             if agent.check_move(child, i + start_index, con_i):
-    #                 child.fill(i + start_index, con_i, constraint.color)
-    #             else:
-    #                 break
-    #     else:
-    #         constraint = child.rows_constraints[con_i][con_j]
-    #         for i in range(constraint.length):
-    #             if agent.check_move(child, con_i, i + start_index):
-    #                 child.fill(con_i, i + start_index, constraint.color)
-    #             else:
-    #                 break
-    #     return child
 
     def fill_n_cells(self, con_i, con_j, start_index, constraint_type=COLUMNS):
         """
@@ -133,7 +106,7 @@ class Board:
 
             for i in range(constraint.length):
                 if child.fill(i + start_index, con_i, constraint.color) \
-                        and agent.check_move(child, con_i, i + start_index):
+                        and agent.check_move(child, con_i, i + start_index, problem_type=SEARCH_PROBLEMS):
                     continue
                 else:
                     return None

@@ -70,17 +70,17 @@ class NonogramProblem(SearchProblem):
         for start_index in range(state.num_rows):
             child = state.fill_n_cells(constraint_coord[0], constraint_coord[1], start_index, COLUMNS)
             if child is not None:
+                actions = set()
                 constraint = self.board.cols_constraints[constraint_coord[0]][constraint_coord[1]]
-                successors.append((child, constraint, abs(constraint.number - state.num_rows)))
-
-                # i, j = constraint_coord
-                # successors.append((child, constraint_coord, abs(state.board[i][j].number - state.num_rows)))
+                for i in range(constraint.length):
+                    actions.add((start_index + i, constraint_coord[0]))
+                successors.append((child, actions, abs(constraint.length - state.num_rows)))
 
         return successors
 
     def get_cost_of_actions(self, actions):
-        # Action is the number of cells we colored to get a new state.
-        return sum(action.length for action in actions if action.completed)
+        # Actions are a set of cell's coordinates we colored to get a new state.
+        return len(actions)
 
 
 # todo - fix the design and the problems that Ibraheem made
@@ -119,22 +119,22 @@ def _brute_force_helper(board, row_id, col_id):
     return
 
 
-def check_move(board, row_id, col_id):
+def check_move(board, row_id, col_id, problem_type=BRUTE_FORCE):
     """
     check if the move in this row_id/col_id is legit.
     """
     # checking for the rows
-    if not _check_move_helper_with_constraint_check(board, col_id):
+    if not _check_move_helper_with_constraint_check(board, col_id, flipped=False, problem_type=problem_type):
         return False
 
     # checking for the columns (as rows)
-    if not _check_move_helper_with_constraint_check(board, row_id, flipped=True):
+    if not _check_move_helper_with_constraint_check(board, row_id, flipped=True, problem_type=problem_type):
         return False
 
     return True
 
 
-def _check_move_helper_with_constraint_check(board, row_id, flipped=False):
+def _check_move_helper_with_constraint_check(board, row_id, flipped=False, problem_type=BRUTE_FORCE):
     """
     check if the move in this row_id/col_id is legit.
     return True if this move works and legit, false otherwise
@@ -168,7 +168,6 @@ def _check_move_helper_with_constraint_check(board, row_id, flipped=False):
 
         if cell_color == EMPTY:  # we didn't fill it yet
             empty_flag = True
-            # todo - Shakra
             blocked_color = EMPTY  # Nothing blocked after an empty cell.
             cell_id += 1
             continue
@@ -203,7 +202,8 @@ def _check_move_helper_with_constraint_check(board, row_id, flipped=False):
             elif curr_num_of_cells_to_fill == 0:
                 must_color = EMPTY  # nothing is a must
                 blocked_color = curr_constraint_color
-                if not brute_force:
+                if not problem_type:
+                    # if not brute force
                     constraints_for_row[curr_constraint_id].completed = True  # Change the status for a future checks.
 
                 # move to next constraint

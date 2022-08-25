@@ -189,16 +189,16 @@ class Game:
 
     def run(self):
         # runs the brute force algorithm on the board.
-        print("Brute Force")
-        self.board = agent.brute_force(self.board)
+        # print("Brute Force")
+        # self.board = agent.brute_force(self.board)
+        nonogram_problem = agent.NonogramProblem(self.board)
         # print("BFS")
-        # nonogram_problem = agent.NonogramProblem(self.board)
-        # print(search.breadth_first_search(nonogram_problem))
+        # print(search.breadth_first_search(nonogram_problem).print_board())
         # print("DFS")
         # print(search.depth_first_search(nonogram_problem).print_board())
         # print(search.depth_first_search(nonogram_problem))
-        # print("A*")
-        # print(search.a_star_search(problem=nonogram_problem))
+        print("A*")
+        print(search.a_star_search(problem=nonogram_problem).print_board())
 
 
 if __name__ == "__main__":
