@@ -102,16 +102,16 @@ def local_beam_search(problem, k_states, k):
     all_successors = util.PriorityQueue()
     for current in k_states:
         if problem.is_goal_state(current.state):
-            return problem
+            return current.state
     for current in k_states:
-        for successor in problem.state.get_successors(current.state):
+        for successor in problem.get_successors(current.state):
             visited_coords = False
             for coord in successor[1]:
                 if coord in current.actions:
                     visited_coords = True
             if not visited_coords:
                 successor[1].update(current.actions)
-                priority = problem.get_cost_of_actions(successor[1])
+                priority = problem.get_cost_of_actions(successor[0])
                 all_successors.push(StateAndActions(successor[0], successor[1]), priority)
             # todo Adam will check this later - he said that, also he mentioned how excited he is for the video
 

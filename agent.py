@@ -70,7 +70,7 @@ class NonogramProblem(SearchProblem):
             child = state.fill_n_cells(constraint_coord[0], constraint_coord[1], start_index, COLUMNS)
             if child is not None:
                 actions = set()
-                constraint = self.board.cols_constraints[constraint_coord[0]][constraint_coord[1]]
+                constraint = state.cols_constraints[constraint_coord[0]][constraint_coord[1]]
                 for i in range(constraint.length):
                     actions.add((start_index + i, constraint_coord[0]))
                 successors.append((child, actions))
@@ -114,7 +114,7 @@ class NonogramCells(SearchProblem):
             child = state.fill_n_cells(constraint_coord[0], constraint_coord[1], start_index, COLUMNS)
             if child is not None:
                 actions = set()
-                constraint = self.board.cols_constraints[constraint_coord[0]][constraint_coord[1]]
+                constraint = state.cols_constraints[constraint_coord[0]][constraint_coord[1]]
                 for i in range(constraint.length):
                     actions.add((start_index + i, constraint_coord[0]))
                 successors.append((child, actions))
