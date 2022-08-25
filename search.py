@@ -2,19 +2,20 @@ import util
 
 
 def search_helper(problem, fringe):
-    fringe.push((problem.get_start_state(), []))
-    visited = set()
+    fringe.push((problem.get_start_state(), set()))
     while not fringe.isEmpty():
         current = fringe.pop()
         if problem.is_goal_state(current[0]):
-            # todo - was return current[1] before Shakra
             return current[0]
-        elif current[0] not in visited:
-            for child in problem.get_successors(current[0]):
-                temp = current[1] + [child[1]]
-                fringe.push((child[0], temp))
-            visited.add(current[0])
-            # print(child[0].print_board())
+        for child in problem.get_successors(current[0]):
+            check_coords = False
+            for coord in child[1]:
+                if coord in current[1]:
+                    check_coords = True
+            if not check_coords:
+                # if we have a new board.
+                child[1].update(current[1])
+                fringe.push((child[0], child[1]))
     return -1  # Error
 
 
@@ -72,19 +73,19 @@ def a_star_search(problem, heuristic=null_heuristic):
     """
     "*** YOUR CODE HERE ***"
     fringe = util.PriorityQueue()
-    root = StateAndActions(problem.get_start_state(), [])
+    root = StateAndActions(problem.get_start_state(), set())
     fringe.push(root, 0)
     visited = set()
     while not fringe.isEmpty():
         current = fringe.pop()
         if problem.is_goal_state(current.state):
-            return current.actions
+            return current.state
         elif current.state not in visited:
             for child in problem.get_successors(current.state):
-                temp = current.actions + [child[1]]
+                child[1].update(current.actions)
                 child_cost = problem.get_cost_of_actions(current.actions) + child[2]
                 heuristic_cost = child_cost + heuristic(child[0], problem)
-                fringe.push(StateAndActions(child[0], temp), heuristic_cost)
+                fringe.push(StateAndActions(child[0], child[1]), heuristic_cost)
             visited.add(current.state)
 
 

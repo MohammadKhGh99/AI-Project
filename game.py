@@ -31,6 +31,7 @@ class Game:
         self.state = None
         self.always_solvable = always_solvable
         self.board = None
+        self.gui = GUI.GUI()
 
         if csv_file:
             # create a board from csv file.
@@ -67,7 +68,7 @@ class Game:
         temp_cols_constraints = [list(map(lambda x: Constraint(x), col.split('-'))) for col in cols_constraints]
 
         # build a new empty board with the given constraints.
-        self.board = Board(temp_rows_constraints, temp_cols_constraints)
+        self.board = Board(temp_rows_constraints, temp_cols_constraints, gui=self.gui)
 
     def __csv_building(self, csv_file):
         """
@@ -99,7 +100,7 @@ class Game:
         temp_rows_constraints = list(map(lambda l: [Constraint(x) for x in l], temp_rows_constraints))
 
         # build the board as empty board.# build the board as empty board.
-        self.board = Board(temp_rows_constraints, temp_cols_constraints)
+        self.board = Board(temp_rows_constraints, temp_cols_constraints, gui=self.gui)
 
     def __random_building(self, size, colors):
         """
@@ -152,7 +153,7 @@ class Game:
                             col_constraints.append(Constraint(str(seq) + cur_color))
                 temp_cols_constraints.append(col_constraints)
 
-        self.board = Board(temp_rows_constraints, temp_cols_constraints, randomly=True, size=size)
+        self.board = Board(temp_rows_constraints, temp_cols_constraints, randomly=True, size=size, gui=self.gui)
 
     def __build_constraints(self, m, n):
         all_constraints = []
@@ -192,14 +193,14 @@ class Game:
         print("Brute Force")
         self.board = agent.brute_force(self.board)
         # print("BFS")
-        # nonogram_problem = agent.NonogramProblem(self.board)
+        nonogram_problem = agent.NonogramProblem(self.board)
+        # print(search.breadth_first_search(nonogram_problem).print_board())
         # print(search.breadth_first_search(nonogram_problem))
         # print("DFS")
         # print(search.depth_first_search(nonogram_problem).print_board())
         # print(search.depth_first_search(nonogram_problem))
-        # print("A*")
-        # print(search.a_star_search(problem=nonogram_problem))
-
+        print("A*")
+        print(search.a_star_search(problem=nonogram_problem).print_board())
 
 if __name__ == "__main__":
     print("Hello World!")

@@ -23,6 +23,16 @@ class Cell:
     def __str__(self):
         return str(self.color)
 
+    def __repr__(self):
+        if self.color == EMPTY:
+            return ' '
+        elif self.color == WHITE:
+            return 'w'
+        elif self.color == BLACK:
+            return 'b'
+        elif self.color == RED:
+            return 'r'
+
 
 class Constraint:
     """
@@ -64,9 +74,12 @@ class Board:
 
     # delete - board argument, it's just for testing bro!
     def __init__(self, rows_constraints: List[List[Constraint]], cols_constraints: List[List[Constraint]],
-                 randomly=False, size=(5, 5), board=None):
+                 randomly=False, size=(5, 5), board=None, gui=None):
         self.rows_constraints = rows_constraints
         self.cols_constraints = cols_constraints
+        self.gui = gui
+        self.to_print = ""
+        self.__cells_locations = []
 
         if not randomly:
             self.num_rows = len(self.rows_constraints)
@@ -75,45 +88,23 @@ class Board:
             self.num_rows, self.num_cols = size
 
         self.board = board if board else [[Cell(r, c) for c in range(self.num_cols)] for r in range(self.num_rows)]
-        # todo i guess now to have same cells we need to flip this board manually
+        # todo i guess now to have same cells we need to flip this board manually - DONE (I think?)
         self.flipped = [[Cell(c, r) for r in range(self.num_rows)] for c in range(self.num_cols)]
+
+        self.to_print = self.init_board_print()
 
     def fill(self, r, c, color):
         time.sleep(1)
-        sys.stdout.flush()
+        # sys.stdout.flush()
         if r < self.num_rows and c < self.num_cols:
             self.board[r][c].color = color
             self.flipped[c][r].color = color
-            print(self.print_board())
+            cur = self.__cells_locations[r][c]
+            # I found that this way is faster
+            self.to_print = self.to_print[:cur] + self.board[r][c].__repr__() + self.to_print[cur + 1:]
+            self.print_board()
             return True
         return False
-
-    # todo - BEFORE MERGING WITH ADAM
-    # def fill_n_cells(self, con_i, con_j, start_index, constraint_type=COLUMNS):
-    #     """
-    #     Function fill the board, in a valid way. It fills n cells according to the given constraint.
-    #     constraint_type: on which constraints list we will work: columns or rows.
-    #     con_i: the index of the working constraints group.
-    #     con_j: the index of the working constraint in the group.
-    #     start_index: from where to start to fill (row/column)
-    #     """
-    #     child = deepcopy(self)
-    #     child.complete_constraints(constraint_type, con_i, con_j)
-    #     if constraint_type:
-    #         constraint = child.cols_constraints[con_i][con_j]
-    #         for i in range(constraint.length):
-    #             if agent.check_move(child, i + start_index, con_i):
-    #                 child.fill(i + start_index, con_i, constraint.color)
-    #             else:
-    #                 break
-    #     else:
-    #         constraint = child.rows_constraints[con_i][con_j]
-    #         for i in range(constraint.length):
-    #             if agent.check_move(child, con_i, i + start_index):
-    #                 child.fill(con_i, i + start_index, constraint.color)
-    #             else:
-    #                 break
-    #     return child
 
     def fill_n_cells(self, con_i, con_j, start_index, constraint_type=COLUMNS):
         """
@@ -133,7 +124,7 @@ class Board:
 
             for i in range(constraint.length):
                 if child.fill(i + start_index, con_i, constraint.color) \
-                        and agent.check_move(child, con_i, i + start_index):
+                        and agent.check_move(child, con_i, i + start_index, problem_type=SEARCH_PROBLEMS):
                     continue
                 else:
                     return None
@@ -159,11 +150,8 @@ class Board:
     def get_cell(self, r, c, flipped=False):
         return self.board[r][c] if not flipped else self.flipped[c][r]
 
-    def print_board(self):
-        # if we got None from an agent, this means that there is no solution for the board.
-        # if self.board is None:
-        #     return None
-        text = ""
+    def init_board_print(self):
+        self.to_print = ""
 
         # gets the longest row's length
         max_row, max_col = None, None
@@ -178,56 +166,143 @@ class Board:
                 n = len(col)
 
         # this thing just for the design 😁.
-        text += " " * (len(max_row) * 6)
-        row_space = text
-        text += ("-" * (6 * self.num_cols + 2)) + f"\n{row_space}"
-        text += "|| "
+        self.to_print += " " * (len(max_row) * 6)
+        row_space = self.to_print
+        self.to_print += ("-" * (6 * self.num_cols + 2)) + f"\n{row_space}"
+        self.to_print += "|| "
 
         # adding the column constraints.
         for i in range(n - 1, -1, -1):
-            for col in self.cols_constraints:
+            for j, col in enumerate(self.cols_constraints):
                 cur = col[::-1]
                 if i >= len(cur):
-                    text += "    | "
+                    self.to_print += "    | "
                 elif len(cur[i]) == 2:
-                    text += f"{cur[i]}  | "
+                    self.to_print += f"{cur[i]}  | "
                 elif len(cur[i]) == 3:
-                    text += f"{cur[i]} | "
+                    self.to_print += f"{cur[i]} | "
+                if j == self.num_cols - 1:
+                    self.to_print = self.to_print[:-1]
 
             # adding a line separator between the column constraints and the board itself.
             if i == 0:
-                text += f"\n" + ("=" * (len(row_space) + self.num_cols * 6 + 2)) + f"\n{row_space}| "
+                self.to_print += f"\n" + ("=" * (len(row_space) + self.num_cols * 6 + 2)) + f"\n{row_space}| "
             else:
-                text += f"\n{row_space}" + ("-" * (self.num_cols * 6 + 2)) + f"\n{row_space}|| "
+                self.to_print += f"\n{row_space}" + ("-" * (self.num_cols * 6 + 2)) + f"\n{row_space}|| "
         # remove the last unnecessary '|'
-        text = text[:-1]
-        text = text[:len(text) - len(row_space) - 1] + "|"
+        self.to_print = self.to_print[:-1]
+        self.to_print = self.to_print[:len(self.to_print) - len(row_space) - 1] + "|"
 
-        # adding the structure of each row with the current content of the board beside the rows constraints.
         for j, row in enumerate(self.rows_constraints):
             for i in range(m - 1, -1, -1):
                 cur = row[::-1]
                 if i >= len(cur):
-                    text += "     |"
+                    self.to_print += "     |"
                 elif len(cur[i]) == 2:
-                    text += f" {cur[i]}  |"
+                    self.to_print += f" {cur[i]}  |"
                 elif len(cur[i]) == 3:
-                    text += f" {cur[i]} |"
-            text += "|"
-            for y in self.board[j]:
+                    self.to_print += f" {cur[i]} |"
+
+            self.to_print += "|"
+            lst = []
+            for i, y in enumerate(self.board[j]):
                 x = str(y)
                 if int(x) == EMPTY:
-                    text += "     |"
+                    self.to_print += "     |"
                 elif int(x) == WHITE:
-                    text += f"  w  |"
+                    self.to_print += f"  w  |"
                 elif int(x) == BLACK:
-                    text += f"  b  |"
+                    self.to_print += f"  b  |"
                 elif int(x) == RED:
-                    text += f"  r  |"
+                    self.to_print += f"  r  |"
+                else:
+                    raise Exception("the board should be filled just with -1, 0, 1 and 2")
+                lst.append(len(self.to_print) - 4)
+                # print(self.to_print[len(self.to_print) - 9:len(self.to_print) - 4])
+            self.__cells_locations.append(lst)
             tmp = 2 + (m + self.num_cols) * 6
-            text += "\n" + ("-" * tmp) + "\n|"
+            self.to_print += "\n" + ("-" * tmp) + "\n|"
 
-        return text[:-1]
+        return self.to_print[:-1]
+
+    def print_board(self):
+        print(self.to_print)
+
+    # def print_board(self, m):
+        # if we got None from an agent, this means that there is no solution for the board.
+        # if self.board is None:
+        #     return None
+        # text = ""
+        #
+        # # gets the longest row's length
+        # max_row, max_col = None, None
+        # m, n = 0, 0
+        # for row in self.rows_constraints:
+        #     if len(row) > m:
+        #         m = len(row)
+        #         max_row = row
+        # # gets the longest column's length
+        # for col in self.cols_constraints:
+        #     if len(col) > n:
+        #         n = len(col)
+        #
+        # # this thing just for the design 😁.
+        # text += " " * (len(max_row) * 6)
+        # row_space = text
+        # text += ("-" * (6 * self.num_cols + 2)) + f"\n{row_space}"
+        # text += "|| "
+
+        # # adding the column constraints.
+        # for i in range(n - 1, -1, -1):
+        #     for col in self.cols_constraints:
+        #         cur = col[::-1]
+        #         if i >= len(cur):
+        #             text += "    | "
+        #         elif len(cur[i]) == 2:
+        #             text += f"{cur[i]}  | "
+        #         elif len(cur[i]) == 3:
+        #             text += f"{cur[i]} | "
+        #
+        #     # adding a line separator between the column constraints and the board itself.
+        #     if i == 0:
+        #         text += f"\n" + ("=" * (len(row_space) + self.num_cols * 6 + 2)) + f"\n{row_space}| "
+        #     else:
+        #         text += f"\n{row_space}" + ("-" * (self.num_cols * 6 + 2)) + f"\n{row_space}|| "
+        # # remove the last unnecessary '|'
+        # text = text[:-1]
+        # text = text[:len(text) - len(row_space) - 1] + "|"
+
+        # adding the structure of each row with the current content of the board beside the rows constraints.
+        # for j, row in enumerate(self.rows_constraints):
+        #     for i in range(m - 1, -1, -1):
+        #         cur = row[::-1]
+        #         if i >= len(cur):
+        #             self.to_print += "     |"
+        #         elif len(cur[i]) == 2:
+        #             self.to_print += f" {cur[i]}  |"
+        #         elif len(cur[i]) == 3:
+        #             self.to_print += f" {cur[i]} |"
+        #
+        #     self.to_print += "|"
+        #     lst = []
+        #     for i, y in enumerate(self.board[j]):
+        #         x = str(y)
+        #         if int(x) == EMPTY:
+        #             self.to_print += "     |"
+        #         elif int(x) == WHITE:
+        #             self.to_print += f"  w  |"
+        #         elif int(x) == BLACK:
+        #             self.to_print += f"  b  |"
+        #         elif int(x) == RED:
+        #             self.to_print += f"  r  |"
+        #         else:
+        #             raise Exception("the board should be filled just with -1, 0, 1 and 2")
+        #         lst.append(len(self.to_print) - 4)
+        #     self.__cells_locations.append(lst)
+        #     tmp = 2 + (m + self.num_cols) * 6
+        #     self.to_print += "\n" + ("-" * tmp) + "\n|"
+        #
+        # return self.to_print[:-1]
 
     def get_first_incomplete_constraint(self, constraint_type):
         """
@@ -235,10 +310,7 @@ class Board:
         constrain_type: on which constraints list we will work: columns or rows
         Return the coordinates of the incomplete constraints, None, if all constraints are completed
         """
-        # if constraint_type:
         constraints_group = self.cols_constraints if constraint_type else self.rows_constraints
-        # else:
-        #     constraints_group = self.rows_constraints
 
         for i in range(len(constraints_group)):
             for j in range(len(constraints_group[i])):
