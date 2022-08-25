@@ -79,7 +79,6 @@ def a_star_search(problem, heuristic=null_heuristic):
         current = fringe.pop()
         if problem.is_goal_state(current.state):
             return current.state
-
         for child in problem.get_successors(current.state):
             check_coords = False
             for coord in child[1]:
