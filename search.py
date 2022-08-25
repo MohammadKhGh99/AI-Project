@@ -2,19 +2,19 @@ import util
 
 
 def search_helper(problem, fringe):
-
     fringe.push((problem.get_start_state(), []))
     visited = set()
     while not fringe.isEmpty():
         current = fringe.pop()
         if problem.is_goal_state(current[0]):
+            # todo - was return current[1] before Shakra
             return current[0]
         elif current[0] not in visited:
             for child in problem.get_successors(current[0]):
                 temp = current[1] + [child[1]]
                 fringe.push((child[0], temp))
             visited.add(current[0])
-            print(child[0].print_board())
+            # print(child[0].print_board())
     return -1  # Error
 
 
@@ -78,12 +78,12 @@ def a_star_search(problem, heuristic=null_heuristic):
     while not fringe.isEmpty():
         current = fringe.pop()
         if problem.is_goal_state(current.state):
-            return current.state
+            return current.actions
         elif current.state not in visited:
             for child in problem.get_successors(current.state):
                 temp = current.actions + [child[1]]
                 child_cost = problem.get_cost_of_actions(current.actions) + child[2]
-                heuristic_cost = child_cost + heuristic(child[0], problem)  # todo heuristic
+                heuristic_cost = child_cost + heuristic(child[0], problem)
                 fringe.push(StateAndActions(child[0], temp), heuristic_cost)
             visited.add(current.state)
 
@@ -105,7 +105,7 @@ def local_beam_search(k_problems, k):
     for i in range(k):
         try:
             k_successors.append(all_successors.pop())
-        except:
+        except IndexError:
             break
     if len(k_successors) == 0:
         return None
