@@ -75,18 +75,21 @@ def a_star_search(problem, heuristic=null_heuristic):
     fringe = util.PriorityQueue()
     root = StateAndActions(problem.get_start_state(), set())
     fringe.push(root, 0)
-    visited = set()
     while not fringe.isEmpty():
         current = fringe.pop()
         if problem.is_goal_state(current.state):
             return current.state
-        elif current.state not in visited:
-            for child in problem.get_successors(current.state):
+
+        for child in problem.get_successors(current.state):
+            check_coords = False
+            for coord in child[1]:
+                if coord in current.actions:
+                    check_coords = True
+            if not check_coords:
                 child[1].update(current.actions)
                 child_cost = problem.get_cost_of_actions(current.actions) + child[2]
                 heuristic_cost = child_cost + heuristic(child[0], problem)
                 fringe.push(StateAndActions(child[0], child[1]), heuristic_cost)
-            visited.add(current.state)
 
 
 def local_beam_search(k_problems, k):
