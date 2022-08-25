@@ -77,7 +77,7 @@ class Board:
                  randomly=False, size=(5, 5), board=None, gui=None):
         self.rows_constraints = rows_constraints
         self.cols_constraints = cols_constraints
-        self.gui = gui
+        # self.gui = gui
         self.to_print = ""
         self.__cells_locations = []
 
@@ -95,7 +95,7 @@ class Board:
 
     def fill(self, r, c, color):
         time.sleep(1)
-        # sys.stdout.flush()
+        sys.stdout.flush()
         if r < self.num_rows and c < self.num_cols:
             self.board[r][c].color = color
             self.flipped[c][r].color = color
@@ -124,28 +124,12 @@ class Board:
 
             for i in range(constraint.length):
                 if child.fill(i + start_index, con_i, constraint.color) \
-                        and agent.check_move(child, con_i, i + start_index, problem_type=SEARCH_PROBLEMS):
+                        and child.check_move(con_i, i + start_index, problem_type=SEARCH_PROBLEMS):
                     continue
                 else:
                     return None
-        # Todo make it support the row constrains
-        # else:
-        #     constraint = child.rows_constraints[con_i][con_j]
-        #     for i in range(constraint.number):
-        #         if child.fill(con_i, i + start_index, constraint.color) \
-        #                 and agent.check_move(child, con_i, i + start_index):
-        #             continue
-        #         else:
-        #             return None
-        #     for i in range(start_index):
-        #         # Assign the cells that must be white.
-        #         if child.get_cell(con_i, i).color == EMPTY:
-        #             child.fill(con_i, i, WHITE)
         child.complete_constraints(con_i, con_j, constraint_type)
         return child
-
-    def switch_empty_to(self):
-        pass
 
     def get_cell(self, r, c, flipped=False):
         return self.board[r][c] if not flipped else self.flipped[c][r]
@@ -228,81 +212,115 @@ class Board:
     def print_board(self):
         print(self.to_print)
 
-    # def print_board(self, m):
-        # if we got None from an agent, this means that there is no solution for the board.
-        # if self.board is None:
-        #     return None
-        # text = ""
-        #
-        # # gets the longest row's length
-        # max_row, max_col = None, None
-        # m, n = 0, 0
-        # for row in self.rows_constraints:
-        #     if len(row) > m:
-        #         m = len(row)
-        #         max_row = row
-        # # gets the longest column's length
-        # for col in self.cols_constraints:
-        #     if len(col) > n:
-        #         n = len(col)
-        #
-        # # this thing just for the design 😁.
-        # text += " " * (len(max_row) * 6)
-        # row_space = text
-        # text += ("-" * (6 * self.num_cols + 2)) + f"\n{row_space}"
-        # text += "|| "
+    def check_move(self, row_id, col_id, problem_type=BRUTE_FORCE):
+        """
+        check if the move in this row_id/col_id is legit.
+        """
+        # checking for the rows
+        if not self._check_move_helper_with_constraint_check(col_id, flipped=False, problem_type=problem_type):
+            return False
 
-        # # adding the column constraints.
-        # for i in range(n - 1, -1, -1):
-        #     for col in self.cols_constraints:
-        #         cur = col[::-1]
-        #         if i >= len(cur):
-        #             text += "    | "
-        #         elif len(cur[i]) == 2:
-        #             text += f"{cur[i]}  | "
-        #         elif len(cur[i]) == 3:
-        #             text += f"{cur[i]} | "
-        #
-        #     # adding a line separator between the column constraints and the board itself.
-        #     if i == 0:
-        #         text += f"\n" + ("=" * (len(row_space) + self.num_cols * 6 + 2)) + f"\n{row_space}| "
-        #     else:
-        #         text += f"\n{row_space}" + ("-" * (self.num_cols * 6 + 2)) + f"\n{row_space}|| "
-        # # remove the last unnecessary '|'
-        # text = text[:-1]
-        # text = text[:len(text) - len(row_space) - 1] + "|"
+        # checking for the columns (as rows)
+        if not self._check_move_helper_with_constraint_check(row_id, flipped=True, problem_type=problem_type):
+            return False
 
-        # adding the structure of each row with the current content of the board beside the rows constraints.
-        # for j, row in enumerate(self.rows_constraints):
-        #     for i in range(m - 1, -1, -1):
-        #         cur = row[::-1]
-        #         if i >= len(cur):
-        #             self.to_print += "     |"
-        #         elif len(cur[i]) == 2:
-        #             self.to_print += f" {cur[i]}  |"
-        #         elif len(cur[i]) == 3:
-        #             self.to_print += f" {cur[i]} |"
-        #
-        #     self.to_print += "|"
-        #     lst = []
-        #     for i, y in enumerate(self.board[j]):
-        #         x = str(y)
-        #         if int(x) == EMPTY:
-        #             self.to_print += "     |"
-        #         elif int(x) == WHITE:
-        #             self.to_print += f"  w  |"
-        #         elif int(x) == BLACK:
-        #             self.to_print += f"  b  |"
-        #         elif int(x) == RED:
-        #             self.to_print += f"  r  |"
-        #         else:
-        #             raise Exception("the board should be filled just with -1, 0, 1 and 2")
-        #         lst.append(len(self.to_print) - 4)
-        #     self.__cells_locations.append(lst)
-        #     tmp = 2 + (m + self.num_cols) * 6
-        #     self.to_print += "\n" + ("-" * tmp) + "\n|"
-        #
-        # return self.to_print[:-1]
+        return True
+
+    def _check_move_helper_with_constraint_check(self, row_id, flipped=False, problem_type=BRUTE_FORCE):
+        """
+        check if the move in this row_id/col_id is legit.
+        return True if this move works and legit, false otherwise
+
+        IMPORTANT NOTE: this doesn't show that this step is correct, it just checks if it could be there.
+        """
+
+        constraints_for_row = self.rows_constraints[row_id] if not flipped else self.cols_constraints[row_id]
+        current_row = self.flipped[row_id] if flipped else self.board[row_id]
+
+        # constraint:
+        curr_constraint_id = 0
+        curr_constraint = constraints_for_row[curr_constraint_id]
+        curr_num_of_cells_to_fill = curr_constraint.length
+        curr_constraint_color = curr_constraint.color
+        curr_constraint_status = curr_constraint.completed
+
+        # the color must be for the next cell
+        must_color = EMPTY
+        # sometimes we need to block a color from next cell (example: 1b-1b - we can't put two black near each other)
+        # - white can't be forbidden
+        blocked_color = EMPTY
+
+        constraints_complete = False  # all constraints are fulfilled
+        empty_flag = False  # there is an empty cell in this row
+
+        cell_id = 0
+        while cell_id < len(current_row):
+            cell = current_row[cell_id]
+            cell_color = cell.color
+
+            if cell_color == EMPTY:  # we didn't fill it yet
+                empty_flag = True
+                blocked_color = EMPTY  # Nothing blocked after an empty cell.
+                cell_id += 1
+                continue
+
+            elif cell_color == WHITE and (must_color == WHITE or must_color == EMPTY):
+                # that's good
+                # if must color is white - that means we finished all constraints, and all remaining cells should stay white
+
+                # we reset the forbid color
+                blocked_color = EMPTY
+                cell_id += 1
+                continue
+
+            elif cell_color == curr_constraint_color and (
+                    must_color == curr_constraint_color or must_color == EMPTY) and blocked_color != curr_constraint_color:
+                if curr_constraint_status:
+                    # this constraint already filled and done, so move to next situation as we finished this status
+                    cell_id += curr_num_of_cells_to_fill
+                    curr_num_of_cells_to_fill = 0
+                else:
+                    # this constraint ain't finished yet
+                    curr_num_of_cells_to_fill -= 1
+                    cell_id += 1
+
+                # check if we need to change constraint #
+                # if we still didn't finish filling this constraint, we want the next color to be same color as the constraint:
+                if curr_num_of_cells_to_fill > 0:
+                    must_color = curr_constraint_color
+                    blocked_color = EMPTY  # nothing blocked
+
+                # if we finished filling this current constraint, we need to move to next constraint
+                elif curr_num_of_cells_to_fill == 0:
+                    must_color = EMPTY  # nothing is a must
+                    blocked_color = curr_constraint_color
+                    if not problem_type:  # if not brute force
+                        constraints_for_row[
+                            curr_constraint_id].completed = True  # Change the status for a future checks.
+
+                    # move to next constraint
+                    curr_constraint_id += 1
+                    if curr_constraint_id < len(constraints_for_row):
+                        curr_constraint = constraints_for_row[curr_constraint_id]
+                        curr_num_of_cells_to_fill = curr_constraint.length
+                        curr_constraint_color = curr_constraint.color
+
+                    else:
+                        # we finished every constraint, next cells should be white only
+                        constraints_complete = True
+                        must_color = WHITE
+                else:
+                    raise Exception("this is an impossible situation, hmmmmmm")
+
+            else:
+                return False
+
+        # maybe we finished the row but the constraints aren't finished yet! and that's a mistake:
+        # if we have Empty then no need to finish the constraints, if we don't then constraints must complete
+        if empty_flag or constraints_complete:
+            return True
+
+        return False
 
     def get_first_incomplete_constraint(self, constraint_type):
         """

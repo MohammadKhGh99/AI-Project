@@ -8,11 +8,11 @@ def search_helper(problem, fringe):
         if problem.is_goal_state(current[0]):
             return current[0]
         for child in problem.get_successors(current[0]):
-            check_coords = False
+            visited_coords = False
             for coord in child[1]:
                 if coord in current[1]:
-                    check_coords = True
-            if not check_coords:
+                    visited_coords = True
+            if not visited_coords:
                 # if we have a new board.
                 child[1].update(current[1])
                 fringe.push((child[0], child[1]))
@@ -80,30 +80,41 @@ def a_star_search(problem, heuristic=null_heuristic):
         if problem.is_goal_state(current.state):
             return current.state
         for child in problem.get_successors(current.state):
-            check_coords = False
+            visited_coords = False
             for coord in child[1]:
                 if coord in current.actions:
-                    check_coords = True
-            if not check_coords:
+                    visited_coords = True
+            if not visited_coords:
                 child[1].update(current.actions)
-                child_cost = problem.get_cost_of_actions(current.actions) + child[2]
+                child_cost = problem.get_cost_of_actions(child[0])
                 heuristic_cost = child_cost + heuristic(child[0], problem)
                 fringe.push(StateAndActions(child[0], child[1]), heuristic_cost)
 
 
-def local_beam_search(k_problems, k):
+def local_beam_search(problem, k_states, k):
     """
-    Local beam search, starting with k-random stats, searching for a goal state in this k states.
-    If no goal state, we pick the best k-stats from all successors (of starting states), and repeat.
+    Local beam search, starting with k-random states, searching for a goal state in this k states.
+    If no goal state, we pick the best k-states from all successors (of starting states), and repeat.
+    problem: type of our problem.
+    k_states: a list of k-states, each state is a board and the actions (coordinates of non-empty cells),
+              list of StateAndActions objects.
     """
     all_successors = util.PriorityQueue()
-    for problem in k_problems:
-        if problem.is_goal_state():
+    for current in k_states:
+        if problem.is_goal_state(current.state):
             return problem
-    for problem in k_problems:
-        for successor in problem.get_successors():
-            all_successors.push(successor, -1 * (successor[0].get_cost_of_actions(successor[0].cols_constraints)))
+    for current in k_states:
+        for successor in problem.state.get_successors(current.state):
+            visited_coords = False
+            for coord in successor[1]:
+                if coord in current.actions:
+                    visited_coords = True
+            if not visited_coords:
+                successor[1].update(current.actions)
+                priority = problem.get_cost_of_actions(successor[1])
+                all_successors.push(StateAndActions(successor[0], successor[1]), priority)
             # todo Adam will check this later - he said that, also he mentioned how excited he is for the video
+
     k_successors = []
     for i in range(k):
         try:
@@ -112,7 +123,7 @@ def local_beam_search(k_problems, k):
             break
     if len(k_successors) == 0:
         return None
-    return local_beam_search(k_successors, k)
+    return local_beam_search(problem, k_successors, k)
 
 
 # Abbreviations

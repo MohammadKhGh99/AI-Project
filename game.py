@@ -190,17 +190,17 @@ class Game:
 
     def run(self):
         # runs the brute force algorithm on the board.
-        print("Brute Force")
-        self.board = agent.brute_force(self.board)
+        # print("Brute Force")
+        print(agent.BruteForce(self.board).brute_force().board.print_board())
+        # nonogram_problem = agent.NonogramProblem(self.board)
         # print("BFS")
-        nonogram_problem = agent.NonogramProblem(self.board)
         # print(search.breadth_first_search(nonogram_problem).print_board())
         # print(search.breadth_first_search(nonogram_problem))
         # print("DFS")
         # print(search.depth_first_search(nonogram_problem).print_board())
         # print(search.depth_first_search(nonogram_problem))
-        print("A*")
-        print(search.a_star_search(problem=nonogram_problem).print_board())
+        # print("A*")
+        # print(search.a_star_search(problem=nonogram_problem).print_board())
 
 if __name__ == "__main__":
     print("Hello World!")
@@ -220,7 +220,7 @@ if __name__ == "__main__":
     # gui.draw_board(game.board.board)
     # gui.master.mainloop()
     # csp.run_CSP(game.board)
-    print(game.board.print_board())
+    # print(game.board.print_board())
 
     # todo - for Shakra's testing
     # print(game.board.print_board())
