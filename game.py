@@ -28,8 +28,8 @@ class Game:
 
         """
         self.agent = my_agent
-        self.state = None
         self.always_solvable = always_solvable
+        self.state = None
         self.board = None
 
         if csv_file:
@@ -61,10 +61,26 @@ class Game:
         self.colors = colors
 
         # remove the '-' between each constraint and put it in a cell in a list of a row constraints.
-        temp_rows_constraints = [list(map(lambda x: Constraint(x), row.split('-'))) for row in rows_constraints]
+        temp_rows_constraints = []
+        for i, row in enumerate(rows_constraints):
+            const_for_row_i = []
+            for order, cons in enumerate(row.split('-')):
+                const_for_row_i.append(Constraint(cons, ROWS, i, order))
+            temp_rows_constraints.append(const_for_row_i)
 
-        # remove the '-' between each constraint and put it in a cell in a list of a column constraints.
-        temp_cols_constraints = [list(map(lambda x: Constraint(x), col.split('-'))) for col in cols_constraints]
+
+        #  remove the '-' between each constraint and put it in a cell in a list of a column constraints.
+        temp_cols_constraints = []
+        for j, col in enumerate(cols_constraints):
+            const_for_col_j = []
+            for order, cons in enumerate(col.split('-')):
+                const_for_col_j.append(Constraint(cons, COLUMNS, j, order))
+            temp_cols_constraints.append(const_for_col_j)
+
+
+        # temp_rows_constraints = [list(map(lambda x: Constraint(x), row.split('-'))) for row in rows_constraints]
+        #
+        # temp_cols_constraints = [list(map(lambda x: Constraint(x), col.split('-'))) for col in cols_constraints]
 
         # build a new empty board with the given constraints.
         self.board = Board(temp_rows_constraints, temp_cols_constraints)
@@ -130,10 +146,10 @@ class Game:
                             if temp_board[row][col].color == temp_board[row][col + 1].color:
                                 seq += 1
                             else:
-                                row_constraints.append(Constraint(str(seq) + cur_color))
+                                row_constraints.append(Constraint(str(seq) + cur_color, ROWS, row, len(row_constraints)))
                                 seq = 1
                         else:
-                            row_constraints.append(Constraint(str(seq) + cur_color))
+                            row_constraints.append(Constraint(str(seq) + cur_color, ROWS, row, len(row_constraints)))
                 temp_rows_constraints.append(row_constraints)
 
             for col in range(self.num_cols):
@@ -146,10 +162,10 @@ class Game:
                             if temp_board[row][col].color == temp_board[row + 1][col].color:
                                 seq += 1
                             else:
-                                col_constraints.append(Constraint(str(seq) + cur_color))
+                                col_constraints.append(Constraint(str(seq) + cur_color, COLUMNS, col, len(col_constraints)))
                                 seq = 1
                         else:
-                            col_constraints.append(Constraint(str(seq) + cur_color))
+                            col_constraints.append(Constraint(str(seq) + cur_color, COLUMNS, col, len(col_constraints)))
                 temp_cols_constraints.append(col_constraints)
 
         self.board = Board(temp_rows_constraints, temp_cols_constraints, randomly=True, size=size)
@@ -208,19 +224,16 @@ if __name__ == "__main__":
     # game = Game(colors=COLORFUL, size=(3, 3))
     # game = Game(colors=COLORFUL, size=(5, 5))
     # game = Game(colors=COLORFUL, size=(15, 15))
-    game = Game(csv_file='example1.csv')
+    # game = Game(csv_file='example1.csv')
     # game = Game(colors=COLORFUL)
-    game.run()
-    # gui = GUI.GUI()
-
-
 
     # import graphics
     # gui = graphics.NonogramGUI("Nonogram")
     # gui.draw_board(game.board.board)
     # gui.master.mainloop()
-    # csp.run_CSP(game.board)
-    print(game.board.print_board())
+    csp.run_CSP(game.board)
+    game.run()
+    # print(game.print_board())
 
     # todo - for Shakra's testing
     # print(game.board.print_board())

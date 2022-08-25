@@ -2,7 +2,7 @@
 import tkinter as tk
 import time as t
 # from game import *
-import pygame as pg
+# import pygame as pg
 from config import *
 
 

@@ -24,11 +24,45 @@ class Cell:
         return str(self.color)
 
 
+# class Constraint:
+#     """
+#     This class describes the constraints cells with number, status and color (Black, Red).
+#     """
+#     def __init__(self, constraint):
+#         # todo - add the situation if the constraint is empty or not?
+#         if constraint.replace(' ', '') == '':
+#             raise Exception("Empty Constraint Situation Not Implemented!")
+#
+#         try:
+#             self.length = int(constraint[:-1])
+#         except Exception:
+#             raise Exception("constraint structure should be like this")
+#
+#         c = constraint[-1]
+#
+#         if c.lower() not in COLORS:
+#             raise Exception("error in choosing color for constraint")
+#         else:
+#             self.color = BLACK if c.lower() == 'b' else RED
+#
+#         # todo choose one of those
+#         self.completed = False
+#
+#
+#     def __str__(self):
+#         c = 'b' if self.color == BLACK else 'r'
+#         return str(self.length) + c
+#         # str_comp = "T" if self.completed else "F"
+#         # return str(self.number) + self.c + str_comp
+#
+#     def __len__(self):
+#         return len(self.__str__())
+
 class Constraint:
     """
     This class describes the constraints cells with number, status and color (Black, Red).
     """
-    def __init__(self, constraint):
+    def __init__(self, constraint, row_or_col, which_row, order_in_that_row, col_id=EMPTY):
         # todo - add the situation if the constraint is empty or not?
         if constraint.replace(' ', '') == '':
             raise Exception("Empty Constraint Situation Not Implemented!")
@@ -45,10 +79,15 @@ class Constraint:
         else:
             self.color = BLACK if c.lower() == 'b' else RED
 
-        # todo choose one of those
         self.completed = False
+        # todo just testing:
+        self.row_or_col = row_or_col
+        self.which_row = which_row
+        self.order_in_row = order_in_that_row
+        self.col_id = col_id
 
-        # self.status = NOT_COMPLETE
+
+
 
     def __str__(self):
         c = 'b' if self.color == BLACK else 'r'
@@ -58,7 +97,6 @@ class Constraint:
 
     def __len__(self):
         return len(self.__str__())
-
 
 class Board:
 
@@ -87,33 +125,6 @@ class Board:
             print(self.print_board())
             return True
         return False
-
-    # todo - BEFORE MERGING WITH ADAM
-    # def fill_n_cells(self, con_i, con_j, start_index, constraint_type=COLUMNS):
-    #     """
-    #     Function fill the board, in a valid way. It fills n cells according to the given constraint.
-    #     constraint_type: on which constraints list we will work: columns or rows.
-    #     con_i: the index of the working constraints group.
-    #     con_j: the index of the working constraint in the group.
-    #     start_index: from where to start to fill (row/column)
-    #     """
-    #     child = deepcopy(self)
-    #     child.complete_constraints(constraint_type, con_i, con_j)
-    #     if constraint_type:
-    #         constraint = child.cols_constraints[con_i][con_j]
-    #         for i in range(constraint.length):
-    #             if agent.check_move(child, i + start_index, con_i):
-    #                 child.fill(i + start_index, con_i, constraint.color)
-    #             else:
-    #                 break
-    #     else:
-    #         constraint = child.rows_constraints[con_i][con_j]
-    #         for i in range(constraint.length):
-    #             if agent.check_move(child, con_i, i + start_index):
-    #                 child.fill(con_i, i + start_index, constraint.color)
-    #             else:
-    #                 break
-    #     return child
 
     def fill_n_cells(self, con_i, con_j, start_index, constraint_type=COLUMNS):
         """
