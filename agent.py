@@ -75,13 +75,11 @@ class NonogramProblem(SearchProblem):
                 for i in range(constraint.length):
                     actions.add((start_index + i, constraint_coord[0]))
                 successors.append((child, actions, abs(constraint.length - state.num_rows)))
-
         return successors
 
     def get_cost_of_actions(self, actions):
         # Actions are a set of cell's coordinates we colored to get a new state.
         return len(actions)
-
 
 # todo - fix the design and the problems that Ibraheem made
 
@@ -202,8 +200,7 @@ def _check_move_helper_with_constraint_check(board, row_id, flipped=False, probl
             elif curr_num_of_cells_to_fill == 0:
                 must_color = EMPTY  # nothing is a must
                 blocked_color = curr_constraint_color
-                if not problem_type:
-                    # if not brute force
+                if not problem_type:  # if not brute force
                     constraints_for_row[curr_constraint_id].completed = True  # Change the status for a future checks.
 
                 # move to next constraint
