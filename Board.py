@@ -31,6 +31,40 @@ class Cell:
             return 'r'
 
 
+# class Constraint:
+#     """
+#     This class describes the constraints cells with number, status and color (Black, Red).
+#     """
+#     def __init__(self, constraint):
+#         # todo - add the situation if the constraint is empty or not?
+#         if constraint.replace(' ', '') == '':
+#             raise Exception("Empty Constraint Situation Not Implemented!")
+#
+#         try:
+#             self.length = int(constraint[:-1])
+#         except Exception:
+#             raise Exception("constraint structure should be like this")
+#
+#         c = constraint[-1]
+#
+#         if c.lower() not in COLORS:
+#             raise Exception("error in choosing color for constraint")
+#         else:
+#             self.color = BLACK if c.lower() == 'b' else RED
+#
+#         # todo choose one of those
+#         self.completed = False
+#
+#
+#     def __str__(self):
+#         c = 'b' if self.color == BLACK else 'r'
+#         return str(self.length) + c
+#         # str_comp = "T" if self.completed else "F"
+#         # return str(self.number) + self.c + str_comp
+#
+#     def __len__(self):
+#         return len(self.__str__())
+
 class Constraint:
     """
     This class describes the constraints cells with number, status and color (Black, Red).
@@ -53,7 +87,6 @@ class Constraint:
         else:
             self.color = BLACK if c.lower() == 'b' else RED
 
-        # todo choose one of those
         self.completed = False
 
     def __str__(self):
@@ -63,7 +96,6 @@ class Constraint:
 
     def __len__(self):
         return len(self.__str__())
-
 
 class Board:
     gui = None
