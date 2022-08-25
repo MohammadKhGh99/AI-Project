@@ -1,3 +1,4 @@
+
 BLACK_WHITE = 0
 COLORFUL = 1
 
@@ -18,5 +19,12 @@ SEARCH_PROBLEMS = False
 COMPLETE = True
 NOT_COMPLETE = False
 
-GUI_WIDTH = 500
-GUI_HEIGHT = 500
+GUI_WIDTH = 1000
+GUI_HEIGHT = 770
+
+GUI_FILES_PATH = r'.\FinalProject\\gui_files'
+
+SOUND = False
+
+COLORS_DICT = {'w': 'white', 'b': 'black', 'r': 'red', ' ': 'grey'}
+

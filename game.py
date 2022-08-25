@@ -31,24 +31,39 @@ class Game:
         self.state = None
         self.always_solvable = always_solvable
         self.board = None
-        self.gui = GUI.GUI()
+        # self.gui = None
 
         if csv_file:
-            # create a board from csv file.
+            """
+            create a board from csv file.
+            in the first line: a variation of the colors 'b' 'r' 'w' or just 'b' 'w'
+            the second line: the columns constraints.
+            the other lines: the rows constraints
+            example:
+            expecting format to be: [brw]|[bwr]|[wrb]|[wbr]|[rbw]|[rwb]
+                                    ,3b,2r-3b,1b
+                                    2r,,,,
+                                    3b,,,,
+                                    1b-3r,,,,
+            """
             self.__csv_building(csv_file)
         elif rows_constraints and cols_constraints:
-            # create a board from a giving rows and cols constraints lists.
-            # the rows constraints and columns constraints should be as the following structure:
-            #       rows_constraints = ["row 1 constraint", "row 2 constraint",...,"row n constraint"]
-            #       cols_constraints = ["column 1 constraint", "column 2 constraint",...,"column n constraint"]
-            # this means that each one of rows_constraints and cols_constraints should be as list of strings and each
-            # string is the constraint of the row in its place.
+            """ 
+            create a board from a giving rows and cols constraints lists.
+            the rows constraints and columns constraints should be as the following structure:
+                   rows_constraints = ["row 1 constraint", "row 2 constraint",...,"row n constraint"]
+                   cols_constraints = ["column 1 constraint", "column 2 constraint",...,"column n constraint"]
+            this means that each one of rows_constraints and cols_constraints should be as list of strings and each
+            string is the constraint of the row in its place.
+            """
             self.__our_building(colors, rows_constraints, cols_constraints)
         else:
-            # create a random board from giving size and color
-            # in this situation the user or us will enter the colors of the Nonogram Game
-            # (Back&White or Black&Red&White) and the dimensions of the board, the default size will be 5x5 and
-            # the default colors will be Black & White.
+            """
+            create a random board from giving size and color
+            in this situation the user or us will enter the colors of the Nonogram Game
+            (Back&White or Black&Red&White) and the dimensions of the board, the default size will be 5x5 and
+            the default colors will be Black & White.
+            """
             self.__random_building(size, colors)
 
     def __our_building(self, colors, rows_constraints, cols_constraints):
@@ -68,17 +83,11 @@ class Game:
         temp_cols_constraints = [list(map(lambda x: Constraint(x), col.split('-'))) for col in cols_constraints]
 
         # build a new empty board with the given constraints.
-        self.board = Board(temp_rows_constraints, temp_cols_constraints, gui=self.gui)
+        self.board = Board(temp_rows_constraints, temp_cols_constraints)
 
     def __csv_building(self, csv_file):
         """
             building the board from a csv file
-            expecting format to be: brw
-                                    ,3b,2r-3b,1b
-                                    2r,,,,
-                                    3b,,,,
-                                    1b-3r,,,,
-
         """
         with open(csv_file, 'r') as f:
             all_lines = f.readlines()
@@ -100,7 +109,7 @@ class Game:
         temp_rows_constraints = list(map(lambda l: [Constraint(x) for x in l], temp_rows_constraints))
 
         # build the board as empty board.# build the board as empty board.
-        self.board = Board(temp_rows_constraints, temp_cols_constraints, gui=self.gui)
+        self.board = Board(temp_rows_constraints, temp_cols_constraints)
 
     def __random_building(self, size, colors):
         """
@@ -153,7 +162,7 @@ class Game:
                             col_constraints.append(Constraint(str(seq) + cur_color))
                 temp_cols_constraints.append(col_constraints)
 
-        self.board = Board(temp_rows_constraints, temp_cols_constraints, randomly=True, size=size, gui=self.gui)
+        self.board = Board(temp_rows_constraints, temp_cols_constraints, randomly=True, size=size)
 
     def __build_constraints(self, m, n):
         all_constraints = []
@@ -190,8 +199,10 @@ class Game:
 
     def run(self):
         # runs the brute force algorithm on the board.
-        print("Brute Force")
-        self.board = agent.brute_force(self.board)
+        # agent.BruteForce(self.board).brute_force().board.print_board()
+        # print("Brute Force")
+        # self.board = agent.brute_force(self.board)
+        # self.board.print_board()
         # print("BFS")
         nonogram_problem = agent.NonogramProblem(self.board)
         # print(search.breadth_first_search(nonogram_problem).print_board())
@@ -200,7 +211,13 @@ class Game:
         # print(search.depth_first_search(nonogram_problem).print_board())
         # print(search.depth_first_search(nonogram_problem))
         print("A*")
-        print(search.a_star_search(problem=nonogram_problem).print_board())
+        self.board = search.a_star_search(problem=nonogram_problem)
+        # self.board.print_board()
+        # Board.gui = GUI.GUI(self.board)
+        # self.gui.canvas.mainloop()
+        # Board.gui.root.mainloop()
+        # Board.gui.finish_msg()
+
 
 if __name__ == "__main__":
     print("Hello World!")
@@ -208,21 +225,7 @@ if __name__ == "__main__":
     # game = Game(colors=COLORFUL, size=(2, 2))
     # game = Game(colors=COLORFUL, size=(5, 5))
     # game = Game(colors=COLORFUL, size=(15, 15))
-    game = Game(csv_file='example1.csv')
-    # game = Game(colors=COLORFUL)
+    # game = Game(csv_file='example1.csv')
+    game = Game(colors=COLORFUL)
     game.run()
-    # gui = GUI.GUI()
-
-
-
-    # import graphics
-    # gui = graphics.NonogramGUI("Nonogram")
-    # gui.draw_board(game.board.board)
-    # gui.master.mainloop()
-    # csp.run_CSP(game.board)
-    print(game.board.print_board())
-
-    # todo - for Shakra's testing
-    # print(game.board.print_board())
-    # game.run()
-    # print(game.board.print_board())
+    game.board.print_board()
