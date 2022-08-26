@@ -10,6 +10,7 @@ RED = 2  # could be COLOR
 NONO_COLORS = {"bw", "wb", "bwr", "brw", "wbr", "wrb", "rbw", "rwb"}
 COLORS = {'b', 'r'}
 COLORS_LST = [WHITE, BLACK, RED]
+COLORS_LST_WITHOUT_WHITE = [BLACK, RED]
 ROWS = False
 COLUMNS = True
 
@@ -19,8 +20,8 @@ SEARCH_PROBLEMS = False
 COMPLETE = True
 NOT_COMPLETE = False
 
-GUI_WIDTH = 1000
-GUI_HEIGHT = 770
+GUI_WIDTH = 800
+GUI_HEIGHT = 700
 
 GUI_FILES_PATH = r'.\FinalProject\\gui_files'
 

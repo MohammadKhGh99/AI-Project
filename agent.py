@@ -73,14 +73,14 @@ class NonogramProblem(SearchProblem):
                 actions = set()
                 constraint = state.cols_constraints[constraint_coord[0]][constraint_coord[1]]
                 for i in range(constraint.length):
-                    actions.add((start_index + i, constraint_coord[0]))
+                    actions.add((start_index + i, constraint_coord[0]))  #, constraint.color))
                 # successors.append((child, actions, abs(constraint.length - state.num_rows)))
                 successors.append((child, actions))
         return successors
 
     def get_cost_of_actions(self, state):
         # Actions are a set of cell's coordinates we colored to get a new state.
-        # Todo it looks like a heuristc function, discucss this with team.
+        # Todo it looks like a heuristic function, discuss this with team.
         # cost zero.
         sum_completed_constrains = 0
         for row_con in state.rows_constraints:

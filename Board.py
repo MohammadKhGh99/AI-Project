@@ -14,10 +14,6 @@ class Cell:
 
     def __init__(self, row_id, col_id, color=EMPTY):
         self.color = color
-
-        self.current_state = 0  # check: idk what is this | me neither
-
-        # i'll try if this help me: OK
         self.row = row_id
         self.col = col_id
 
@@ -39,6 +35,7 @@ class Constraint:
     """
     This class describes the constraints cells with number, status and color (Black, Red).
     """
+
     def __init__(self, constraint):
         # todo - add the situation if the constraint is empty or not?
         if constraint.replace(' ', '') == '':
@@ -59,13 +56,10 @@ class Constraint:
         # todo choose one of those
         self.completed = False
 
-        # self.status = NOT_COMPLETE
-
     def __str__(self):
         c = 'b' if self.color == BLACK else 'r'
         return str(self.length) + c
-        # str_comp = "T" if self.completed else "F"
-        # return str(self.number) + self.c + str_comp
+        # return (str(self.length) + 'b') if self.color == BLACK else (str(self.length) + 'r')
 
     def __len__(self):
         return len(self.__str__())
@@ -74,16 +68,18 @@ class Constraint:
 class Board:
     gui = None
 
-    # delete - board argument, it's just for testing bro!
     def __init__(self, rows_constraints: List[List[Constraint]], cols_constraints: List[List[Constraint]],
                  randomly=False, size=(5, 5)):
         self.rows_constraints = rows_constraints
         self.cols_constraints = cols_constraints
-        # self.gui = gui
         self.to_print = ""
         self.cells_locations = []
         self.randomly = randomly
         self.size = size
+
+        # todo - add a list of the cells of the child's actions rectangles
+        self.rects = []
+
         if not self.randomly:
             self.num_rows = len(self.rows_constraints)
             self.num_cols = len(self.cols_constraints)
@@ -95,19 +91,11 @@ class Board:
         self.flipped = [[Cell(c, r) for r in range(self.num_rows)] for c in range(self.num_cols)]
 
         self.to_print = self.init_board_print()
-        Board.gui = GUI.GUI(board=self)
+        # Board.gui = GUI.GUI(board=self)
 
-    # def copy_board(self, other):
-    #     # other = Board(self.rows_constraints, self.cols_constraints)
-    #     other.board = deepcopy(self.board)
-    #     other.flipped = deepcopy(self.flipped)
-    #     other.randomly = self.randomly
-    #     other.to_print = deepcopy(self.to_print)
-    #     other.num_cols = self.num_cols
-    #     other.num_rows = self.num_rows
-    #     other.cells_locations = deepcopy(self.cells_locations)
-    #     other.size = deepcopy(self.size)
-    #     return other
+    @staticmethod
+    def start_gui(board):
+        Board.gui = GUI.GUI(board=board)
 
     def fill(self, r, c, color):
         # time.sleep(0.1)
@@ -119,10 +107,14 @@ class Board:
             cur = self.cells_locations[r][c]
             # I found that this way is faster
             self.to_print = self.to_print[:cur] + self.board[r][c].__repr__() + self.to_print[cur + 1:]
-            # temp = temp[r][c]
-            # print(self.board[0][0].__repr__())
-            # print(curr)
 
+            time.sleep(0.1)
+            # Board.gui.canvas.delete('rect')
+            temp = Board.gui.board_rectangles_locs[r][c]
+            Board.gui.canvas.create_rectangle(temp[0], temp[1], temp[2], temp[3],
+                                              fill=COLORS_DICT[self.board[r][c].__repr__()], tags='rect')
+            Board.gui.root.update()
+            self.rects.append(self.board[r][c])
             # self.print_board()
             return True
         return False
@@ -142,38 +134,14 @@ class Board:
                 # Assign the cells that must be white.
                 if child.get_cell(i, con_i).color == EMPTY:
                     child.fill(i, con_i, WHITE)
-                    # r, c = i, con_i
-                    # temp = Board.gui.board_rectangles_locs[r][c]
-                    # Board.gui.canvas.create_rectangle(temp[0], temp[1], temp[2], temp[3],
-                    #                                   fill=COLORS_DICT[child.board[r][c].__repr__()])
-                    # Board.gui.root.update()
-
             for i in range(constraint.length):
                 if child.fill(i + start_index, con_i, constraint.color) \
                         and child.check_move(con_i, i + start_index, problem_type=SEARCH_PROBLEMS):
-                    # r, c = i + start_index, con_i
-                    # temp = Board.gui.board_rectangles_locs[r][c]
-                    # Board.gui.canvas.create_rectangle(temp[0], temp[1], temp[2], temp[3],
-                    #                                   fill=COLORS_DICT[child.board[r][c].__repr__()])
-                    # Board.gui.root.update()
                     continue
                 else:
                     return None
-        # child = deepcopy(self)
-        # if constraint_type:
-        #     constraint = child.cols_constraints[con_i][con_j]
-        #     for i in range(start_index):
-        #         # Assign the cells that must be white.
-        #         if child.get_cell(i, con_i).color == EMPTY:
-        #             child.fill(i, con_i, WHITE)
-        #
-        #     for i in range(constraint.length):
-        #         if child.fill(i + start_index, con_i, constraint.color) \
-        #                 and agent.check_move(child, con_i, i + start_index, problem_type=SEARCH_PROBLEMS):
-        #             continue
-        #         else:
-        #             return None
         child.complete_constraints(con_i, con_j, constraint_type)
+        # Board.gui.canvas.delete('rect')
         return child
 
     def get_cell(self, r, c, flipped=False):
@@ -183,7 +151,7 @@ class Board:
         self.to_print = ""
 
         # gets the longest row's length
-        max_row, max_col = None, None
+        max_row = None
         m, n = 0, 0
         for row in self.rows_constraints:
             if len(row) > m:
@@ -222,6 +190,8 @@ class Board:
         self.to_print = self.to_print[:-1]
         self.to_print = self.to_print[:len(self.to_print) - len(row_space) - 1] + "|"
 
+        # adding the structure of each row with the current content of the board beside the rows constraints.
+
         for j, row in enumerate(self.rows_constraints):
             for i in range(m - 1, -1, -1):
                 cur = row[::-1]
@@ -247,7 +217,6 @@ class Board:
                 else:
                     raise Exception("the board should be filled just with -1, 0, 1 and 2")
                 lst.append(len(self.to_print) - 4)
-                # print(self.to_print[len(self.to_print) - 9:len(self.to_print) - 4])
             self.cells_locations.append(lst)
             tmp = 2 + (m + self.num_cols) * 6
             self.to_print += "\n" + ("-" * tmp) + "\n|"
@@ -255,7 +224,11 @@ class Board:
         return self.to_print[:-1]
 
     def print_board(self):
-        # print(self.board[4][4])
+        for r in range(self.num_rows):
+            for c in range(self.num_cols):
+                cur = self.cells_locations[r][c]
+                if self.to_print[cur] == ' ':
+                    self.to_print = self.to_print[:cur] + 'w' + self.to_print[cur + 1:]
         print(self.to_print)
 
     def check_move(self, row_id, col_id, problem_type=BRUTE_FORCE):
@@ -311,7 +284,8 @@ class Board:
 
             elif cell_color == WHITE and (must_color == WHITE or must_color == EMPTY):
                 # that's good
-                # if must color is white - that means we finished all constraints, and all remaining cells should stay white
+                # if must_color is white -
+                # that means we finished all constraints, and all remaining cells should stay white
 
                 # we reset the forbid color
                 blocked_color = EMPTY
@@ -330,7 +304,8 @@ class Board:
                     cell_id += 1
 
                 # check if we need to change constraint #
-                # if we still didn't finish filling this constraint, we want the next color to be same color as the constraint:
+                # if we still didn't finish filling this constraint,
+                # we want the next color to be same color as the constraint:
                 if curr_num_of_cells_to_fill > 0:
                     must_color = curr_constraint_color
                     blocked_color = EMPTY  # nothing blocked
@@ -392,4 +367,3 @@ class Board:
             self.cols_constraints[con_i][con_j].completed = True
         else:
             self.rows_constraints[con_i][con_j].completed = True
-

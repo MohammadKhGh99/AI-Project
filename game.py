@@ -1,4 +1,6 @@
 import random
+
+import Board
 from config import *
 import agent
 import csp
@@ -28,10 +30,9 @@ class Game:
 
         """
         self.agent = my_agent
-        self.state = None
         self.always_solvable = always_solvable
+        self.state = None
         self.board = None
-        # self.gui = None
 
         if csv_file:
             """
@@ -65,6 +66,7 @@ class Game:
             the default colors will be Black & White.
             """
             self.__random_building(size, colors)
+        Board.start_gui(self.board)
 
     def __our_building(self, colors, rows_constraints, cols_constraints):
         """
@@ -199,33 +201,42 @@ class Game:
 
     def run(self):
         # runs the brute force algorithm on the board.
-        # agent.BruteForce(self.board).brute_force().board.print_board()
+
         # print("Brute Force")
-        # self.board = agent.brute_force(self.board)
-        # self.board.print_board()
-        # print("BFS")
+        # self.board = agent.BruteForce(self.board).brute_force().board
+
         nonogram_problem = agent.NonogramProblem(self.board)
-        # print(search.breadth_first_search(nonogram_problem).print_board())
-        # print(search.breadth_first_search(nonogram_problem))
+
+        # print("BFS")
+        # self.board = search.breadth_first_search(nonogram_problem)
+
         # print("DFS")
-        # print(search.depth_first_search(nonogram_problem).print_board())
-        # print(search.depth_first_search(nonogram_problem))
+        # self.board = search.depth_first_search(nonogram_problem)
+
         print("A*")
         self.board = search.a_star_search(problem=nonogram_problem)
-        # self.board.print_board()
-        # Board.gui = GUI.GUI(self.board)
-        # self.gui.canvas.mainloop()
-        # Board.gui.root.mainloop()
-        # Board.gui.finish_msg()
+
+        # print("CSP")
+        # csp.run_CSP(self.board)
+
+        if type(self.board) is not int and self.board is not None:
+            Board.gui.success_msg()
+        else:
+            Board.gui.failed_msg()
 
 
 if __name__ == "__main__":
     print("Hello World!")
 
-    # game = Game(colors=COLORFUL, size=(2, 2))
+    game = Game(colors=COLORFUL, size=(9, 9))
     # game = Game(colors=COLORFUL, size=(5, 5))
     # game = Game(colors=COLORFUL, size=(15, 15))
+    # game.board.print_board()
     # game = Game(csv_file='example1.csv')
-    game = Game(colors=COLORFUL)
+    # game = Game(colors=COLORFUL)
     game.run()
-    game.board.print_board()
+    # game.board.print_board()
+
+    Board.gui.root.mainloop()
+
+
