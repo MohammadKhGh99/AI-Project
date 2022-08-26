@@ -14,10 +14,6 @@ class Cell:
 
     def __init__(self, row_id, col_id, color=EMPTY):
         self.color = color
-
-        self.current_state = 0  # check: idk what is this | me neither
-
-        # i'll try if this help me: OK
         self.row = row_id
         self.col = col_id
 
@@ -35,45 +31,11 @@ class Cell:
             return 'r'
 
 
-# class Constraint:
-#     """
-#     This class describes the constraints cells with number, status and color (Black, Red).
-#     """
-#     def __init__(self, constraint):
-#         # todo - add the situation if the constraint is empty or not?
-#         if constraint.replace(' ', '') == '':
-#             raise Exception("Empty Constraint Situation Not Implemented!")
-#
-#         try:
-#             self.length = int(constraint[:-1])
-#         except Exception:
-#             raise Exception("constraint structure should be like this")
-#
-#         c = constraint[-1]
-#
-#         if c.lower() not in COLORS:
-#             raise Exception("error in choosing color for constraint")
-#         else:
-#             self.color = BLACK if c.lower() == 'b' else RED
-#
-#         # todo choose one of those
-#         self.completed = False
-#
-#
-#     def __str__(self):
-#         c = 'b' if self.color == BLACK else 'r'
-#         return str(self.length) + c
-#         # str_comp = "T" if self.completed else "F"
-#         # return str(self.number) + self.c + str_comp
-#
-#     def __len__(self):
-#         return len(self.__str__())
-
 class Constraint:
     """
     This class describes the constraints cells with number, status and color (Black, Red).
     """
-    def __init__(self, constraint, row_or_col, which_row, order_in_that_row, col_id=EMPTY):
+    def __init__(self, constraint):
         # todo - add the situation if the constraint is empty or not?
         if constraint.replace(' ', '') == '':
             raise Exception("Empty Constraint Situation Not Implemented!")
@@ -90,24 +52,59 @@ class Constraint:
         else:
             self.color = BLACK if c.lower() == 'b' else RED
 
+        # todo choose one of those
         self.completed = False
-        # todo just testing:
-        self.row_or_col = row_or_col
-        self.which_row = which_row
-        self.order_in_row = order_in_that_row
-        self.col_id = col_id
-
-
 
 
     def __str__(self):
         c = 'b' if self.color == BLACK else 'r'
         return str(self.length) + c
-        # str_comp = "T" if self.completed else "F"
-        # return str(self.number) + self.c + str_comp
+
 
     def __len__(self):
         return len(self.__str__())
+
+# class Constraint:
+#     """
+#     This class describes the constraints cells with number, status and color (Black, Red).
+#     """
+#     def __init__(self, constraint, row_or_col, which_row, order_in_that_row, smallest_most_left_pixel=EMPTY, largest_most_left_pixel=EMPTY):
+#         # todo - add the situation if the constraint is empty or not?
+#         if constraint.replace(' ', '') == '':
+#             raise Exception("Empty Constraint Situation Not Implemented!")
+#
+#         try:
+#             self.length = int(constraint[:-1])
+#         except Exception:
+#             raise Exception("constraint structure should be like this")
+#
+#         c = constraint[-1]
+#
+#         if c.lower() not in COLORS:
+#             raise Exception("error in choosing color for constraint")
+#         else:
+#             self.color = BLACK if c.lower() == 'b' else RED
+#
+#         self.completed = False
+#         # todo just testing:
+#         self.row_or_col = row_or_col
+#         self.which_row = which_row
+#         self.order_in_row = order_in_that_row
+
+
+        #to b filled later
+        # self.col_id = EMPTY
+        # self.smallest_most_left_pixel = smallest_most_left_pixel    # left most pixel of the constraint
+        # self.largest_most_left_pixel = largest_most_left_pixel    # left most pixel of the constraint
+    #
+    # def __str__(self):
+    #     c = 'b' if self.color == BLACK else 'r'
+    #     return str(self.length) + c
+    #     # str_comp = "T" if self.completed else "F"
+    #     # return str(self.number) + self.c + str_comp
+    #
+    # def __len__(self):
+    #     return len(self.__str__())
 
 class Board:
     gui = None
@@ -135,17 +132,6 @@ class Board:
         self.to_print = self.init_board_print()
         Board.gui = GUI.GUI(board=self)
 
-    # def copy_board(self, other):
-    #     # other = Board(self.rows_constraints, self.cols_constraints)
-    #     other.board = deepcopy(self.board)
-    #     other.flipped = deepcopy(self.flipped)
-    #     other.randomly = self.randomly
-    #     other.to_print = deepcopy(self.to_print)
-    #     other.num_cols = self.num_cols
-    #     other.num_rows = self.num_rows
-    #     other.cells_locations = deepcopy(self.cells_locations)
-    #     other.size = deepcopy(self.size)
-    #     return other
 
     def fill(self, r, c, color):
         # time.sleep(0.1)
@@ -157,11 +143,7 @@ class Board:
             cur = self.cells_locations[r][c]
             # I found that this way is faster
             self.to_print = self.to_print[:cur] + self.board[r][c].__repr__() + self.to_print[cur + 1:]
-            # temp = temp[r][c]
-            # print(self.board[0][0].__repr__())
-            # print(curr)
 
-            # self.print_board()
             return True
         return False
 
@@ -180,37 +162,13 @@ class Board:
                 # Assign the cells that must be white.
                 if child.get_cell(i, con_i).color == EMPTY:
                     child.fill(i, con_i, WHITE)
-                    # r, c = i, con_i
-                    # temp = Board.gui.board_rectangles_locs[r][c]
-                    # Board.gui.canvas.create_rectangle(temp[0], temp[1], temp[2], temp[3],
-                    #                                   fill=COLORS_DICT[child.board[r][c].__repr__()])
-                    # Board.gui.root.update()
 
             for i in range(constraint.length):
                 if child.fill(i + start_index, con_i, constraint.color) \
                         and child.check_move(con_i, i + start_index, problem_type=SEARCH_PROBLEMS):
-                    # r, c = i + start_index, con_i
-                    # temp = Board.gui.board_rectangles_locs[r][c]
-                    # Board.gui.canvas.create_rectangle(temp[0], temp[1], temp[2], temp[3],
-                    #                                   fill=COLORS_DICT[child.board[r][c].__repr__()])
-                    # Board.gui.root.update()
                     continue
                 else:
                     return None
-        # child = deepcopy(self)
-        # if constraint_type:
-        #     constraint = child.cols_constraints[con_i][con_j]
-        #     for i in range(start_index):
-        #         # Assign the cells that must be white.
-        #         if child.get_cell(i, con_i).color == EMPTY:
-        #             child.fill(i, con_i, WHITE)
-        #
-        #     for i in range(constraint.length):
-        #         if child.fill(i + start_index, con_i, constraint.color) \
-        #                 and agent.check_move(child, con_i, i + start_index, problem_type=SEARCH_PROBLEMS):
-        #             continue
-        #         else:
-        #             return None
         child.complete_constraints(con_i, con_j, constraint_type)
         return child
 
@@ -260,6 +218,7 @@ class Board:
         self.to_print = self.to_print[:-1]
         self.to_print = self.to_print[:len(self.to_print) - len(row_space) - 1] + "|"
 
+        # adding the structure of each row with the current content of the board beside the rows constraints.
         for j, row in enumerate(self.rows_constraints):
             for i in range(m - 1, -1, -1):
                 cur = row[::-1]
