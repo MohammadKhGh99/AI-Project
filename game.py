@@ -28,8 +28,8 @@ class Game:
 
         """
         self.agent = my_agent
-        self.state = None
         self.always_solvable = always_solvable
+        self.state = None
         self.board = None
         # self.gui = None
 
@@ -92,8 +92,6 @@ class Game:
         with open(csv_file, 'r') as f:
             all_lines = f.readlines()
 
-        # todo - this tries to take just the lines that have something in them and not empty lines.
-        # check - so check it !
         lines = [line for line in all_lines if line.replace(' ', '') != '']
 
         self.colors = lines[3:6]
@@ -222,10 +220,11 @@ class Game:
 if __name__ == "__main__":
     print("Hello World!")
 
-    # game = Game(colors=COLORFUL, size=(2, 2))
+    game = Game(colors=COLORFUL, size=(1, 7))
+    # game = Game(colors=COLORFUL, size=(3, 3))
     # game = Game(colors=COLORFUL, size=(5, 5))
     # game = Game(colors=COLORFUL, size=(15, 15))
-    # game = Game(csv_file='example1.csv')
-    game = Game(colors=COLORFUL)
+
+    csp.run_CSP(game.board)
     game.run()
-    game.board.print_board()
+
