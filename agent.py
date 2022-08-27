@@ -169,6 +169,12 @@ class BruteForce:
         # no color is correct
         self.board.fill(row_id, col_id, EMPTY, brute_force=BRUTE_FORCE)
         return
+
+
+
+
+
+
 #
 # def brute_force(board):
 #     """

@@ -3,15 +3,15 @@ import util
 from config import COLORS_DICT
 
 
-def __gui_helper(board):
-    Board.Board.gui.canvas.delete('rect')
-    for r in range(board.num_rows):
-        for c in range(board.num_cols):
-            cur_color = board.board[r][c].color
-            if cur_color == -1:
-                board.fill(r, c, 0)
-            else:
-                board.fill(r, c, board.board[r][c].color)
+# def __gui_helper(board):
+#     Board.Board.gui.canvas.delete('rect')
+#     for r in range(board.num_rows):
+#         for c in range(board.num_cols):
+#             cur_color = board.board[r][c].color
+#             if cur_color == -1:
+#                 board.fill(r, c, 0)
+#             else:
+#                 board.fill(r, c, board.board[r][c].color)
 
 
 def search_helper(problem, fringe):
@@ -22,7 +22,6 @@ def search_helper(problem, fringe):
         current = fringe.pop()
         # todo - block the gui for some time...
         # todo - show all the rectangles of the current child
-        # Board.Board.gui.canvas.after(5000, Board.Board.gui.root.update)
         for i in range(len(current[0].rects)):
             r, c = current[0].rects[i].row, current[0].rects[i].col
             temp = Board.Board.gui.board_rectangles_locs[r][c]
@@ -30,9 +29,7 @@ def search_helper(problem, fringe):
                                                     fill=COLORS_DICT[current[0].board[r][c].__repr__()], tags='rect')
         Board.Board.gui.root.update()
 
-        # current[0].print_board()
         if problem.is_goal_state(current[0]):
-            # __gui_helper(current[0])
             return current[0]
         for child in problem.get_successors(current[0]):
             visited_coords = False

@@ -32,3 +32,6 @@ COLORS_DICT = {'w': 'white', 'b': 'black', 'r': 'red', ' ': 'white'}
 BFS = 1
 DFS = 2
 ASTAR = 3
+
+GUI = True
+PRINT = False

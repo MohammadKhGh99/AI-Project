@@ -111,11 +111,11 @@ class Board:
             # time.sleep(0.1)
             # Board.gui.canvas.delete('rect')
 
-            if brute_force:
-                temp = Board.gui.board_rectangles_locs[r][c]
-                Board.gui.canvas.create_rectangle(temp[0], temp[1], temp[2], temp[3],
-                                                  fill=COLORS_DICT[self.board[r][c].__repr__()], tags='rect')
-                Board.gui.root.update()
+            # if brute_force:
+            #     temp = Board.gui.board_rectangles_locs[r][c]
+            #     Board.gui.canvas.create_rectangle(temp[0], temp[1], temp[2], temp[3],
+            #                                       fill=COLORS_DICT[self.board[r][c].__repr__()], tags='rect')
+                # Board.gui.root.update()
             self.rects.append(self.board[r][c])
 
             # self.print_board()
