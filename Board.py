@@ -97,25 +97,24 @@ class Board:
     def start_gui(board):
         Board.gui = GUI.GUI(board=board)
 
-    def fill(self, r, c, color):
+    def fill(self, r, c, color, brute_force=BRUTE_FORCE):
         # time.sleep(0.1)
         # sys.stdout.flush()
         if r < self.num_rows and c < self.num_cols:
             self.board[r][c].color = color
             self.flipped[c][r].color = color
-            Board.gui.board.board[r][c].color = color
+            # Board.gui.board.board[r][c].color = color
             cur = self.cells_locations[r][c]
             # I found that this way is faster
             self.to_print = self.to_print[:cur] + self.board[r][c].__repr__() + self.to_print[cur + 1:]
-
-            time.sleep(0.1)
-            # Board.gui.canvas.delete('rect')
-            temp = Board.gui.board_rectangles_locs[r][c]
-            Board.gui.canvas.create_rectangle(temp[0], temp[1], temp[2], temp[3],
-                                              fill=COLORS_DICT[self.board[r][c].__repr__()], tags='rect')
-            Board.gui.root.update()
+            if brute_force:
+                # time.sleep(0.1)
+                # Board.gui.canvas.delete('rect')
+                temp = Board.gui.board_rectangles_locs[r][c]
+                Board.gui.canvas.create_rectangle(temp[0], temp[1], temp[2], temp[3],
+                                                  fill=COLORS_DICT[self.board[r][c].__repr__()], tags='rect')
+                Board.gui.root.update()
             self.rects.append(self.board[r][c])
-            # self.print_board()
             return True
         return False
 
@@ -128,15 +127,15 @@ class Board:
         start_index: from where to start to fill (row/column)
         """
         child = deepcopy(self)
-        if constraint_type:
-            constraint = child.cols_constraints[con_i][con_j]
+        if not constraint_type:
+            constraint = child.rows_constraints[con_i][con_j]
             for i in range(start_index):
                 # Assign the cells that must be white.
-                if child.get_cell(i, con_i).color == EMPTY:
-                    child.fill(i, con_i, WHITE)
+                if child.get_cell(con_i, i).color == EMPTY:
+                    child.fill(con_i, i, WHITE, SEARCH_PROBLEMS)
             for i in range(constraint.length):
-                if child.fill(i + start_index, con_i, constraint.color) \
-                        and child.check_move(con_i, i + start_index, problem_type=SEARCH_PROBLEMS):
+                if child.fill(con_i, i + start_index, constraint.color, SEARCH_PROBLEMS) \
+                        and child.check_move(i + start_index, con_i, problem_type=SEARCH_PROBLEMS):
                     continue
                 else:
                     return None

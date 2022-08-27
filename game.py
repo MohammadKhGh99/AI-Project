@@ -207,14 +207,14 @@ class Game:
 
         nonogram_problem = agent.NonogramProblem(self.board)
 
-        # print("BFS")
-        # self.board = search.breadth_first_search(nonogram_problem)
+        print("BFS")
+        self.board = search.breadth_first_search(nonogram_problem)
 
         # print("DFS")
         # self.board = search.depth_first_search(nonogram_problem)
 
-        print("A*")
-        self.board = search.a_star_search(problem=nonogram_problem)
+        # print("A*")
+        # self.board = search.a_star_search(problem=nonogram_problem)
 
         # print("CSP")
         # csp.run_CSP(self.board)
@@ -228,11 +228,11 @@ class Game:
 if __name__ == "__main__":
     print("Hello World!")
 
-    game = Game(colors=COLORFUL, size=(9, 9))
-    # game = Game(colors=COLORFUL, size=(5, 5))
+    # game = Game(colors=COLORFUL, size=(10, 17))
+    # game = Game(colors=COLORFUL, size=(11, 11))
     # game = Game(colors=COLORFUL, size=(15, 15))
     # game.board.print_board()
-    # game = Game(csv_file='example1.csv')
+    game = Game(csv_file='example1.csv')
     # game = Game(colors=COLORFUL)
     game.run()
     # game.board.print_board()

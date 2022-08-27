@@ -30,9 +30,7 @@ def search_helper(problem, fringe):
                                               fill=COLORS_DICT[current[0].board[r][c].__repr__()], tags='rect')
         Board.Board.gui.root.update()
 
-        # current[0].print_board()
         if problem.is_goal_state(current[0]):
-            # __gui_helper(current[0])
             return current[0]
         for child in problem.get_successors(current[0]):
             visited_coords = False
