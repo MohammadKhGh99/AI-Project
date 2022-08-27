@@ -61,20 +61,19 @@ class NonogramProblem(SearchProblem):
 
     def get_successors(self, state):
         successors = []
-        constraint_coord = state.get_first_incomplete_constraint(COLUMNS)
+        constraint_coord = state.get_first_incomplete_constraint(ROWS)
 
         if constraint_coord is None:
             # We have done all the constraints
             return successors
 
-        for start_index in range(state.num_rows):
-            child = state.fill_n_cells(constraint_coord[0], constraint_coord[1], start_index, COLUMNS)
+        for start_index in range(state.num_cols):
+            child = state.fill_n_cells(constraint_coord[0], constraint_coord[1], start_index, ROWS)
             if child is not None:
                 actions = set()
-                constraint = state.cols_constraints[constraint_coord[0]][constraint_coord[1]]
+                constraint = state.rows_constraints[constraint_coord[0]][constraint_coord[1]]
                 for i in range(constraint.length):
-                    actions.add((start_index + i, constraint_coord[0]))  #, constraint.color))
-                # successors.append((child, actions, abs(constraint.length - state.num_rows)))
+                    actions.add((constraint_coord[0], start_index + i))  #, constraint.color))
                 successors.append((child, actions))
         return successors
 
@@ -90,48 +89,48 @@ class NonogramProblem(SearchProblem):
         return -1 * sum_completed_constrains
 
 
-class NonogramCells(SearchProblem):
-    """
-        Class that defining the nonogram game as a problem.
-    """
-
-    def __init__(self, board):
-        self.board = board
-        self.current_cell = 0
-
-    def get_start_state(self):
-        return self.board
-
-    def is_goal_state(self, state):
-        return (state.get_first_incomplete_constraint(COLUMNS) is None) and \
-               (state.get_first_incomplete_constraint(ROWS) is None)
-
-    def get_successors(self, state):
-        successors = []
-        constraint_coord = state.get_first_incomplete_constraint(COLUMNS)
-
-        if constraint_coord is None:
-            # We have done all the constraints
-            return successors
-
-        for start_index in range(state.num_rows):
-            child = state.fill_n_cells(constraint_coord[0], constraint_coord[1], start_index, COLUMNS)
-            if child is not None:
-                actions = set()
-                constraint = state.cols_constraints[constraint_coord[0]][constraint_coord[1]]
-                for i in range(constraint.length):
-                    actions.add((start_index + i, constraint_coord[0]))
-                successors.append((child, actions))
-        return successors
-
-    def get_cost_of_actions(self, state):
-        # Actions are a set of cell's coordinates we colored to get a new state.
-        sum_completed_constrains = 0
-        for row_con in state.rows_constraints:
-            for constraint in row_con:
-                if constraint.completed:
-                    sum_completed_constrains += 1
-        return -1 * sum_completed_constrains
+# class NonogramCells(SearchProblem):
+#     """
+#         Class that defining the nonogram game as a problem.
+#     """
+#
+#     def __init__(self, board):
+#         self.board = board
+#         self.current_cell = 0
+#
+#     def get_start_state(self):
+#         return self.board
+#
+#     def is_goal_state(self, state):
+#         return (state.get_first_incomplete_constraint(COLUMNS) is None) and \
+#                (state.get_first_incomplete_constraint(ROWS) is None)
+#
+#     def get_successors(self, state):
+#         successors = []
+#         constraint_coord = state.get_first_incomplete_constraint(COLUMNS)
+#
+#         if constraint_coord is None:
+#             # We have done all the constraints
+#             return successors
+#
+#         for start_index in range(state.num_rows):
+#             child = state.fill_n_cells(constraint_coord[0], constraint_coord[1], start_index, COLUMNS)
+#             if child is not None:
+#                 actions = set()
+#                 constraint = state.cols_constraints[constraint_coord[0]][constraint_coord[1]]
+#                 for i in range(constraint.length):
+#                     actions.add((start_index + i, constraint_coord[0]))
+#                 successors.append((child, actions))
+#         return successors
+#
+#     def get_cost_of_actions(self, state):
+#         # Actions are a set of cell's coordinates we colored to get a new state.
+#         sum_completed_constrains = 0
+#         for row_con in state.rows_constraints:
+#             for constraint in row_con:
+#                 if constraint.completed:
+#                     sum_completed_constrains += 1
+#         return -1 * sum_completed_constrains
 
 
 # todo - fix the design and the problems that Ibraheem made
@@ -153,7 +152,7 @@ class BruteForce:
         this is a recursion function, we do recursion to solve it in brute force.
         """
         for color in [RED, BLACK, WHITE]:
-            self.board.fill(row_id, col_id, color)
+            self.board.fill(row_id, col_id, color, brute_force=BRUTE_FORCE)
             # check if this move works, if yes go to next cell.
             if self.board.check_move(col_id, row_id):
                 if col_id + 1 < len(self.board.cols_constraints):
@@ -168,7 +167,7 @@ class BruteForce:
                     #  finished - the board is complete
                     return self
         # no color is correct
-        self.board.fill(row_id, col_id, EMPTY)
+        self.board.fill(row_id, col_id, EMPTY, brute_force=BRUTE_FORCE)
         return
 #
 # def brute_force(board):

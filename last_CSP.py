@@ -18,9 +18,10 @@ class ConstraintForVariable:
 
 
 class CSP:
-    def __init__(self, variables, domains):
-        self.variables = variables
-        self.domains: Dict = domains
+    def __init__(self, variables, domains, neighbors):
+        self.variables = variables      # A list of variables
+        self.domains: Dict = domains     # {var:[possible_value, ...]}
+        self.neighbors: Dict = neighbors  # {var: [var,...]}
         self.constraints = {}
         for variable in self.variables:
             self.constraints[variable] = []
@@ -35,6 +36,24 @@ class CSP:
                 return False
         return True
 
+    def nconflicts(self, variable, value, assignment):
+        "Return the number of conflicts var=val has with other variables."
+        def conflict(var2):
+            val2 = assignment.get(var2, None)
+
+            if val2 is not None:
+                temp_assignment[var2] = val2
+                return not self.consistent(variable, temp_assignment)
+        temp_assignment = {variable: value}
+        return self.count_matching(conflict, self.neighbors[variable])
+
+    def count_matching(self, condition, seq):
+        """Returns the amount of items in seq that return true from condition"""
+        return sum(1 for item in seq if condition(item))
+
+    def cmp(self, a, b):
+        return (a > b) - (a < b)
+
     def backtracking_search_rec(self, assignment=None):
         # assignment is complete if every variable is assigned (our base case)
         if assignment is None:
@@ -42,20 +61,19 @@ class CSP:
         if len(assignment) == len(self.variables):
             return assignment
 
-        # get all variables in the CSP but not in the assignment
-        unassigned: List = self.select_unassigned_variable(assignment)
+        # get the first variable in the CSP but not in the assignment
+        variable = self.select_unassigned_variable(assignment)
 
-        # organize all the different values in the unassigned variables
-        ordered_unassigned = self.order_domain_values(unassigned, assignment)
+        # organize all the different values for this unassigned variable
+        ordered_domain = self.order_domain_values(variable, assignment)
 
-        # get the every possible domain value of the first unassigned variable
-        first = ordered_unassigned[0]
-        for value in self.domains[first]:
+        # get the every possible domain value for this unassigned variable
+        for value in ordered_domain:
             local_assignment = assignment.copy()
-            local_assignment[first] = value
+            local_assignment[variable] = value
 
             # if we're still consistent, we recurse (continue)
-            if self.consistent(first, local_assignment):
+            if self.consistent(variable, local_assignment):
                 # local_assignment[first] = value
                 result = self.backtracking_search_rec(local_assignment)
                 # if we didn't find the result, we will end up backtracking
@@ -67,14 +85,13 @@ class CSP:
         """
         choose the unassigned variables from all the variables.
         """
-        # todo, this function need to get override by different CSP, to choose the best variable
-        return [v for v in self.variables if v not in assignment]
+        return [v for v in self.variables if v not in assignment][0]
 
-    def order_domain_values(self, unassigned, assignment):
+    def order_domain_values(self, variable, assignment):
         """
         choose the order of the values we are going to try for variable
         """
-        return unassigned
+        return self.domains[variable]
 
 
 class MRV_CSP(CSP):
@@ -89,7 +106,7 @@ class MRV_CSP(CSP):
             if least_values >= len(self.domains[var]):
                 least_values = len(self.domains[var])
                 first_var = var
-        return [first_var]
+        return first_var
 
 
 class degree_CSP(CSP):
@@ -104,7 +121,7 @@ class degree_CSP(CSP):
             if most_constraints <= len(self.constraints[var]):
                 most_constraints = len(self.constraints[var])
                 first_var = var
-        return [first_var]
+        return first_var
 
 
 class MRV_then_degree_CSP(CSP):
@@ -128,7 +145,23 @@ class MRV_then_degree_CSP(CSP):
             if most_constraints <= len(self.constraints[var]):
                 most_constraints = len(self.constraints[var])
                 first_var = var
-        return [first_var]
+        return first_var
+
+
+class LCV_CSP(CSP):
+    def order_domain_values(self, variable, assignment):
+        domain_for_var = self.domains[variable].copy()
+        num_of_conflicts = []
+        for value in domain_for_var:
+            num_of_conflicts.append((value, self.nconflicts(variable, value, assignment)))
+        for conf in num_of_conflicts:
+            if conf[1] >= 1:
+                print()
+        sorted_conflicts = sorted(num_of_conflicts, key=lambda x: x[1])
+        domain_for_var = [val[0] for val in sorted_conflicts]
+
+        while domain_for_var:
+            yield domain_for_var.pop()
 
 
 # class degree_then_MRV_CSP(CSP):
@@ -235,8 +268,7 @@ def get_all_possibilities(constraint_list, dict_of_blocks, final_result, curr_an
                     index_to_fill += constraint_length
 
                     # we finished this constraint move to next constraint
-                    get_all_possibilities(constraint_list, dict_of_blocks, final_result, temp_curr_ans,
-                                          curr_constraint_idx + 1, index_to_fill)
+                    get_all_possibilities(constraint_list, dict_of_blocks, final_result, temp_curr_ans, curr_constraint_idx + 1, index_to_fill)
 
                 else:
                     # we can't fill this constraint, something is wrong, (I think this will never happen)
@@ -274,8 +306,10 @@ def get_constraints_boundaries(board, constraint_type):
         for con_reverse in reversed(constraints_list):
             if con_reverse.color == old_con_color:
                 old_cluster_end_pos -= 1
-            possible_positions[con_reverse][1] = old_cluster_end_pos - con_reverse.length
-            old_cluster_end_pos = con_reverse.largest_most_left_pixel
+
+            old_cluster_end_pos -= con_reverse.length
+            possible_positions[con_reverse][1] = old_cluster_end_pos
+            # old_cluster_end_pos = con_reverse.largest_most_left_pixel
             old_con_color = con_reverse.color
 
         all_positions_for_constraint_list.append(possible_positions)
@@ -283,53 +317,56 @@ def get_constraints_boundaries(board, constraint_type):
     return all_positions_for_constraint_list
 
 
-def get_constrains(board):
+def get_constrains_and_neighbors(board):
     """
     making constraints between variables
     """
-    neighbours = {}
+    neighbors = {}
     columns_constraints = []
     rows_constraints = []
     constraints = []
     for col_idx in range(len(board.cols_constraints)):
-        columns_constraints.append((COLUMNS, col_idx))
+        temp_variable = (COLUMNS, col_idx)
+        columns_constraints.append(temp_variable)
+        neighbors[temp_variable] = []
+
     for row_idx in range(len(board.rows_constraints)):
         temp_variable = (ROWS, row_idx)
         rows_constraints.append(temp_variable)
         constraints.append(RowColumnConstraint(temp_variable, *columns_constraints))
+        neighbors[temp_variable] = columns_constraints
 
     # todo, I feel we don't need this, but we keep it for now
-    # for col_idx in range(len(board.cols_constraints)):
-    #     temp_variable = (COLUMNS, col_idx)
-    #     constraints.append(RowColumnConstraint(temp_variable, *rows_constraints))
+    for col_idx in range(len(board.cols_constraints)):
+        temp_variable = (COLUMNS, col_idx)
+        constraints.append(RowColumnConstraint(temp_variable, *rows_constraints))
+        neighbors[temp_variable] = rows_constraints
 
-    return constraints
-
+    return constraints, neighbors
 
 def run_CSP_last(game):
     board = game.board
     variables, domains = get_variables_and_domains(board)
-    our_csp = CSP(variables, domains)
-    our_csp_mrv = MRV_CSP(variables, domains)
-    the_constraints = get_constrains(board)
+    the_constraints, neighbors = get_constrains_and_neighbors(board)
+    our_csp = CSP(variables, domains, neighbors)
+    our_csp_mrv = MRV_CSP(variables, domains, neighbors)
+    our_csp_lcv = LCV_CSP(variables, domains, neighbors)
     for con in the_constraints:
         our_csp.add_constraint(con)
         our_csp_mrv.add_constraint(con)
 
     test = our_csp.backtracking_search_rec()
-    test2 = our_csp.backtracking_search_rec()
+    test2 = our_csp_mrv.backtracking_search_rec()
+    test3 = our_csp_lcv.backtracking_search_rec()
     print()
-    game.run()
-    if test:
-        test2 = our_csp.backtracking_search_rec()
-        print()
+
 
 
 class RowColumnConstraint(ConstraintForVariable):
     def __init__(self, v1, *v2):
         super().__init__([v1, *v2])
         self.row = v1
-        self.all_columns = v2  # tuple of tuples each tuple: (COLUMNS, idx)
+        self.all_columns = v2    # tuple of tuples each tuple: (COLUMNS, idx)
 
     def satisfied(self, assignment) -> bool:
         if self.row not in assignment:
