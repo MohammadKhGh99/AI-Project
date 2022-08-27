@@ -27,7 +27,7 @@ def search_helper(problem, fringe):
             r, c = current[0].rects[i].row, current[0].rects[i].col
             temp = Board.Board.gui.board_rectangles_locs[r][c]
             Board.Board.gui.canvas.create_rectangle(temp[0], temp[1], temp[2], temp[3],
-                                              fill=COLORS_DICT[current[0].board[r][c].__repr__()], tags='rect')
+                                                    fill=COLORS_DICT[current[0].board[r][c].__repr__()], tags='rect')
         Board.Board.gui.root.update()
 
         if problem.is_goal_state(current[0]):
@@ -98,13 +98,16 @@ def a_star_search(problem, heuristic=null_heuristic):
     fringe.push(root, 0)
     while not fringe.isEmpty():
         Board.Board.gui.canvas.delete('rect')
+
         current = fringe.pop()
+
         for i in range(len(current.state.rects)):
             r, c = current.state.rects[i].row, current.state.rects[i].col
             temp = Board.Board.gui.board_rectangles_locs[r][c]
             Board.Board.gui.canvas.create_rectangle(temp[0], temp[1], temp[2], temp[3],
-                                              fill=COLORS_DICT[current.state.board[r][c].__repr__()], tags='rect')
+                                                    fill=COLORS_DICT[repr(current.state.board[r][c])], tags='rect')
         Board.Board.gui.root.update()
+
         if problem.is_goal_state(current.state):
             # __gui_helper(current.state)
             return current.state
@@ -159,7 +162,6 @@ def local_beam_search(problem, k_states, k):
 bfs = breadth_first_search
 dfs = depth_first_search
 astar = a_star_search
-
 
 # import util
 #

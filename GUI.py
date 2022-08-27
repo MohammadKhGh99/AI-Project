@@ -12,13 +12,13 @@ class GUI:
         self.root = Tk()
         self.root.title(title)
         self.root.configure(background="grey")
-        my_title = Label(self.root, text="Nonogram Game", font=("times new riman", 20, "bold"), bg="grey", fg="black")
+        my_title = Label(self.root, text="Nonogram Game", font=("times new riman", 20, "bold"), bg="white", fg="black")
         my_title.pack(side=TOP)
         self.canvas_width = window_width - 100
         self.canvas_height = window_height - 40
         self.root.geometry(f'{window_width}x{window_height}')  # Size of window.
 
-        self.canvas = Canvas(self.root, width=self.canvas_width, height=self.canvas_height, bg="white")
+        self.canvas = Canvas(self.root, width=self.canvas_width, height=self.canvas_height, bg="white", highlightbackground='black')
         # self.canvas.create_line(0, 200, self.canvas_width, 200)
         # self.canvas.create_line(200, 0, 200, self.canvas_height)
         self.canvas.pack(anchor='n', side=BOTTOM)
@@ -59,6 +59,7 @@ class GUI:
         # row_len = self.canvas_width - 200
         # col_len = self.canvas_height - 200
 
+        # print(row_width)
 
         # create lines to create a look-like table
         for i in range(self.board.num_rows + 1):
@@ -92,7 +93,7 @@ class GUI:
                 x0, y0 = x + col_width * j + 2, y + row_width * i + 2
                 x1, y1 = x + col_width * (j + 1) - 2, y + row_width * (i + 1) - 2
                 row_locs.append((x0, y0, x1, y1))
-                self.canvas.create_rectangle(x0, y0, x1, y1)
+                self.canvas.create_rectangle(x0, y0, x1, y1, fill='white')
             self.board_rectangles_locs.append(row_locs)
 
         # print(self.board_rectangles_locs)

@@ -97,28 +97,32 @@ class Board:
     def start_gui(board):
         Board.gui = GUI.GUI(board=board)
 
-    def fill(self, r, c, color, brute_force=BRUTE_FORCE):
+    def fill(self, r, c, color, brute_force=SEARCH_PROBLEMS):
         # time.sleep(0.1)
         # sys.stdout.flush()
         if r < self.num_rows and c < self.num_cols:
             self.board[r][c].color = color
             self.flipped[c][r].color = color
-            # Board.gui.board.board[r][c].color = color
+            Board.gui.board.board[r][c].color = color
             cur = self.cells_locations[r][c]
             # I found that this way is faster
             self.to_print = self.to_print[:cur] + self.board[r][c].__repr__() + self.to_print[cur + 1:]
+
+            # time.sleep(0.1)
+            # Board.gui.canvas.delete('rect')
+
             if brute_force:
-                # time.sleep(0.1)
-                # Board.gui.canvas.delete('rect')
                 temp = Board.gui.board_rectangles_locs[r][c]
                 Board.gui.canvas.create_rectangle(temp[0], temp[1], temp[2], temp[3],
                                                   fill=COLORS_DICT[self.board[r][c].__repr__()], tags='rect')
                 Board.gui.root.update()
             self.rects.append(self.board[r][c])
+
+            # self.print_board()
             return True
         return False
 
-    def fill_n_cells(self, con_i, con_j, start_index, constraint_type=COLUMNS):
+    def fill_n_cells(self, con_i, con_j, start_index, constraint_type=ROWS):
         """
         Function fill the board, in a valid way. It fills n cells according to the given constraint.
         constraint_type: on which constraints list we will work: columns or rows.
@@ -132,9 +136,9 @@ class Board:
             for i in range(start_index):
                 # Assign the cells that must be white.
                 if child.get_cell(con_i, i).color == EMPTY:
-                    child.fill(con_i, i, WHITE, SEARCH_PROBLEMS)
+                    child.fill(con_i, i, WHITE)
             for i in range(constraint.length):
-                if child.fill(con_i, i + start_index, constraint.color, SEARCH_PROBLEMS) \
+                if child.fill(con_i, i + start_index, constraint.color) \
                         and child.check_move(i + start_index, con_i, problem_type=SEARCH_PROBLEMS):
                     continue
                 else:
