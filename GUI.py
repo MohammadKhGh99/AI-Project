@@ -8,24 +8,20 @@ from tkinter import *
 
 
 class GUI:
-    def __init__(self, board=None, title="Nonogram", window_width=GUI_WIDTH, window_height=GUI_HEIGHT, speed=0.3):
+    def __init__(self, board=None, title="Nonogram Game", window_width=GUI_WIDTH, window_height=GUI_HEIGHT, cur_game=None):
+        self.__cur_game = cur_game
+
         self.root = Tk()
         self.root.title(title)
         self.root.configure(background="grey")
-        my_title = Label(self.root, text="Nonogram Game", font=("times new riman", 20, "bold"), bg="white", fg="black")
+        my_title = Label(self.root, text="Nonogram Game", font=("times new roman", 20, "bold"), bg="white", fg="black")
         my_title.pack(side=TOP)
         self.canvas_width = window_width - 100
         self.canvas_height = window_height - 40
-        self.root.geometry(f'{window_width}x{window_height}')  # Size of window.
+        self.root.geometry(f'{window_width}x{window_height}')
 
         self.canvas = Canvas(self.root, width=self.canvas_width, height=self.canvas_height, bg="white", highlightbackground='black')
-        # self.canvas.create_line(0, 200, self.canvas_width, 200)
-        # self.canvas.create_line(200, 0, 200, self.canvas_height)
         self.canvas.pack(anchor='n', side=BOTTOM)
-        # self.canvas.place(relx=GUI_WIDTH // 2)#, rely=(GUI_HEIGHT // 2) - 100)
-
-        self.speed = speed
-
         flag = False
 
         def play_sound():
@@ -41,25 +37,60 @@ class GUI:
 
         sound_button = Button(self.root, text="sound", command=play_sound)
         sound_button.config(height=1, width=5)
-        sound_button.place(x=850, y=1)
+        sound_button.place(x=750, y=1)
 
-        # def set_board(self, board):
+        def clear_board():
+            self.__cur_game.board.clear_board()
+
+        clear_button = Button(self.root, text="clear", command=self.__cur_game.board.clear_board)
+        clear_button.config(height=1, width=5)
+        clear_button.place(x=600, y=1)
+
+        def run_brute():
+            self.__cur_game.run(BRUTE)
+
+        brute_button = Button(self.root, text="BRUTE", command=run_brute)
+        brute_button.config(height=1, width=4)
+        brute_button.place(x=757, y=100)
+
+        def run_dfs():
+            self.__cur_game.run(DFS)
+
+        dfs_button = Button(self.root, text="DFS", command=run_dfs)
+        dfs_button.config(height=1, width=4)
+        dfs_button.place(x=760, y=200)
+
+        def run_bfs():
+            self.__cur_game.run(BFS)
+
+        bfs_button = Button(self.root, text="BFS", command=run_bfs)
+        bfs_button.config(height=1, width=4)
+        bfs_button.place(x=760, y=300)
+
+        def run_astar():
+            self.__cur_game.run(ASTAR)
+
+        astar_button = Button(self.root, text="ASTAR", command=run_astar)
+        astar_button.config(height=1, width=4)
+        astar_button.place(x=758, y=400)
+
+        exit_button = Button(self.root, text="exit", command=exit, background='red')
+        exit_button.config(height=1, width=4)
+        exit_button.place(x=5, y=1)
+
+        # def run_csp():
+        #     self.__cur_game.run(CSP_P)
+        #
+        # csp_button = Button(self.root, text="CSP", command=run_csp)
+        # csp_button.config(height=1, width=4)
+        # csp_button.place(x=760, y=500)
+
         self.board = deepcopy(board)
 
         x, y = 260, 230
-
-        # def draw_lines(self):
-        row_width = (self.canvas_width - x) // self.board.num_rows
-        col_width = (self.canvas_height - y) // self.board.num_cols
-
-        tmp = min(row_width, col_width)
+        tmp = min((self.canvas_width - x) // self.board.num_rows, (self.canvas_height - y) // self.board.num_cols)
 
         col_width, row_width = tmp, tmp
-
-        # row_len = self.canvas_width - 200
-        # col_len = self.canvas_height - 200
-
-        # print(row_width)
 
         # create lines to create a look-like table
         for i in range(self.board.num_rows + 1):
@@ -67,25 +98,6 @@ class GUI:
         for i in range(self.board.num_cols + 1):
             self.canvas.create_line(x + i * col_width, 0, x + i * col_width, self.canvas_height)
 
-        # max_col, max_row = 0, 0
-        # for row in self.board.rows_constraints:
-        #     if len(row) > max_row:
-        #         max_row = len(row)
-        # # gets the longest column's length
-        # for col in self.board.cols_constraints:
-        #     if len(col) > max_col:
-        #         max_col = len(col)
-
-        # row_width_con = 200 // max_row
-        # col_width_con = 200 // max_col
-
-        # for row in range(max_row):
-        #     self.canvas.create_line(0 + row * row_width, 200, 0 + row * row_width, self.canvas_height, dash=(3, 1))
-        # for col in range(max_col):
-        #     self.canvas.create_line(200, 0 + col * col_width, self.canvas_height, 0 + col * col_width, dash=(3, 1))
-
-        # row_width = (self.canvas_height - 200) // self.board.num_rows
-        # col_width = (self.canvas_width - 200) // self.board.num_cols
         self.board_rectangles_locs = []
         for i in range(self.board.num_rows):
             row_locs = []
@@ -96,23 +108,17 @@ class GUI:
                 self.canvas.create_rectangle(x0, y0, x1, y1, fill='white')
             self.board_rectangles_locs.append(row_locs)
 
-        # print(self.board_rectangles_locs)
-
         for i, row_con in enumerate(self.board.rows_constraints):
             row_text = ''
             for con in row_con:
                 row_text += str(con) + ' '
-            # row_text = row_text * 15
             row_text = row_text[:-1]
-            # if len(row_text) < 80:
-            #     row_text = ' ' * (80 - len(row_text)) + row_text
 
             self.canvas.create_text((5, y + row_width // 3 + row_width * i), text=row_text, anchor='nw', font=('lucida', '9'))
         for i, col_con in enumerate(self.board.cols_constraints):
             col_text = ''
             for con in col_con:
                 col_text += str(con) + '\n'
-            # col_text = col_text * 15
             col_text = col_text[:-1]
             n = col_text.count('\n')
             if n < 14:
@@ -125,3 +131,9 @@ class GUI:
 
     def failed_msg(self):
         messagebox.showerror('Failed', 'You didn\'t find the solution')
+
+    def put_time(self, solve_type, timing):
+        loc = LOCS_DICT[solve_type]
+        label = Label(self.root, text=str(timing), bg='light green')
+        label.place(x=loc[0] - 2, y=loc[1] + 30)
+        # self.canvas.create_text((loc[0], loc[1] + 30), text=str(timing))

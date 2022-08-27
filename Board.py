@@ -1,10 +1,7 @@
-import GUI
+from GUI import GUI
 from config import *
 from typing import List
 from copy import deepcopy
-import agent
-import sys
-import time
 
 
 class Cell:
@@ -37,14 +34,12 @@ class Constraint:
     """
 
     def __init__(self, constraint):
-        # todo - add the situation if the constraint is empty or not?
-        if constraint.replace(' ', '') == '':
+        if constraint.replace(' ', '') == '':  # empty constraint
             raise Exception("Empty Constraint Situation Not Implemented!")
-
         try:
             self.length = int(constraint[:-1])
         except Exception:
-            raise Exception("constraint structure should be like this")
+            raise Exception("constraint structure should not be like this")
 
         c = constraint[-1]
 
@@ -53,13 +48,10 @@ class Constraint:
         else:
             self.color = BLACK if c.lower() == 'b' else RED
 
-        # todo choose one of those
         self.completed = False
 
     def __str__(self):
-        c = 'b' if self.color == BLACK else 'r'
-        return str(self.length) + c
-        # return (str(self.length) + 'b') if self.color == BLACK else (str(self.length) + 'r')
+        return str(self.length) + COLORS_N_DICT[self.color]
 
     def __len__(self):
         return len(self.__str__())
@@ -69,15 +61,15 @@ class Board:
     gui = None
 
     def __init__(self, rows_constraints: List[List[Constraint]], cols_constraints: List[List[Constraint]],
-                 randomly=False, size=(5, 5), board=None):
+                 randomly=False, size=(5, 5), cur_game=None):
         self.rows_constraints = rows_constraints
         self.cols_constraints = cols_constraints
         self.to_print = ""
         self.cells_locations = []
         self.randomly = randomly
         self.size = size
+        self.cur_game = cur_game
 
-        # todo - add a list of the cells of the child's actions rectangles
         self.rects = []
 
         if not self.randomly:
@@ -86,27 +78,46 @@ class Board:
         else:
             self.num_rows, self.num_cols = self.size
 
-        self.board = board if board else [[Cell(r, c) for c in range(self.num_cols)] for r in range(self.num_rows)]
-        # todo I guess now to have same cells we need to flip this board manually - DONE (I think?)
+        self.board = [[Cell(r, c) for c in range(self.num_cols)] for r in range(self.num_rows)]
         self.flipped = [[Cell(c, r) for r in range(self.num_rows)] for c in range(self.num_cols)]
 
-        self.to_print = self.init_board_print()
-        # Board.gui = GUI.GUI(board=self)
+        self.init_board_print()
 
     @staticmethod
     def start_gui(board):
-        Board.gui = GUI.GUI(board=board)
+        Board.gui = GUI(board=board, cur_game=board.cur_game)
+
+    def clear_board(self):
+        Board.gui.canvas.delete('rect')
+        for r in range(self.num_rows):
+            for c in range(self.num_cols):
+                self.board[r][c].color = EMPTY
+                self.flipped[r][c].color = EMPTY
+                Board.gui.board.board[r][c].color = EMPTY
+                self.cells_locations = []
+                Board.gui.board.cells_locations = []
+                self.init_board_print()
+                Board.gui.board.init_board_print()
+                self.rects = []
+                Board.gui.board.rects = []
+        for row_con in self.rows_constraints:
+            for con in row_con:
+                con.completed = False
+        for col_con in self.cols_constraints:
+            for con in col_con:
+                con.completed = False
+
+        # Board.gui.board = Board(rows_constraints=self.rows_constraints, cols_constraints=self.cols_constraints, randomly=self.randomly, size=self.size, cur_game=self.cur_game)
+        # return Board(rows_constraints=self.rows_constraints, cols_constraints=self.cols_constraints, randomly=self.randomly, size=self.size, cur_game=self.cur_game)
 
     def fill(self, r, c, color, brute_force=SEARCH_PROBLEMS):
-        # time.sleep(0.1)
-        # sys.stdout.flush()
         if r < self.num_rows and c < self.num_cols:
             self.board[r][c].color = color
             self.flipped[c][r].color = color
             Board.gui.board.board[r][c].color = color
             cur = self.cells_locations[r][c]
             # I found that this way is faster
-            self.to_print = self.to_print[:cur] + self.board[r][c].__repr__() + self.to_print[cur + 1:]
+            self.to_print = self.to_print[:cur] + repr(self.board[r][c]) + self.to_print[cur + 1:]
 
             # time.sleep(0.1)
             # Board.gui.canvas.delete('rect')
@@ -122,6 +133,17 @@ class Board:
             return True
         return False
 
+    def fill_row_col(self, i, row_or_col):
+        if row_or_col == ROWS:  # row
+            for j in range(self.num_cols):
+                loc = Board.gui.board_rectangles_locs[i][j]
+                Board.gui.canvas.create_rectangle(loc, fill=COLORS_DICT[repr(self.board[i][j])], tags='rect')
+        else:  # column
+            for j in range(self.num_rows):
+                loc = Board.gui.board_rectangles_locs[j][i]
+                Board.gui.canvas.create_rectangle(loc, fill=COLORS_DICT[repr(self.board[j][i])], tags='rect')
+        Board.gui.root.update()
+
     def fill_n_cells(self, con_i, con_j, start_index, constraint_type=ROWS):
         """
         Function fill the board, in a valid way. It fills n cells according to the given constraint.
@@ -135,7 +157,7 @@ class Board:
             constraint = child.rows_constraints[con_i][con_j]
             for i in range(start_index):
                 # Assign the cells that must be white.
-                if child.get_cell(con_i, i).color == EMPTY:
+                if child.board[con_i][i].color == EMPTY:
                     child.fill(con_i, i, WHITE)
             for i in range(constraint.length):
                 if child.fill(con_i, i + start_index, constraint.color) \
@@ -146,9 +168,6 @@ class Board:
         child.complete_constraints(con_i, con_j, constraint_type)
         # Board.gui.canvas.delete('rect')
         return child
-
-    def get_cell(self, r, c, flipped=False):
-        return self.board[r][c] if not flipped else self.flipped[c][r]
 
     def init_board_print(self):
         self.to_print = ""

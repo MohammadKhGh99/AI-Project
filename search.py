@@ -20,13 +20,14 @@ def search_helper(problem, fringe):
         # delete the previous child's actions rectangles
         Board.Board.gui.canvas.delete('rect')
         current = fringe.pop()
+        # current[0].print_board()
         # todo - block the gui for some time...
         # todo - show all the rectangles of the current child
         for i in range(len(current[0].rects)):
             r, c = current[0].rects[i].row, current[0].rects[i].col
             temp = Board.Board.gui.board_rectangles_locs[r][c]
             Board.Board.gui.canvas.create_rectangle(temp[0], temp[1], temp[2], temp[3],
-                                                    fill=COLORS_DICT[current[0].board[r][c].__repr__()], tags='rect')
+                                                    fill=COLORS_DICT[repr(current[0].board[r][c])], tags='rect')
         Board.Board.gui.root.update()
 
         if problem.is_goal_state(current[0]):
