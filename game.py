@@ -12,7 +12,7 @@ from Board import *
 
 class Game:
     def __init__(self, csv_file=None, rows_constraints=None, cols_constraints=None, colors=BLACK_WHITE,
-                 size=(5, 5), my_agent=None, always_solvable=True, rows_or_cols=ROWS, gui_or_print=GUI):
+                 size=(5, 5), my_agent=None, always_solvable=True, rows_or_cols=ROWS, gui_or_print=IS_GUI, difficulty=EASY):
         """
         Initializing the board of the game, we have 3 different ways:
         1) from CSV file
@@ -35,6 +35,8 @@ class Game:
         self.state = None
         self.board = None
         self.rows_or_cols = rows_or_cols
+        self.gui_or_print = gui_or_print
+        self.difficulty = difficulty
 
         if csv_file:
             """
@@ -115,6 +117,69 @@ class Game:
         # build the board as empty board.# build the board as empty board.
         self.board = Board(temp_rows_constraints, temp_cols_constraints)
 
+    def __build_rows_constraints(self, temp_board, temp_rows_constraints):
+        for row in range(self.num_rows):
+            seq = 1
+            row_constraints = []
+            for col in range(self.num_cols):
+                if temp_board[row][col].color != WHITE:
+                    cur_color = 'b' if temp_board[row][col].color == BLACK else 'r'
+                    if col < self.num_cols - 1:
+                        if temp_board[row][col].color == temp_board[row][col + 1].color:
+                            seq += 1
+                        else:
+                            row_constraints.append(Constraint(str(seq) + cur_color))
+                            seq = 1
+                    else:
+                        row_constraints.append(Constraint(str(seq) + cur_color))
+            temp_rows_constraints.append(row_constraints)
+        return temp_rows_constraints
+
+    def __build_cols_constraints(self, temp_board, temp_cols_constraints):
+        for col in range(self.num_cols):
+            seq = 1
+            col_constraints = []
+            for row in range(self.num_rows):
+                if temp_board[row][col].color != WHITE:
+                    cur_color = 'b' if temp_board[row][col].color == BLACK else 'r'
+                    if row < self.num_rows - 1:
+                        if temp_board[row][col].color == temp_board[row + 1][col].color:
+                            seq += 1
+                        else:
+                            col_constraints.append(Constraint(str(seq) + cur_color))
+                            seq = 1
+                    else:
+                        col_constraints.append(Constraint(str(seq) + cur_color))
+            temp_cols_constraints.append(col_constraints)
+        return temp_cols_constraints
+
+    def __build_easy(self, m, n, temp_board, temp_constraints, rows_cols=ROWS):
+        for i in range(m):
+            con_lst = []
+            j = 0
+            while j < n:
+                ran_len = random.randint(1, n - j)
+                color = random.choice(COLORS_LST_WITHOUT_WHITE)
+                for k in range(j, j + ran_len):
+                    if rows_cols == ROWS:
+                        temp_board[i][k].color = color
+                    else:
+                        temp_board[k][i].color = color
+                if j + ran_len < n:
+                    if rows_cols == ROWS:
+                        temp_board[i][j + ran_len].color = WHITE
+                    else:
+                        temp_board[j + ran_len][i].color = WHITE
+                j += (ran_len + 1)
+                con = 'w'
+                if color == BLACK:
+                    con = 'b'
+                elif color == RED:
+                    con = 'r'
+                con_lst.append(Constraint(str(ran_len) + con))
+            temp_constraints.append(con_lst)
+        return temp_constraints
+
     def __random_building(self, size, colors):
         """
                 building a board randomly from giving size and colors
@@ -131,80 +196,21 @@ class Game:
             temp_cols_constraints = self.__build_constraints(size[1], random.randint(1, size[0]))
         else:
             # build an always solvable board, then build its constraints.
-            # temp_board = [[Cell(r, c) for c in range(self.num_cols)] for r in range(self.num_rows)]
-            temp_board = [[Cell(r, c, color=random.choice(COLORS_LST)) for c in range(self.num_cols)] for r in range(self.num_rows)]
             temp_rows_constraints, temp_cols_constraints = [], []
 
-            # if self.rows_or_cols:
-            #     for col in range(self.num_cols):
-            #         col_con = []
-            #         row = 0
-            #         while row < self.num_rows:
-            #             n = random.randint(1, (self.num_rows - row) // 2 + 1)
-            #             color = random.choice(COLORS_LST_WITHOUT_WHITE)
-            #             for i in range(row, row + n):
-            #                 temp_board[i][col].color = color
-            #             if row + n < self.num_rows:
-            #                 temp_board[row + n][col].color = WHITE
-            #             row += (n + 1)
-            #             con = 'w'
-            #             if color == BLACK:
-            #                 con = 'b'
-            #             elif color == RED:
-            #                 con = 'r'
-            #             col_con.append(Constraint(str(n) + con))
-            #         temp_cols_constraints.append(col_con)
-
-            for row in range(self.num_rows):
-                seq = 1
-                row_constraints = []
-                for col in range(self.num_cols):
-                    if temp_board[row][col].color != WHITE:
-                        cur_color = 'b' if temp_board[row][col].color == BLACK else 'r'
-                        if col < self.num_cols - 1:
-                            if temp_board[row][col].color == temp_board[row][col + 1].color:
-                                seq += 1
-                            else:
-                                row_constraints.append(Constraint(str(seq) + cur_color))
-                                seq = 1
-                        else:
-                            row_constraints.append(Constraint(str(seq) + cur_color))
-                temp_rows_constraints.append(row_constraints)
-            # else:
-            #     for row in range(self.num_rows):
-            #         row_con = []
-            #         col = 0
-            #         while col < self.num_cols:
-            #             n = random.randint(1, (self.num_cols - col) // 2 + 1)
-            #             color = random.choice(COLORS_LST_WITHOUT_WHITE)
-            #             for i in range(col, col + n):
-            #                 temp_board[row][i].color = color
-            #             if col + n < self.num_cols:
-            #                 temp_board[row][col + n].color = WHITE
-            #             col += (n + 1)
-            #             con = 'w'
-            #             if color == BLACK:
-            #                 con = 'b'
-            #             elif color == RED:
-            #                 con = 'r'
-            #             row_con.append(Constraint(str(n) + con))
-            #         temp_rows_constraints.append(row_con)
-
-            for col in range(self.num_cols):
-                seq = 1
-                col_constraints = []
-                for row in range(self.num_rows):
-                    if temp_board[row][col].color != WHITE:
-                        cur_color = 'b' if temp_board[row][col].color == BLACK else 'r'
-                        if row < self.num_rows - 1:
-                            if temp_board[row][col].color == temp_board[row + 1][col].color:
-                                seq += 1
-                            else:
-                                col_constraints.append(Constraint(str(seq) + cur_color))
-                                seq = 1
-                        else:
-                            col_constraints.append(Constraint(str(seq) + cur_color))
-                temp_cols_constraints.append(col_constraints)
+            if self.difficulty == EASY:
+                temp_board = [[Cell(r, c) for c in range(self.num_cols)] for r in range(self.num_rows)]
+                if self.rows_or_cols == COLUMNS:
+                    temp_cols_constraints = self.__build_easy(self.num_cols, self.num_rows, temp_board, temp_cols_constraints, rows_cols=COLUMNS)
+                    temp_rows_constraints = self.__build_rows_constraints(temp_board, temp_rows_constraints)
+                else:
+                    temp_rows_constraints = self.__build_easy(self.num_rows, self.num_cols, temp_board, temp_rows_constraints, rows_cols=ROWS)
+                    temp_cols_constraints = self.__build_cols_constraints(temp_board, temp_cols_constraints)
+            else:
+                temp_board = [[Cell(r, c, color=random.choice(COLORS_LST)) for c in range(self.num_cols)] for r in
+                              range(self.num_rows)]
+                temp_rows_constraints = self.__build_rows_constraints(temp_board, temp_rows_constraints)
+                temp_cols_constraints = self.__build_cols_constraints(temp_board, temp_cols_constraints)
 
         self.board = Board(temp_rows_constraints, temp_cols_constraints, randomly=True, size=size)
 
@@ -248,7 +254,6 @@ class Game:
         if not is_problem:
             print("Brute Force")
             self.board = agent.BruteForce(self.board).brute_force().board
-
         else:
             nonogram_problem = agent.NonogramProblem(self.board)
             if solve_type == BFS:
@@ -263,13 +268,17 @@ class Game:
 
         after = time.time()
         print(f"Time:  {after - before}")
-        gui_helper(self.board)
 
+        if self.gui_or_print:
+            gui_helper(self.board)
+        else:
+            self.board.print_board()
 
         if type(self.board) is not int and self.board is not None:
             Board.gui.success_msg()
         else:
             Board.gui.failed_msg()
+
 
 def gui_helper(board):
     Board.gui.canvas.delete('rect')
@@ -281,24 +290,24 @@ def gui_helper(board):
                                                     fill=COLORS_DICT[repr(board.board[r][c])],
                                                     tags='rect')
             Board.gui.root.update()
-            # if cur_color == -1:
-            #     board.fill(r, c, 0)
-            # else:
-            #     board.fill(r, c, board.board[r][c].color)
+
+# def main():
+#     print("Nonogram Game")
 
 
 if __name__ == "__main__":
     print("Hello World!")
 
     # game = Game(colors=COLORFUL, size=(9, 9))
-    # game = Game(colors=COLORFUL, size=(5, 5))
-    game = Game(colors=COLORFUL, size=(30, 30))
-    # game.board.print_board()
+    # game = Game(colors=COLORFUL, size=(20, 20))
+    # Brute Force can solve up to 31x31 boards - the others will come to maximum recursion depth Error
+    game = Game(colors=COLORFUL, size=(30, 30), difficulty=HARD)
+
     # game = Game(csv_file='example1.csv')
     # game = Game(colors=COLORFUL)
 
     # print("CSP")
-    last_CSP.run_CSP_last(game)
+    # last_CSP.run_CSP_last(game)
 
     game.run(solve_type=DFS, is_problem=False)
     # game.board.print_board()

@@ -69,7 +69,7 @@ class Board:
     gui = None
 
     def __init__(self, rows_constraints: List[List[Constraint]], cols_constraints: List[List[Constraint]],
-                 randomly=False, size=(5, 5)):
+                 randomly=False, size=(5, 5), board=None):
         self.rows_constraints = rows_constraints
         self.cols_constraints = cols_constraints
         self.to_print = ""
@@ -86,8 +86,8 @@ class Board:
         else:
             self.num_rows, self.num_cols = self.size
 
-        self.board = [[Cell(r, c) for c in range(self.num_cols)] for r in range(self.num_rows)]
-        # todo i guess now to have same cells we need to flip this board manually - DONE (I think?)
+        self.board = board if board else [[Cell(r, c) for c in range(self.num_cols)] for r in range(self.num_rows)]
+        # todo I guess now to have same cells we need to flip this board manually - DONE (I think?)
         self.flipped = [[Cell(c, r) for r in range(self.num_rows)] for c in range(self.num_cols)]
 
         self.to_print = self.init_board_print()
@@ -115,7 +115,7 @@ class Board:
             #     temp = Board.gui.board_rectangles_locs[r][c]
             #     Board.gui.canvas.create_rectangle(temp[0], temp[1], temp[2], temp[3],
             #                                       fill=COLORS_DICT[self.board[r][c].__repr__()], tags='rect')
-                # Board.gui.root.update()
+            #     Board.gui.root.update()
             self.rects.append(self.board[r][c])
 
             # self.print_board()

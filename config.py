@@ -33,5 +33,8 @@ BFS = 1
 DFS = 2
 ASTAR = 3
 
-GUI = True
+IS_GUI = True
 PRINT = False
+
+EASY = True
+HARD = False
