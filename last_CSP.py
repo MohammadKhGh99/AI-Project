@@ -672,7 +672,7 @@ def get_constraints_boundaries(board, constraint_type):
 
 def get_constrains_and_neighbors(board):
     """
-    making constraints between variables
+    making constraints and neighbors between variables
     """
     neighbors = {}
     columns_constraints = []
@@ -692,7 +692,6 @@ def get_constrains_and_neighbors(board):
     for col_idx in range(len(board.cols_constraints)):
         temp_variable = (COLUMNS, col_idx)
         neighbors[temp_variable] = rows_constraints
-        # todo, I feel we don't need this, but we keep it off for now
         # constraints.append(RowColumnConstraint(temp_variable, *rows_constraints))
 
     return constraints, neighbors
@@ -711,7 +710,7 @@ def run_CSP_last(board, types_of_csps=None):
         types_of_csps = {}
     res = our_csp.backtracking_search(types_of_csps)
     if res:
-        print_result(res, str(AC))
+        print_result(res, str("Normal"))
 
 #------------------------
 def test_all(game):
