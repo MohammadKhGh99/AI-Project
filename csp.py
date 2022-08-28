@@ -53,6 +53,7 @@ class CSP:
         self.neighbors: Dict = neighbors  # {var: [var,...]}
         self.constraints = {}
         self.board = board
+
         for variable in self.variables:
             self.constraints[variable] = []
 
@@ -93,7 +94,6 @@ class CSP:
         # print(assignment)
 
         # TODO - MHMD - we need to fill (one assignment only!)
-
         if self.curr_domains:
             if FC in self.csp_types:
                 self.forward_check(var, val, assignment)
@@ -123,7 +123,7 @@ class CSP:
 
         def conflict(var2):
             val2 = assignment.get(var2, None)
-            return val2 != None and not self.consistent2(var, val, var2, val2)
+            return val2 is not None and not self.consistent2(var, val, var2, val2)
 
         return self.count_matching(conflict, self.neighbors[var])
 
@@ -168,11 +168,23 @@ class CSP:
         # get every possible domain value that are in order for this unassigned variable
         for value in self.order_domain_values(variable, assignment):
             # check if there is a conflicts between variables and assignments
+            if FC in self.csp_types and value not in self.curr_domains[variable]:
+                continue
             if FC in self.csp_types or self.nconflicts2(variable, value, assignment) == 0:
                 # perfect! no conflict, assign the value to variable
                 self.assign(variable, value, assignment)
+                no_solution_flag_FC = False
+                if FC in self.csp_types:
+                    # check forward if this helps us or there is no solution
+                    for var in self.variables:
+                        if len(self.curr_domains[var]) == 0 and var != variable:
+                            no_solution_flag_FC = True
+                            break
                 # backtrack baby
-                result = self.backtracking_search_rec(assignment)
+                if not no_solution_flag_FC:
+                    result = self.backtracking_search_rec(assignment)
+                else:
+                    continue
                 # if we didn't find the result, we will end up backtracking
                 if result is not None:
                     return result
@@ -231,8 +243,10 @@ class CSP:
             sorted_conflicts = sorted(num_of_conflicts, key=lambda x: x[1])
             domain_for_var = [val[0] for val in sorted_conflicts]
 
-        while domain_for_var:
-            yield domain_for_var.pop()
+        return domain_for_var
+
+        # while domain_for_var:
+        #     yield domain_for_var.pop()
 
     def forward_check(self, variable, value, assignment):
         """Do forward checking for this assignment."""
@@ -282,7 +296,8 @@ class CSP:
 def get_variables_and_domains(board):
     """
     get variables and domains for CSP.
-    our variables: tuple: first index is boolean reffering to rows(False) or columns(True), second index is row/col index.
+    our variables: tuple: first index is boolean reffering to rows(False) or columns(True),
+                   second index is row/col index.
     our domains: each combination the variable can have as a row/col
     """
     variables = []
@@ -364,7 +379,7 @@ def get_all_possibilities(constraint_list, dict_of_blocks, final_result, curr_an
 
 def get_constraints_boundaries(board, constraint_type):
     """
-    fill a list with dictionaries of constraints, each dictionary contain a row or a column with it's constraint
+    fill a list with dictionaries of constraints, each dictionary contain a row or a column with its constraint
     that it's value is a list of the range this constraint could possibly be in
     """
     if constraint_type == ROWS:
@@ -432,6 +447,8 @@ def get_constrains_and_neighbors(board):
 
 
 # -----------------------
+
+
 def run_CSP(board, types_of_csps=None):
     # if not CSP.created_or_not:
     variables, domains = get_variables_and_domains(board)
@@ -469,9 +486,9 @@ def test_all_new(game):
 
     all_csps_results = []
     for type_of_csp, csp in new_dict_all.items():
-        #### time start
+        # TODO - time start
         res = csp[1].backtracking_search(csp[0])
-        #### time finish
+        # TODO - time finish
         if res:
             all_csps_results.append(print_result(res, type_of_csp))
         else:
@@ -525,7 +542,7 @@ def csp_names(csp_set):
 
 def select_all_csps():
     # all_things_test2 = []
-    all_things_test = {}
+    all_things_test = dict()
 
     # NO CSP
     # all_things_test.append({0})
@@ -550,7 +567,7 @@ def select_all_csps():
             all_things_test[csp_names(curr_2)] = list(curr_2)
         all_things_test[csp_names(curr_1)] = list(curr_1)
 
-    all_things_test["ALL"] = (ALL_CSPS)
+    all_things_test["ALL"] = ALL_CSPS
     return all_things_test
 
 
