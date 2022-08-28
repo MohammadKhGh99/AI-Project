@@ -1,13 +1,10 @@
-import copy
 import math
 from abc import abstractmethod
 
-import Board
 from config import *
 from typing import Dict, List
 
 
-# FAKE
 class ConstraintForVariable:
     """ Generic class to add constraints between variables"""
     def __init__(self, variables: List) -> None:
@@ -58,10 +55,12 @@ class CSP:
         self.csp_types = set()
 
     def add_constraint(self, constraint: ConstraintForVariable) -> None:
+        """ fill the constraints for the variables"""
         for variable in constraint.variables:
             self.constraints[variable].append(constraint)
 
     def consistent(self, variable, assignment):
+        """ check if the constraints being satisfied"""
         for constraint in self.constraints[variable]:
             if not constraint.satisfied(assignment):
                 return False
@@ -98,6 +97,7 @@ class CSP:
                 return not self.consistent(variable, temp_assignment)
         temp_assignment = {variable: value}
         return self.count_matching(conflict, self.neighbors[variable])
+
     def nconflicts2(self, var, val, assignment):
         "Return the number of conflicts var=val has with other variables."
         def conflict(var2):
@@ -133,42 +133,6 @@ class CSP:
             self.AC3(None)
         return self.backtracking_search_rec({})
 
-    def backtracking_search_rec2(self, assignment=None):
-        """ this is the recursive backtracking search"""
-        # assignment is complete if every variable is assigned (our base case)
-        if assignment is None:
-            assignment = {}
-        if len(assignment) == len(self.variables):
-            return assignment
-
-        # get the first variable in the CSP but not in the assignment
-        variable = self.select_unassigned_variable(assignment)
-
-        # get every possible domain value that are in order for this unassigned variable
-        for value in self.order_domain_values(variable, assignment):
-            local_assignment = assignment.copy()
-            local_assignment[variable] = value
-
-            # check if this is a good value to proceed with
-            if FC in self.csp_types or self.nconflicts2(variable, value, assignment) == 0:
-            # if FC in self.csp_types or self.consistent(variable, local_assignment) == 0:
-                self.assign(variable, value, assignment)
-
-                # no_solution_flag = False
-                # for domain in local_curr_domains.values():
-                #     if not domain:
-                #         no_solution_flag = True
-                #         break
-                # if not no_solution_flag:
-
-                result = self.backtracking_search_rec(assignment)
-                # if we didn't find the result, we will end up backtracking
-                if result is not None:
-                    return result
-
-            self.unassign(variable, assignment)
-        return None
-
     def backtracking_search_rec(self, assignment=None):
         """ this is the recursive backtracking search"""
         # assignment is complete if every variable is assigned (our base case)
@@ -179,19 +143,18 @@ class CSP:
 
         # get the first variable in the CSP but not in the assignment
         variable = self.select_unassigned_variable(assignment)
-
         # get every possible domain value that are in order for this unassigned variable
         for value in self.order_domain_values(variable, assignment):
-
+            # check if there is a conflicts between variables and assignments
             if FC in self.csp_types or self.nconflicts2(variable, value, assignment) == 0:
-
+                # perfect! no conflict, assign the value to variable
                 self.assign(variable, value, assignment)
-
+                # backtrack baby
                 result = self.backtracking_search_rec(assignment)
                 # if we didn't find the result, we will end up backtracking
                 if result is not None:
                     return result
-
+            # this might be a failure assigning, but don't give up, we will try again!
             self.unassign(variable, assignment)
         return None
 
@@ -263,7 +226,7 @@ class CSP:
                     temp_assignment[other_variable] = None
                     for other_value in self.curr_domains[other_variable][:]:
                         temp_assignment[other_variable] = other_value
-                        if not self.consistent(variable, temp_assignment):  # TODO MAYBE this not shouldn't be here
+                        if not self.consistent(variable, temp_assignment):
                             self.curr_domains[other_variable].remove(other_value)
                             self.pruned[variable].append((other_variable, other_value))
                     temp_assignment.pop(other_variable, None)
@@ -304,24 +267,20 @@ def get_variables_and_domains(board):
     col_constraints_list = get_constraints_boundaries(board, COLUMNS)
 
     # get variables and domains - rows
-    possibilities_rows = []
     for idx, dic in enumerate(row_constraints_list):
         pos_row = []
         get_all_possibilities(board.rows_constraints[idx], dic, pos_row, [WHITE] * board.num_cols, 0, 0)
         var = ROWS, idx
         variables.append(var)
         domains[var] = pos_row
-        # possibilities_rows.append(pos_row)
 
     # get variables and domains - columns
-    possibilities_cols = []
     for idx, dic in enumerate(col_constraints_list):
         pos_col = []
         get_all_possibilities(board.cols_constraints[idx], dic, pos_col, [WHITE] * board.num_rows, 0, 0)
         var = COLUMNS, idx
         variables.append(var)
         domains[var] = pos_col
-        # possibilities_cols.append(pos_col)
 
     # return variables, domains
     return variables, domains
@@ -366,7 +325,6 @@ def get_all_possibilities(constraint_list, dict_of_blocks, final_result, curr_an
 
                 if index_to_fill + constraint_length - 1 <= len(temp_curr_ans) - 1:
                     # fill the constraint
-                    # check the -1 maybe it's wrong like this
                     for j in range(constraint_length):
                         temp_curr_ans[index_to_fill + j] = constraint_color
                     index_to_fill += constraint_length
@@ -464,40 +422,6 @@ def run_CSP(board, types_of_csps=None):
         print_result(res, str("Normal"))
 
 #------------------------
-def test_all(game):
-    board = game.board
-    variables, domains = get_variables_and_domains(board)
-    the_constraints, neighbors = get_constrains_and_neighbors(board)
-    all_csps = dict()
-
-
-    selected_csp_types = set()
-    all_csps[0] = CSP(variables, domains, neighbors)
-    all_csps[MRV] = CSP(variables, domains, neighbors)
-    all_csps[FC] = CSP(variables, domains, neighbors)
-    all_csps[AC] = CSP(variables, domains, neighbors)
-    all_csps[LCV] = CSP(variables, domains, neighbors)
-    all_csps[DEGREE] = CSP(variables, domains, neighbors)
-    all_csps["MRV + DEGREE"] = CSP(variables, domains, neighbors)
-    for con in the_constraints:
-        for value in all_csps.values():
-            value.add_constraint(con)
-
-    all_csps_results = []
-    for type_of_csp, csp in all_csps.items():
-        res = csp.backtracking_search_rec()
-        all_csps_results.append(print_result(res, type_of_csp))
-
-    first_set = all_csps_results[0]
-    for second_set in all_csps_results:
-        ans = first_set.symmetric_difference(second_set)
-        if ans:
-            print(first_set)
-            print()
-            print(second_set)
-            break
-    else:
-        print("all correct")
 
 def test_all_new(game):
     board = game.board
