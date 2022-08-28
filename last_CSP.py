@@ -75,7 +75,7 @@ class CSP:
     def assign(self, var, val, assignment):
         """ assign a value to this variable"""
         assignment[var] = val
-        # mhmd function to fill a row or column
+        # TODO - MHMD - we need to fill (one assignment only!)
         if self.curr_domains:
             if FC in self.csp_types:
                 self.forward_check(var, val, assignment)
@@ -87,7 +87,7 @@ class CSP:
             if self.curr_domains:
                 self.curr_domains[var] = self.domains[var][:]
             del assignment[var]
-            # make sure all assignment are correct
+            # TODO - MHMD - we need to fill all the assignments over!
 
     def nconflicts(self, variable, value, assignment):
         "Return the number of conflicts var=val has with other variables."
@@ -109,7 +109,6 @@ class CSP:
         """Returns the amount of items in seq that return true from condition"""
         return sum(1 for item in seq if condition(item))
 
-    # todo, maybe you make this function outside the class
     def backtracking_search(self, csp_types):
         """ this will initialize the backtracking as we please"""
 
@@ -292,254 +291,6 @@ class CSP:
                 removed = True
         return removed
 
-    # def remove_inconsistent_values(csp, t_variable, t_other_variable):
-    #     "Return true if we remove a value."
-    #     removed = False
-    #     for x in csp.curr_domains[t_variable][:]:
-    #         # If Xi=x conflicts with Xj=y for every possible y, eliminate Xi=x
-    #         if all(map(lambda y: not csp.constraints(t_variable, x, t_other_variable, y), csp.curr_domains[t_other_variable]):
-    #             csp.curr_domains[t_variable].remove(x)
-    #             removed = True
-    #     return removed
-
-
-class MRV_CSP(CSP):
-    def select_unassigned_variable(self, assignment) -> List:
-        """
-        choose variable with the least amount of values
-        """
-        unassigned_variables = [v for v in self.variables if v not in assignment]
-        least_values = math.inf
-        first_var = None
-        for var in unassigned_variables:
-            if least_values >= len(self.domains[var]):
-                least_values = len(self.domains[var])
-                first_var = var
-        return first_var
-class degree_CSP(CSP):
-    def select_unassigned_variable(self, assignment) -> List:
-        """
-        choose variable with the most amount of constraints
-        """
-        unassigned_variables = [v for v in self.variables if v not in assignment]
-        most_constraints = -math.inf
-        first_var = None
-        for var in unassigned_variables:
-            if most_constraints <= len(self.constraints[var]):
-                most_constraints = len(self.constraints[var])
-                first_var = var
-        return first_var
-class MRV_then_degree_CSP(CSP):
-    def select_unassigned_variable(self, assignment) -> List:
-        """
-        choose variable with the least amount of values and most amount of constraints
-        """
-        unassigned_variables = [v for v in self.variables if v not in assignment]
-        least_values = math.inf
-        vars_with_least_values = []
-        for var in unassigned_variables:
-            if least_values > len(self.domains[var]):
-                least_values = len(self.domains[var])
-                vars_with_least_values = [var]
-            elif least_values == len(self.domains[var]):
-                vars_with_least_values.append(var)
-
-        most_constraints = -math.inf
-        first_var = None
-        for var in vars_with_least_values:
-            if most_constraints <= len(self.constraints[var]):
-                most_constraints = len(self.constraints[var])
-                first_var = var
-        return first_var
-
-class LCV_CSP(CSP):
-    def order_domain_values(self, variable, assignment):
-        domain_for_var = self.domains[variable].copy()
-        num_of_conflicts = []
-        for value in domain_for_var:
-            num_of_conflicts.append((value, self.nconflicts(variable, value, assignment)))
-        sorted_conflicts = sorted(num_of_conflicts, key=lambda x: x[1])
-        domain_for_var = [val[0] for val in sorted_conflicts]
-
-        while domain_for_var:
-            yield domain_for_var.pop()
-
-class FC_CSP(CSP):
-    def __init__(self, variables, domains, neighbors):
-        super().__init__(variables, domains, neighbors)
-        self.curr_domains, self.pruned = {}, {}
-        for v in self.variables:
-            self.curr_domains[v] = self.domains[v][:]
-            self.pruned[v] = []
-
-    def backtracking_search_rec(self, assignment=None, curr_domains=None, pruned=None):
-        # assignment is complete if every variable is assigned (our base case)
-        if assignment is None:
-            assignment = {}
-        if curr_domains is None:
-            curr_domains = self.curr_domains
-        if pruned is None:
-            pruned = self.pruned
-
-        if len(assignment) == len(self.variables):
-            return assignment
-
-        # get the first variable in the CSP but not in the assignment
-        variable = self.select_unassigned_variable(assignment)
-
-        # organize all the different values for this unassigned variable
-        ordered_domain = self.order_domain_values(variable, assignment, curr_domains)
-
-        # get the every possible domain value for this unassigned variable
-        for value in ordered_domain:
-            if variable == (COLUMNS, 0):
-                print()
-            local_assignment = assignment.copy()
-            local_assignment[variable] = value
-
-            local_curr_domains = copy.deepcopy(curr_domains)
-            local_pruned = pruned.copy()
-
-            if local_curr_domains:
-
-                self.forward_check(variable, value, local_assignment, local_curr_domains, local_pruned)
-                # check forward if this helps us or there is no solution
-                no_solution_flag = False
-                for domain in local_curr_domains.values():
-                    if not domain:
-                        no_solution_flag = True
-                        break
-                if not no_solution_flag:
-                    result = self.backtracking_search_rec(local_assignment, local_curr_domains, local_pruned)
-                    # if we didn't find the result, we will end up backtracking
-                    if result is not None:
-                        return result
-        return None
-
-
-    def order_domain_values(self,variable, assignment, curr_domains):
-        if self.curr_domains:
-            domain_for_var = self.curr_domains[variable]
-        else:
-            domain_for_var = self.domains[variable][:]
-
-        while domain_for_var:
-            yield domain_for_var.pop()
-
-    def forward_check(self, variable, value, assignment, curr_domains, pruned):
-        "Do forward checking for this assignment."
-        if curr_domains:
-            # Restore prunings from previous value of var
-            for (other_variable, other_value) in pruned[variable]:
-                curr_domains[other_variable].append(other_value)
-            pruned[variable] = []
-            # Prune any other other_variable=other_value assignment that conflict with variable=value
-            temp_assignment = {variable: value}
-            for other_variable in self.neighbors[variable]:
-                if other_variable not in assignment:
-                    temp_assignment[other_variable] = None
-                    for other_value in curr_domains[other_variable][:]:
-                        temp_assignment[other_variable] = other_value
-                        if not self.consistent(variable, temp_assignment):  # TODO MAYBE this not shouldn't be here
-                            curr_domains[other_variable].remove(other_value)
-                            pruned[variable].append((other_variable, other_value))
-                    temp_assignment.pop(other_variable, None)
-            # todo make sure changing is happen
-
-class AC_CSP(CSP):
-    def __init__(self, variables, domains, neighbors):
-        super().__init__(variables, domains, neighbors)
-        self.curr_domains, self.pruned = {}, {}
-        for v in self.variables:
-            self.curr_domains[v] = self.domains[v][:]
-            self.pruned[v] = []
-
-    def order_domain_values(self, variable, assignment):
-        if self.curr_domains:
-            domain_for_var = self.curr_domains[variable]
-        else:
-            domain_for_var = self.domains[variable][:]
-
-        while domain_for_var:
-            yield domain_for_var.pop()
-
-
-    def backtracking_search_rec(self, assignment=None):
-        if assignment is None:
-            assignment = {}
-        if len(assignment) == len(self.variables):
-            return assignment
-
-        # get the first variable in the CSP but not in the assignment
-        variable = self.select_unassigned_variable(assignment)
-
-        # organize all the different values for this unassigned variable
-        ordered_domain = self.order_domain_values(variable, assignment)
-
-        # get the every possible domain value for this unassigned variable
-        for value in ordered_domain:
-            local_assignment = assignment.copy()
-            local_assignment[variable] = value
-
-            # if we're still consistent, we recurse (continue)
-            if self.consistent(variable, local_assignment):
-                # do arc consitstency
-                self.AC3([(the_neighbor, variable) for the_neighbor in self.neighbors[variable]])
-                result = self.backtracking_search_rec(local_assignment)
-                # if we didn't find the result, we will end up backtracking
-                if result is not None:
-                    return result
-                self.curr_domains[variable] = self.domains[variable][:]
-        return None
-
-    def AC3(self, queue):
-        if queue is None:
-            queue = [(curr_var, var_neighbor) for curr_var in self.variables for var_neighbor in self.neighbors[curr_var]]
-        while queue:
-            (curr_var, var_neighbor) = queue.pop()
-            if self.remove_inconsistent_values(curr_var, var_neighbor):
-                for another_neighbor in self.neighbors[curr_var]:
-                    queue.append((another_neighbor, curr_var))
-
-    def remove_inconsistent_values(self, variable, other_variable):
-        "Return true if we remove a value."
-        removed = False
-        temp_assignment = {variable: None}
-        for value in self.curr_domains[variable][:]:
-            temp_assignment[variable] = value
-            # If variable=value conflicts with other_variable=other_value for every possible other_value, eliminate Xi=x
-            for other_value in self.curr_domains[other_variable]:
-                temp_assignment[other_variable] = other_value
-                if self.consistent(variable, temp_assignment):
-                    break
-            else:
-                self.curr_domains[variable].remove(value)
-                removed = True
-        return removed
-
-# class degree_then_MRV_CSP(CSP):
-#     def select_unassigned_variable(self, assignment) -> List:
-#         """
-#         choose variable with the most amount of constraints and least amount of values
-#         """
-#         unassigned_variables = [v for v in self.variables if v not in assignment]
-#         least_values = math.inf
-#         vars_with_least_values = []
-#         for var in unassigned_variables:
-#             if least_values > len(self.domains[var]):
-#                 least_values = len(self.domains[var])
-#                 vars_with_least_values = [var]
-#             elif least_values == len(self.domains[var]):
-#                 vars_with_least_values.append(var)
-#
-#         most_constraints = -math.inf
-#         first_var = None
-#         for var in vars_with_least_values:
-#             if most_constraints <= len(self.constraints[var]):
-#                 most_constraints = len(self.constraints[var])
-#                 first_var = var
-#         return [first_var]
-
 
 def get_variables_and_domains(board):
     """
@@ -698,7 +449,7 @@ def get_constrains_and_neighbors(board):
 
 
 #-----------------------
-def run_CSP_last(board, types_of_csps=None):
+def run_CSP(board, types_of_csps=None):
     variables, domains = get_variables_and_domains(board)
     the_constraints, neighbors = get_constrains_and_neighbors(board)
     our_csp = CSP(variables, domains, neighbors)
