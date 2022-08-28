@@ -43,6 +43,126 @@ class SearchProblem:
         """
         raise Exception("Not implemented.")
 
+# WORKING
+class NonogramCells(SearchProblem):
+    """
+        Class that defining the nonogram game as a problem.
+    """
+
+    def __init__(self, board):
+        self.board = board
+
+    def get_start_state(self):
+        return self.board
+
+    def is_goal_state(self, state):
+        return self.board.current_cell.row == self.board.num_rows and self.board.current_cell.col == 0
+
+    def back_to_the_prev_cell(self):
+        """This function change the current cell"""
+        new_col = self.board.current_cell.col - 1
+        new_row = self.board.current_cell.row
+        if new_col == -1:
+            new_col = self.board.num_cols - 1
+            new_row -= 1
+        try:
+            self.board.current_cell = self.board.get_cell(new_row, new_col)
+        except IndexError:
+            self.board.current_cell = Board.Cell(new_row, new_col)
+
+    def move_to_the_next_cell(self):
+        """This function change the current cell"""
+        new_col = self.board.current_cell.col + 1
+        new_row = self.board.current_cell.row
+        if new_col == self.board.num_cols:
+            new_col = 0
+            new_row += 1
+        try:
+            self.board.current_cell = self.board.get_cell(new_row, new_col)
+        except IndexError:
+            self.board.current_cell = Board.Cell(new_row, new_col)
+
+    def get_successors(self, state):
+        successors = []
+        if self.board.current_cell.row == self.board.num_rows:
+            # We finished all the cells.
+            return successors
+
+        for color in [WHITE, BLACK, RED]:
+            actions = []
+            cell = Board.Cell(self.board.current_cell.row, self.board.current_cell.col, color)
+            actions.append(cell)
+            successors.append((self.board, actions))
+        return successors
+
+    def get_cost_of_actions(self, state):
+        # Actions are a set of cell's coordinates we colored to get a new state.
+        sum_completed_constrains = 0
+        for row_con in state.rows_constraints:
+            for constraint in row_con:
+                if constraint.completed:
+                    sum_completed_constrains += 1
+        return -1 * sum_completed_constrains
+
+class NonogramCellsV2(SearchProblem):
+    """
+        Class that defining the nonogram game as a problem.
+    """
+
+    def __init__(self, board):
+        self.board = board
+
+    def get_start_state(self):
+        return self.board
+
+    def is_goal_state(self, state):
+        return self.board.current_cell.row == self.board.num_rows and self.board.current_cell.col == 0
+
+    def back_to_the_prev_cell(self):
+        """This function change the current cell"""
+        new_col = self.board.current_cell.col - 1
+        new_row = self.board.current_cell.row
+        if new_col == -1:
+            new_col = self.board.num_cols - 1
+            new_row -= 1
+        try:
+            self.board.current_cell = self.board.get_cell(new_row, new_col)
+        except IndexError:
+            self.board.current_cell = Board.Cell(new_row, new_col)
+
+    def move_to_the_next_cell(self):
+        """This function change the current cell"""
+        new_col = self.board.current_cell.col + 1
+        new_row = self.board.current_cell.row
+        if new_col == self.board.num_cols:
+            new_col = 0
+            new_row += 1
+        try:
+            self.board.current_cell = self.board.get_cell(new_row, new_col)
+        except IndexError:
+            self.board.current_cell = Board.Cell(new_row, new_col)
+
+    def get_successors(self, state):
+        successors = []
+        if self.board.current_cell.row == self.board.num_rows:
+            # We finished all the cells.
+            return successors
+
+        for color in [WHITE, BLACK, RED]:
+            actions = deepcopy(self.board.moves)
+            cell = Board.Cell(self.board.current_cell.row, self.board.current_cell.col, color)
+            actions.append(cell)
+            successors.append((self.board, actions))
+        return successors
+
+    def get_cost_of_actions(self, state):
+        # Actions are a set of cell's coordinates we colored to get a new state.
+        sum_completed_constrains = 0
+        for row_con in state.rows_constraints:
+            for constraint in row_con:
+                if constraint.completed:
+                    sum_completed_constrains += 1
+        return -1 * sum_completed_constrains
 
 class NonogramProblem(SearchProblem):
     """
@@ -82,6 +202,92 @@ class NonogramProblem(SearchProblem):
         # Todo it looks like a heuristic function, discuss this with team.
         # cost zero.
         sum_completed_constrains = 0
+        for col_con in state.cols_constraints:
+            for constraint in col_con:
+                if constraint.completed:
+                    sum_completed_constrains += 1
+        return -1 * sum_completed_constrains
+
+
+class NonogramConstraints(SearchProblem):
+    """
+        Class that defining the nonogram game as a problem.
+    """
+
+    def __init__(self, board):
+        self.board = board
+
+    def get_start_state(self):
+        return self.board
+
+    def is_goal_state(self, state):
+        return self.board.current_cell.row == self.board.num_rows - 1 and\
+               self.board.current_cell.col == self.board.num_cols - 1
+
+    def back_to_the_prev_cell(self):
+        """This function change the current cell"""
+        new_col = self.board.current_cell.col - 1
+        new_row = self.board.current_cell.row
+        if new_col == -1:
+            new_col = self.board.num_cols - 1
+            new_row -= 1
+        try:
+            self.board.current_cell = self.board.get_cell(new_row, new_col)
+        except IndexError:
+            self.board.current_cell = Board.Cell(new_row, new_col)
+
+    def move_to_the_next_cell(self):
+        """This function change the current cell"""
+        new_col = self.board.current_cell.col + 1
+        new_row = self.board.current_cell.row
+        if new_col == self.board.num_cols:
+            new_col = 0
+            new_row += 1
+        try:
+            self.board.current_cell = self.board.get_cell(new_row, new_col)
+        except IndexError:
+            self.board.current_cell = Board.Cell(new_row, new_col)
+
+    def get_successors(self, state):
+        successors = []
+        constraint = self.board.get_next_row_constraint()
+        if (self.board.current_cell.row == self.board.num_rows) or (constraint is None):
+            # We finished all the cells.
+            return successors
+
+        for start_index in range(self.board.num_cols):
+            actions = []
+            out_of_the_board = False
+            for i in range(start_index):
+                # Fill the White Cells.
+                if not out_of_the_board:
+                    row = self.board.current_cell.row
+                    col = self.board.current_cell.col + i
+                    color = WHITE
+                    if col < self.board.num_cols:
+                        if self.board.get_cell(row, col).color == EMPTY:
+                            cell = Board.Cell(row, col, color)
+                            actions.append(cell)
+                    else:
+                        out_of_the_board = True
+            for i in range(constraint.length):
+                # Fill the constraint's color
+                if not out_of_the_board:
+                    row = self.board.current_cell.row
+                    col = start_index + self.board.current_cell.col + i
+                    color = constraint.color
+                    if col < self.board.num_cols and self.board.get_cell(row, col).color == EMPTY:
+                        cell = Board.Cell(row, col, color)
+                        actions.append(cell)
+                    else:
+                        out_of_the_board = True
+            if not out_of_the_board:
+                successors.append((self.board, actions))
+        return successors
+
+    def get_cost_of_actions(self, state):
+        # Actions are a set of cell's coordinates we colored to get a new state.
+        sum_completed_constrains = 0
         for row_con in state.rows_constraints:
             for constraint in row_con:
                 if constraint.completed:
@@ -89,51 +295,7 @@ class NonogramProblem(SearchProblem):
         return -1 * sum_completed_constrains
 
 
-# class NonogramCells(SearchProblem):
-#     """
-#         Class that defining the nonogram game as a problem.
-#     """
-#
-#     def __init__(self, board):
-#         self.board = board
-#         self.current_cell = 0
-#
-#     def get_start_state(self):
-#         return self.board
-#
-#     def is_goal_state(self, state):
-#         return (state.get_first_incomplete_constraint(COLUMNS) is None) and \
-#                (state.get_first_incomplete_constraint(ROWS) is None)
-#
-#     def get_successors(self, state):
-#         successors = []
-#         constraint_coord = state.get_first_incomplete_constraint(COLUMNS)
-#
-#         if constraint_coord is None:
-#             # We have done all the constraints
-#             return successors
-#
-#         for start_index in range(state.num_rows):
-#             child = state.fill_n_cells(constraint_coord[0], constraint_coord[1], start_index, COLUMNS)
-#             if child is not None:
-#                 actions = set()
-#                 constraint = state.cols_constraints[constraint_coord[0]][constraint_coord[1]]
-#                 for i in range(constraint.length):
-#                     actions.add((start_index + i, constraint_coord[0]))
-#                 successors.append((child, actions))
-#         return successors
-#
-#     def get_cost_of_actions(self, state):
-#         # Actions are a set of cell's coordinates we colored to get a new state.
-#         sum_completed_constrains = 0
-#         for row_con in state.rows_constraints:
-#             for constraint in row_con:
-#                 if constraint.completed:
-#                     sum_completed_constrains += 1
-#         return -1 * sum_completed_constrains
 
-
-# todo - fix the design and the problems that Ibraheem made
 
 class BruteForce:
     def __init__(self, board):
@@ -169,147 +331,3 @@ class BruteForce:
         # no color is correct
         self.board.fill(row_id, col_id, EMPTY, brute_force=BRUTE_FORCE)
         return
-#
-# def brute_force(board):
-#     """
-#     try to solve a board of nonogram by trying everything (brute force)
-#     """
-#     result = _brute_force_helper(board, 0, 0)
-#     if result:
-#         return board
-#
-#
-# def _brute_force_helper(board, row_id, col_id):
-#     """
-#     this is a recursion function, we do recursion to solve it in brute force.
-#     """
-#     for color in [RED, BLACK, WHITE]:
-#         board.fill(row_id, col_id, color)
-#         # check if this move works, if yes go to next cell.
-#         if check_move(board, col_id, row_id):
-#             if col_id + 1 < len(board.cols_constraints):
-#                 res = _brute_force_helper(board, row_id, col_id + 1)
-#                 if res:
-#                     return res
-#             elif row_id + 1 < len(board.rows_constraints):
-#                 res2 = _brute_force_helper(board, row_id + 1, 0)
-#                 if res2:
-#                     return res2
-#             else:
-#                 #  finished - the board is complete
-#                 return board
-#     # no color is correct
-#     board.fill(row_id, col_id, EMPTY)
-#     return
-#
-#
-# def check_move(board, row_id, col_id, problem_type=BRUTE_FORCE):
-#     """
-#     check if the move in this row_id/col_id is legit.
-#     """
-#     # checking for the rows
-#     if not _check_move_helper_with_constraint_check(board, col_id, flipped=False, problem_type=problem_type):
-#         return False
-#
-#     # checking for the columns (as rows)
-#     if not _check_move_helper_with_constraint_check(board, row_id, flipped=True, problem_type=problem_type):
-#         return False
-#
-#     return True
-#
-#
-# def _check_move_helper_with_constraint_check(board, row_id, flipped=False, problem_type=BRUTE_FORCE):
-#     """
-#     check if the move in this row_id/col_id is legit.
-#     return True if this move works and legit, false otherwise
-#
-#     IMPORTANT NOTE: this doesn't show that this step is correct, it just checks if it could be there.
-#     """
-#
-#     constraints_for_row = board.rows_constraints[row_id] if not flipped else board.cols_constraints[row_id]
-#     current_row = board.flipped[row_id] if flipped else board.board[row_id]
-#
-#     # constraint:
-#     curr_constraint_id = 0
-#     curr_constraint = constraints_for_row[curr_constraint_id]
-#     curr_num_of_cells_to_fill = curr_constraint.length
-#     curr_constraint_color = curr_constraint.color
-#     curr_constraint_status = curr_constraint.completed
-#
-#     # the color must be for the next cell
-#     must_color = EMPTY
-#     # sometimes we need to block a color from next cell (example: 1b-1b - we can't put two black near each other)
-#     # - white can't be forbidden
-#     blocked_color = EMPTY
-#
-#     constraints_complete = False  # all constraints are fulfilled
-#     empty_flag = False  # there is an empty cell in this row
-#
-#     cell_id = 0
-#     while cell_id < len(current_row):
-#         cell = current_row[cell_id]
-#         cell_color = cell.color
-#
-#         if cell_color == EMPTY:  # we didn't fill it yet
-#             empty_flag = True
-#             blocked_color = EMPTY  # Nothing blocked after an empty cell.
-#             cell_id += 1
-#             continue
-#
-#         elif cell_color == WHITE and (must_color == WHITE or must_color == EMPTY):
-#             # that's good
-#             # if must color is white - that means we finished all constraints, and all remaining cells should stay white
-#
-#             # we reset the forbid color
-#             blocked_color = EMPTY
-#             cell_id += 1
-#             continue
-#
-#         elif cell_color == curr_constraint_color and (
-#                 must_color == curr_constraint_color or must_color == EMPTY) and blocked_color != curr_constraint_color:
-#             if curr_constraint_status:
-#                 # this constraint already filled and done, so move to next situation as we finished this status
-#                 cell_id += curr_num_of_cells_to_fill
-#                 curr_num_of_cells_to_fill = 0
-#             else:
-#                 # this constraint ain't finished yet
-#                 curr_num_of_cells_to_fill -= 1
-#                 cell_id += 1
-#
-#             # check if we need to change constraint #
-#             # if we still didn't finish filling this constraint, we want the next color to be same color as the constraint:
-#             if curr_num_of_cells_to_fill > 0:
-#                 must_color = curr_constraint_color
-#                 blocked_color = EMPTY  # nothing blocked
-#
-#             # if we finished filling this current constraint, we need to move to next constraint
-#             elif curr_num_of_cells_to_fill == 0:
-#                 must_color = EMPTY  # nothing is a must
-#                 blocked_color = curr_constraint_color
-#                 if not problem_type:  # if not brute force
-#                     constraints_for_row[curr_constraint_id].completed = True  # Change the status for a future checks.
-#
-#                 # move to next constraint
-#                 curr_constraint_id += 1
-#                 if curr_constraint_id < len(constraints_for_row):
-#                     curr_constraint = constraints_for_row[curr_constraint_id]
-#                     curr_num_of_cells_to_fill = curr_constraint.length
-#                     curr_constraint_color = curr_constraint.color
-#
-#                 else:
-#                     # we finished every constraint, next cells should be white only
-#                     constraints_complete = True
-#                     must_color = WHITE
-#             else:
-#                 raise Exception("this is an impossible situation, hmmmmmm")
-#
-#         else:
-#             return False
-#
-#     # maybe we finished the row but the constraints aren't finished yet! and that's a mistake:
-#     # if we have Empty then no need to finish the constraints, if we don't then constraints must complete
-#     if empty_flag or constraints_complete:
-#         return True
-#
-#     return False
-#

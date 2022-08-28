@@ -93,7 +93,7 @@ class GUI:
                 x0, y0 = x + col_width * j + 2, y + row_width * i + 2
                 x1, y1 = x + col_width * (j + 1) - 2, y + row_width * (i + 1) - 2
                 row_locs.append((x0, y0, x1, y1))
-                self.canvas.create_rectangle(x0, y0, x1, y1, fill='white')
+                self.canvas.create_rectangle(x0 - 2, y0 - 2, x1 + 2, y1 + 2, fill='grey')
             self.board_rectangles_locs.append(row_locs)
 
         # print(self.board_rectangles_locs)

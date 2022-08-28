@@ -1,6 +1,7 @@
 import Board
 import util
-from config import COLORS_DICT
+from config import *
+import time
 
 
 def __gui_helper(board):
@@ -43,6 +44,138 @@ def search_helper(problem, fringe):
                 fringe.push((child[0], child[1]))
     return -1  # Error
 
+def search_helper_v2(problem, fringe):
+    fringe.push((problem.get_start_state(), []))
+    while not fringe.isEmpty():
+        # delete the previous child's actions rectangles
+        Board.Board.gui.canvas.delete('rect')
+        current = fringe.pop()
+        get_successors = True
+        multi_fill = False
+        current[0].current_row_constraint += 1
+        problem.move_to_the_next_cell()
+        cells_filled = 0
+        for move in current[1]:
+            if multi_fill:
+                problem.move_to_the_next_cell()
+            current[0].fill(move.row, move.col, move.color)
+            cells_filled += 1
+            if not current[0].check_move(move.col, move.row):
+                get_successors = False
+                if multi_fill:
+                    for i in range(cells_filled):
+                        current[0].fill(current[0].current_cell.row, current[0].current_cell.col, EMPTY)
+                        problem.back_to_the_prev_cell()
+                    current[0].fill(current[0].current_cell.row, current[0].current_cell.col, EMPTY)
+                else:
+                    problem.back_to_the_prev_cell()
+                    while current[0].current_cell.color == WHITE:
+                        current[0].fill(current[0].current_cell.row, current[0].current_cell.col, EMPTY)
+                        problem.back_to_the_prev_cell()
+
+                current[0].fill(move.row, move.col, EMPTY)
+                current[0].current_row_constraint -= 1
+                break
+            multi_fill = True
+        if get_successors:
+            # for i in range(len(current[0].rects)):
+            #     r, c = current[0].rects[i].row, current[0].rects[i].col
+            #     temp = Board.Board.gui.board_rectangles_locs[r][c]
+            #     Board.Board.gui.canvas.create_rectangle(temp[0], temp[1], temp[2], temp[3],
+            #                                             fill=COLORS_DICT[current[0].board[r][c].__repr__()], tags='rect')
+            # Board.Board.gui.root.update()
+
+            if problem.is_goal_state(current[0]):
+                return current[0]
+            for child in problem.get_successors(current[0]):
+                fringe.push((child[0], child[1]))
+    return -1  # Error
+
+def search_helper_v3(problem, fringe):
+    fringe.push((problem.get_start_state(), []))
+    while not fringe.isEmpty():
+        # delete the previous child's actions rectangles
+        Board.Board.gui.canvas.delete('rect')
+        current = fringe.pop()
+        get_successors = True
+        current[0].current_cell = Board.Cell(0, 0)
+        # Reset Board
+        for i in range(current[0].num_cols):
+            for j in range(current[0].num_rows):
+                current[0].fill(j, i, EMPTY)
+
+        for move in current[1]:
+            current[0].fill(move.row, move.col, move.color)
+            if not current[0].check_move(move.col, move.row):
+                get_successors = False
+                current[0].fill(move.row, move.col, EMPTY)
+                break
+            else:
+                problem.move_to_the_next_cell()
+
+        if get_successors:
+            # for i in range(len(current[0].rects)):
+            #     r, c = current[0].rects[i].row, current[0].rects[i].col
+            #     temp = Board.Board.gui.board_rectangles_locs[r][c]
+            #     Board.Board.gui.canvas.create_rectangle(temp[0], temp[1], temp[2], temp[3],
+            #                                             fill=COLORS_DICT[current[0].board[r][c].__repr__()], tags='rect')
+            # Board.Board.gui.root.update()
+
+            if problem.is_goal_state(current[0]):
+                return current[0]
+            current[0].moves = current[1]
+            for child in problem.get_successors(current[0]):
+                fringe.push((child[0], child[1]))
+    return -1  # Error
+
+def search_helper_v4(problem, fringe):
+    #copy of v2
+    fringe.push((problem.get_start_state(), []))
+    while not fringe.isEmpty():
+        # delete the previous child's actions rectangles
+        Board.Board.gui.canvas.delete('rect')
+        current = fringe.pop()
+        get_successors = True
+        multi_fill = False
+        current[0].current_row_constraint += 1
+        problem.move_to_the_next_cell()
+        cells_filled = 0
+        for move in current[1]:
+            if multi_fill:
+                problem.move_to_the_next_cell()
+            current[0].fill(move.row, move.col, move.color)
+            cells_filled += 1
+            if not current[0].check_move(move.col, move.row):
+                get_successors = False
+                if multi_fill:
+                    for i in range(cells_filled):
+                        current[0].fill(current[0].current_cell.row, current[0].current_cell.col, EMPTY)
+                        problem.back_to_the_prev_cell()
+                    current[0].fill(current[0].current_cell.row, current[0].current_cell.col, EMPTY)
+                else:
+                    problem.back_to_the_prev_cell()
+                    while current[0].current_cell.color == WHITE:
+                        current[0].fill(current[0].current_cell.row, current[0].current_cell.col, EMPTY)
+                        problem.back_to_the_prev_cell()
+
+                # current[0].fill(move[0], move[1], EMPTY)
+                current[0].current_row_constraint -= 1
+                break
+            multi_fill = True
+        if get_successors:
+            # for i in range(len(current[0].rects)):
+            #     r, c = current[0].rects[i].row, current[0].rects[i].col
+            #     temp = Board.Board.gui.board_rectangles_locs[r][c]
+            #     Board.Board.gui.canvas.create_rectangle(temp[0], temp[1], temp[2], temp[3],
+            #                                             fill=COLORS_DICT[current[0].board[r][c].__repr__()], tags='rect')
+            # Board.Board.gui.root.update()
+
+            if problem.is_goal_state(current[0]):
+                return current[0]
+            for child in problem.get_successors(current[0]):
+                fringe.push((child[0], child[1]))
+    return -1  # Error
+
 
 def depth_first_search(problem):
     """
@@ -56,7 +189,7 @@ def depth_first_search(problem):
     print("Start's successors:", problem.get_successors(problem.get_start_state()))
     """
     "*** YOUR CODE HERE ***"
-    return search_helper(problem, util.Stack())
+    return search_helper_v2(problem, util.Stack())
 
 
 def breadth_first_search(problem):
@@ -64,7 +197,7 @@ def breadth_first_search(problem):
     Search the shallowest nodes in the search tree first.
     """
     "*** YOUR CODE HERE ***"
-    return search_helper(problem, util.Queue())
+    return search_helper_v3(problem, util.Queue())
 
 
 def null_heuristic(state, problem=None):

@@ -248,17 +248,18 @@ class Game:
             print("Brute Force")
             self.board = agent.BruteForce(self.board).brute_force().board
         else:
-            nonogram_problem = agent.NonogramProblem(self.board)
+            nonogram_constraint_problem = agent.NonogramConstraints(self.board)
+            nonogram_cell_problem = agent.NonogramCells(self.board)
+            cell_v2 = agent.NonogramCellsV2(self.board)
             if solve_type == BFS:
                 print("BFS")
-                self.board = search.breadth_first_search(problem=nonogram_problem)
+                self.board = search.breadth_first_search(problem=cell_v2)
             elif solve_type == DFS:
                 print("DFS")
-                self.board = search.depth_first_search(problem=nonogram_problem)
+                self.board = search.depth_first_search(problem=nonogram_cell_problem)
             elif solve_type == ASTAR:
                 print("A*")
-                self.board = search.a_star_search(problem=nonogram_problem)
-
+                self.board = search.a_star_search(problem=nonogram_cell_problem)
         after = time.time()
         print(f"Time:  {after - before}")
 
@@ -272,10 +273,10 @@ if __name__ == "__main__":
     print("Hello World!")
 
     # game = Game(colors=COLORFUL, size=(9, 9))
-    # game = Game(colors=COLORFUL, size=(5, 5))
     # game = Game(colors=COLORFUL, size=(15, 15))
+    game = Game(colors=COLORFUL, size=(30, 30))
     # game.board.print_board()
-    game = Game(csv_file='example1.csv')
+    # game = Game(csv_file='example1.csv')
     # game = Game(colors=COLORFUL)
 
     # print("CSP")

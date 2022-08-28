@@ -1,4 +1,4 @@
-import GUI
+from GUI import GUI
 from config import *
 from typing import List
 from copy import deepcopy
@@ -76,6 +76,10 @@ class Board:
         self.cells_locations = []
         self.randomly = randomly
         self.size = size
+        self.current_cell = Cell(0, -1)
+        self.current_row_constraint = -1
+        self.moves = []
+
 
         # todo - add a list of the cells of the child's actions rectangles
         self.rects = []
@@ -89,13 +93,12 @@ class Board:
         self.board = [[Cell(r, c) for c in range(self.num_cols)] for r in range(self.num_rows)]
         # todo i guess now to have same cells we need to flip this board manually - DONE (I think?)
         self.flipped = [[Cell(c, r) for r in range(self.num_rows)] for c in range(self.num_cols)]
-
         self.to_print = self.init_board_print()
         # Board.gui = GUI.GUI(board=self)
 
     @staticmethod
     def start_gui(board):
-        Board.gui = GUI.GUI(board=board)
+        Board.gui = GUI(board=board)
 
     def fill(self, r, c, color, brute_force=SEARCH_PROBLEMS):
         # time.sleep(0.1)
@@ -327,6 +330,7 @@ class Board:
                         curr_constraint = constraints_for_row[curr_constraint_id]
                         curr_num_of_cells_to_fill = curr_constraint.length
                         curr_constraint_color = curr_constraint.color
+                        curr_constraint_status = constraints_for_row[curr_constraint_id].completed
 
                     else:
                         # we finished every constraint, next cells should be white only
@@ -357,6 +361,19 @@ class Board:
             for j in range(len(constraints_group[i])):
                 if not constraints_group[i][j].completed:
                     return i, j
+        return None
+
+    def get_next_row_constraint(self):
+        i = 0
+        for row_con in range(len(self.rows_constraints)):
+            previous_constraint = -1
+            for constraint in self.rows_constraints[row_con]:
+                if i == self.current_row_constraint:
+                    if self.current_cell.row != row_con:
+                        self.current_cell = self.get_cell(row_con, previous_constraint + 1)
+                    return constraint
+                i += 1
+                previous_constraint += constraint.length
         return None
 
     def complete_constraints(self, con_i, con_j, constraint_type=COLUMNS):
