@@ -1,3 +1,5 @@
+import time
+
 import Board
 import util
 from config import COLORS_DICT
@@ -13,30 +15,35 @@ from config import COLORS_DICT
 #             else:
 #                 board.fill(r, c, board.board[r][c].color)
 
-
+# s = 0
 def search_helper(problem, fringe):
+    # global s
     fringe.push((problem.get_start_state(), set()))
     while not fringe.isEmpty():
+        # print("what")
         # delete the previous child's actions rectangles
-        Board.Board.gui.canvas.delete('rect')
         current = fringe.pop()
-        # current[0].print_board()
-        # todo - block the gui for some time...
-        # todo - show all the rectangles of the current child
-        for i in range(len(current[0].rects)):
-            r, c = current[0].rects[i].row, current[0].rects[i].col
-            temp = Board.Board.gui.board_rectangles_locs[r][c]
-            Board.Board.gui.canvas.create_rectangle(temp[0], temp[1], temp[2], temp[3],
-                                                    fill=COLORS_DICT[repr(current[0].board[r][c])], tags='rect')
-        Board.Board.gui.root.update()
 
+        if current[0].gui is not None:
+            bef = time.time()
+            Board.Board.gui.canvas.delete('rect')
+            for i in range(len(current[0].rects)):
+                r, c = current[0].rects[i].row, current[0].rects[i].col
+                temp = Board.Board.gui.board_rectangles_locs[r][c]
+                Board.Board.gui.canvas.create_rectangle(temp[0], temp[1], temp[2], temp[3],
+                                                        fill=COLORS_DICT[repr(current[0].board[r][c])], tags='rect')
+            Board.Board.gui.root.update()
+            Board.Board.different_time += (time.time() - bef)
+        # s += time.time() - bef
         if problem.is_goal_state(current[0]):
+            # print(s)
             return current[0]
         for child in problem.get_successors(current[0]):
             visited_coords = False
             for coord in child[1]:
                 if coord in current[1]:
                     visited_coords = True
+                    # break
             if not visited_coords:
                 # if we have a new board.
                 child[1].update(current[1])
@@ -97,25 +104,27 @@ def a_star_search(problem, heuristic=null_heuristic):
     root = StateAndActions(problem.get_start_state(), set())
     fringe.push(root, 0)
     while not fringe.isEmpty():
-        Board.Board.gui.canvas.delete('rect')
-
         current = fringe.pop()
 
-        for i in range(len(current.state.rects)):
-            r, c = current.state.rects[i].row, current.state.rects[i].col
-            temp = Board.Board.gui.board_rectangles_locs[r][c]
-            Board.Board.gui.canvas.create_rectangle(temp[0], temp[1], temp[2], temp[3],
-                                                    fill=COLORS_DICT[repr(current.state.board[r][c])], tags='rect')
-        Board.Board.gui.root.update()
+        if current.state.gui is not None:
+            before = time.time()
+            Board.Board.gui.canvas.delete('rect')
+            for i in range(len(current.state.rects)):
+                r, c = current.state.rects[i].row, current.state.rects[i].col
+                temp = Board.Board.gui.board_rectangles_locs[r][c]
+                Board.Board.gui.canvas.create_rectangle(temp[0], temp[1], temp[2], temp[3],
+                                                        fill=COLORS_DICT[repr(current.state.board[r][c])], tags='rect')
+            Board.Board.gui.root.update()
+            Board.Board.different_time += (time.time() - before)
 
         if problem.is_goal_state(current.state):
-            # __gui_helper(current.state)
             return current.state
         for child in problem.get_successors(current.state):
             visited_coords = False
             for coord in child[1]:
                 if coord in current.actions:
                     visited_coords = True
+                    # break
             if not visited_coords:
                 child[1].update(current.actions)
                 child_cost = problem.get_cost_of_actions(child[0])

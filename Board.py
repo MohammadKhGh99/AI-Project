@@ -1,3 +1,5 @@
+import time
+
 from GUI import GUI
 from config import *
 from typing import List
@@ -59,6 +61,10 @@ class Constraint:
 
 class Board:
     gui = None
+    moves = []
+    before_time = 0
+    after_time = 0
+    different_time = 0
 
     def __init__(self, rows_constraints: List[List[Constraint]], cols_constraints: List[List[Constraint]],
                  randomly=False, size=(5, 5), cur_game=None):
@@ -69,6 +75,7 @@ class Board:
         self.randomly = randomly
         self.size = size
         self.cur_game = cur_game
+        # self.moves = []
 
         self.rects = []
 
@@ -86,26 +93,33 @@ class Board:
     @staticmethod
     def start_gui(board):
         Board.gui = GUI(board=board, cur_game=board.cur_game)
+        # Board.gui.create_board(board)
+        Board.gui.root.mainloop()
 
     def clear_board(self):
-        Board.gui.canvas.delete('rect')
+        if Board.gui is not None:
+            Board.gui.canvas.delete('rect')
+        Board.different_time = 0
         for r in range(self.num_rows):
             for c in range(self.num_cols):
                 self.board[r][c].color = EMPTY
                 self.flipped[r][c].color = EMPTY
-                Board.gui.board.board[r][c].color = EMPTY
+                if Board.gui:
+                    Board.gui.board.board[r][c].color = EMPTY
+                    Board.gui.board.cells_locations = []
+                    Board.gui.board.init_board_print()
+                    Board.gui.board.rects = []
                 self.cells_locations = []
-                Board.gui.board.cells_locations = []
                 self.init_board_print()
-                Board.gui.board.init_board_print()
                 self.rects = []
-                Board.gui.board.rects = []
+
         for row_con in self.rows_constraints:
             for con in row_con:
                 con.completed = False
         for col_con in self.cols_constraints:
             for con in col_con:
                 con.completed = False
+        Board.moves = []
 
         # Board.gui.board = Board(rows_constraints=self.rows_constraints, cols_constraints=self.cols_constraints, randomly=self.randomly, size=self.size, cur_game=self.cur_game)
         # return Board(rows_constraints=self.rows_constraints, cols_constraints=self.cols_constraints, randomly=self.randomly, size=self.size, cur_game=self.cur_game)
@@ -114,20 +128,28 @@ class Board:
         if r < self.num_rows and c < self.num_cols:
             self.board[r][c].color = color
             self.flipped[c][r].color = color
-            Board.gui.board.board[r][c].color = color
+            if Board.gui:
+                Board.gui.board.board[r][c].color = color
             cur = self.cells_locations[r][c]
             # I found that this way is faster
             self.to_print = self.to_print[:cur] + repr(self.board[r][c]) + self.to_print[cur + 1:]
 
-            # time.sleep(0.1)
+
             # Board.gui.canvas.delete('rect')
 
-            # if brute_force:
-            #     temp = Board.gui.board_rectangles_locs[r][c]
-            #     Board.gui.canvas.create_rectangle(temp[0], temp[1], temp[2], temp[3],
-            #                                       fill=COLORS_DICT[self.board[r][c].__repr__()], tags='rect')
-            #     Board.gui.root.update()
-            self.rects.append(self.board[r][c])
+            if brute_force == BRUTE or brute_force == CSP_P and Board.gui is not None:
+                # if self.board[r][c] not in Board.moves:
+                # Board.moves.append(self.board[r][c])
+                before = time.time()
+                # time.sleep(0.1)
+                temp = Board.gui.board_rectangles_locs[r][c]
+                Board.gui.canvas.create_rectangle(temp[0], temp[1], temp[2], temp[3],
+                                                  fill=COLORS_DICT[self.board[r][c].__repr__()], tags='rect')
+                Board.gui.root.update()
+                Board.different_time += (time.time() - before)
+
+            if Board.gui is not None:
+                self.rects.append(self.board[r][c])
 
             # self.print_board()
             return True

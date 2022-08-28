@@ -20,8 +20,8 @@ SEARCH_PROBLEMS = False
 COMPLETE = True
 NOT_COMPLETE = False
 
-GUI_WIDTH = 800
-GUI_HEIGHT = 700
+GUI_WIDTH = 1000
+GUI_HEIGHT = 800
 
 GUI_FILES_PATH = r'.\FinalProject\\gui_files'
 
@@ -34,6 +34,8 @@ BFS = 1
 DFS = 2
 ASTAR = 3
 CSP_P = 4
+
+ALL_ALGOS = [BRUTE, BFS, DFS, ASTAR, CSP_P]
 
 IS_GUI = True
 PRINT = False
@@ -49,4 +51,12 @@ COLORS_N_DICT = {EMPTY: ' ', WHITE: 'w', BLACK: 'b', RED: 'r'}
 # ASTAR_DIM = (758, 400)
 # CSP_DIM = (760, 500)
 
-LOCS_DICT = {BRUTE: (757, 100), DFS: (760, 200), BFS: (760, 300), ASTAR: (760, 400), CSP_P: (758, 500)}
+LOCS_DICT = {BRUTE: (865, 100), DFS: (865, 180), BFS: (865, 260), ASTAR: (865, 340), CSP_P: (865, 420)}
+
+## CSP TYPES ##:
+MRV = 1
+DEGREE = 2
+LCV = 3
+FC = 4
+AC = 5
+ALL_CSPS = {1, 2, 3, 4, 5}
