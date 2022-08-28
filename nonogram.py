@@ -233,4 +233,5 @@ def solve_nonogram_helper(constraints, sol_list, board, i):
 
 
 if __name__ == "__main__":
-    print(solve_nonogram([[[1], [1]], [[1], [1]]]))
+    # print(solve_nonogram([[[1], [1]], [[1], [1]]]))
+    pass

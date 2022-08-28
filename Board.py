@@ -109,7 +109,6 @@ class Board:
         self.randomly = randomly
         self.size = size
 
-        # todo - add a list of the cells of the child's actions rectangles
         self.rects = []
 
         if not self.randomly:
@@ -119,11 +118,9 @@ class Board:
             self.num_rows, self.num_cols = self.size
 
         self.board = [[Cell(r, c) for c in range(self.num_cols)] for r in range(self.num_rows)]
-        # todo i guess now to have same cells we need to flip this board manually - DONE (I think?)
         self.flipped = [[Cell(c, r) for r in range(self.num_rows)] for c in range(self.num_cols)]
 
         self.to_print = self.init_board_print()
-        # Board.gui = GUI.GUI(board=self)
 
     @staticmethod
     def start_gui(board):

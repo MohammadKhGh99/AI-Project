@@ -28,3 +28,10 @@ SOUND = False
 
 COLORS_DICT = {'w': 'white', 'b': 'black', 'r': 'red', ' ': 'grey'}
 
+## CSP TYPES ##:
+MRV = 1
+DEGREE = 2
+LCV = 3
+FC = 4
+AC = 5
+ALL_CSPS = {1, 2, 3, 4, 5}

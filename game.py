@@ -1,6 +1,7 @@
 import random
 
 import Board
+import last_CSP
 from config import *
 import agent
 import csp
@@ -202,8 +203,8 @@ class Game:
     def run(self):
         # runs the brute force algorithm on the board.
 
-        # print("Brute Force")
-        # self.board = agent.BruteForce(self.board).brute_force().board
+        print("Brute Force")
+        self.board = agent.BruteForce(self.board).brute_force().board
 
         nonogram_problem = agent.NonogramProblem(self.board)
 
@@ -213,8 +214,8 @@ class Game:
         # print("DFS")
         # self.board = search.depth_first_search(nonogram_problem)
 
-        print("A*")
-        self.board = search.a_star_search(problem=nonogram_problem)
+        # print("A*")
+        # self.board = search.a_star_search(problem=nonogram_problem)
 
         # print("CSP")
         # csp.run_CSP(self.board)
@@ -226,18 +227,21 @@ class Game:
 
 
 if __name__ == "__main__":
-    print("Hello World!")
+    # print("Hello World!")
 
-    game = Game(colors=COLORFUL, size=(3, 3))
+    game = Game(colors=COLORFUL, size=(3, 6))
     # game = Game(colors=COLORFUL, size=(3, 3))
-    game = Game(colors=COLORFUL, size=(9, 9))
     # game = Game(colors=COLORFUL, size=(5, 5))
     # game = Game(colors=COLORFUL, size=(15, 15))
     # game = Game(csv_file='example1.csv')
     # game = Game(colors=COLORFUL)
-    game.run()
+    # game.run()
     # game.board.print_board()
 
-    Board.gui.root.mainloop()
-
+    # Board.gui.root.mainloop()
+    # game.run()
+    # print("Brute Force")
+    # game.board.print_board()
+    last_CSP.test_all_new(game)
+    # last_CSP.run_CSP_last(game)
 
