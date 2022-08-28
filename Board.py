@@ -133,6 +133,7 @@ class Board:
         con_j: the index of the working constraint in the group.
         start_index: from where to start to fill (row/column)
         """
+        #TODO remove if we decided to not use it.
         child = deepcopy(self)
         if not constraint_type:
             constraint = child.rows_constraints[con_i][con_j]
@@ -356,7 +357,7 @@ class Board:
         Return the coordinates of the incomplete constraints, None, if all constraints are completed
         """
         constraints_group = self.cols_constraints if constraint_type else self.rows_constraints
-
+        #TODO remove if we decided to not use it.
         for i in range(len(constraints_group)):
             for j in range(len(constraints_group[i])):
                 if not constraints_group[i][j].completed:
@@ -364,6 +365,7 @@ class Board:
         return None
 
     def get_next_row_constraint(self):
+        #TODO remove if we decided to not use it.
         i = 0
         for row_con in range(len(self.rows_constraints)):
             previous_constraint = -1
@@ -383,7 +385,32 @@ class Board:
         con_i: the index of the working constraints group.
         con_j: the index of the working constraint in the group.
         """
+        #TODO remove if we decided to not use it.
         if constraint_type:
             self.cols_constraints[con_i][con_j].completed = True
         else:
             self.rows_constraints[con_i][con_j].completed = True
+
+    def back_to_the_prev_cell(self):
+        """This function change the current cell backward"""
+        new_col = self.current_cell.col - 1
+        new_row = self.current_cell.row
+        if new_col == -1:
+            new_col = self.num_cols - 1
+            new_row -= 1
+        try:
+            self.current_cell = self.get_cell(new_row, new_col)
+        except IndexError:
+            self.current_cell = Cell(new_row, new_col)
+
+    def move_to_the_next_cell(self):
+        """This function change the current cell forward."""
+        new_col = self.current_cell.col + 1
+        new_row = self.current_cell.row
+        if new_col == self.num_cols:
+            new_col = 0
+            new_row += 1
+        try:
+            self.current_cell = self.get_cell(new_row, new_col)
+        except IndexError:
+            self.current_cell = Cell(new_row, new_col)
