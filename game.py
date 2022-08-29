@@ -49,6 +49,8 @@ class Game:
         self.board = None
         self.csps = set()
         self.times_lst = dict()
+        self.ran_before = False
+
         if csps is not None:
             self.csps.update(set(csps))
 
@@ -93,6 +95,7 @@ class Game:
     @staticmethod
     def new_game(cur_game):
         Board.gui.root.destroy()
+        Board.gui = None
         new_game_object = Game(csv_file=cur_game.csv_file, rows_constraints=cur_game.rows_constraints,
                                cols_constraints=cur_game.cols_constraints, size=cur_game.size,
                                always_solvable=cur_game.always_solvable, rows_or_cols=cur_game.rows_or_cols,
@@ -322,7 +325,6 @@ class Game:
         cur_gui = self.board.gui
 
         Board.before_time = time.time()
-        # before = time.time()
         if solve_type == BRUTE:
             print("Brute Force")
             result = agent.BruteForce(self.board).brute_force()
@@ -341,10 +343,12 @@ class Game:
                 resulted_board = search.a_star_search(problem=nonogram_problem)
             elif solve_type == CSP_P:
                 print("CSP")
-                resulted_board = csp.run_CSP(self.board, types_of_csps=self.csps)
+                print(self.ran_before)
+                resulted_board = csp.run_CSP(self.board, types_of_csps=self.csps, same_board=self.ran_before)
+                self.ran_before = True
             elif solve_type == LBS:
                 print("LBS")
-                resulted_board = search.local_beam_search(nonogram_problem, 5)  #, value_function=lambda: game.board.filled_cells)
+                resulted_board = search.local_beam_search(nonogram_problem, 1)  #, value_function=lambda: game.board.filled_cells)
 
         after = time.time()
         all_time = after - Board.before_time - Board.different_time
@@ -354,11 +358,11 @@ class Game:
 
         if self.gui_or_print == IS_GUI:
             if resulted_board is not None and type(resulted_board) is not int:
+                resulted_board.print_board()
                 # show time of the running algorithm
                 resulted_board.gui.success_time(solve_type, all_time)
                 Board.gui.success_msg()
             else:
-                # todo - check this
                 cur_gui.failure_time(solve_type, all_time)
                 Board.gui.failed_msg()
             # to keep the window running

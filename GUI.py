@@ -149,7 +149,6 @@ class GUI:
         select_csp_button.place(x=865, y=380)
 
         def run_csp():
-            print(self.__cur_game.csps)
             self.__cur_game.run(CSP_P)
 
         # def exit_game():

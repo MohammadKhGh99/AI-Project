@@ -1,7 +1,6 @@
 import math
 from abc import abstractmethod
 
-import Board
 from config import *
 from typing import Dict, List
 import Board
@@ -47,7 +46,6 @@ class RowColumnConstraint(ConstraintForVariable):
 
 class CSP:
     """ a generic CSP class, that has the main things a CSP uses"""
-    created_or_not = False
 
     def __init__(self, variables, domains, neighbors, board):
         self.variables = variables  # A list of variables
@@ -55,13 +53,11 @@ class CSP:
         self.neighbors: Dict = neighbors  # {var: [var,...]}
         self.constraints = {}
         self.board = board
-
         for variable in self.variables:
             self.constraints[variable] = []
 
         self.curr_domains, self.pruned = None, None
         self.csp_types = set()
-        CSP.created_or_not = True
 
     def add_constraint(self, constraint: ConstraintForVariable) -> None:
         """ fill the constraints for the variables"""
@@ -86,13 +82,10 @@ class CSP:
         if var[0] == ROWS:
             for i in range(self.board.num_cols):
                 self.board.fill(var[1], i, val[i], brute_force=CSP_P)
-                # self.board.board[index][i].color = to_fill[i]
         elif var[0] == COLUMNS:
             for i in range(self.board.num_rows):
                 self.board.fill(i, var[1], val[i], brute_force=CSP_P)
-        # print(assignment)
 
-        # TODO - MHMD - we need to fill (one assignment only!)
         if self.curr_domains:
             if FC in self.csp_types:
                 self.forward_check(var, val, assignment)
@@ -121,18 +114,15 @@ class CSP:
                     for i in range(self.board.num_cols):
                         if self.board.board[var1[1]][i].color == EMPTY:
                             self.board.fill(var1[1], i, val[i], brute_force=CSP_P)
-                        # self.board.board[index][i].color = to_fill[i]
                 elif var1[0] == COLUMNS:
                     for i in range(self.board.num_rows):
                         if self.board.board[i][var1[1]].color == EMPTY:
                             self.board.fill(i, var1[1], val[i], brute_force=CSP_P)
-            # Board.Board.gui.root.update()
 
             del assignment[var]
-            # TODO - MHMD - we need to fill all the assignments over!
 
     def nconflicts(self, variable, value, assignment):
-        """Return the number of conflicts var=val has with other variables."""
+        "Return the number of conflicts var=val has with other variables."
 
         def conflict(var2):
             val2 = assignment.get(var2, None)
@@ -144,11 +134,11 @@ class CSP:
         return self.count_matching(conflict, self.neighbors[variable])
 
     def nconflicts2(self, var, val, assignment):
-        """Return the number of conflicts var=val has with other variables."""
+        "Return the number of conflicts var=val has with other variables."
 
         def conflict(var2):
             val2 = assignment.get(var2, None)
-            return val2 is not None and not self.consistent2(var, val, var2, val2)
+            return val2 != None and not self.consistent2(var, val, var2, val2)
 
         return self.count_matching(conflict, self.neighbors[var])
 
@@ -156,8 +146,10 @@ class CSP:
         """Returns the amount of items in seq that return true from condition"""
         return sum(1 for item in seq if condition(item))
 
-    def backtracking_search(self, csp_types):
+    def backtracking_search(self, csp_types, same_board):
         """ this will initialize the backtracking as we please"""
+        if same_board:
+            self.board.clear_board()
 
         for csp in csp_types:
             if csp == MRV:
@@ -180,6 +172,47 @@ class CSP:
             self.AC3(None)
         return self.backtracking_search_rec({})
 
+    def backtracking_search_rec_old(self, assignment=None):
+        """ this is the recursive backtracking search"""
+        # assignment is complete if every variable is assigned (our base case)
+        if assignment is None:
+            assignment = {}
+        if len(assignment) == len(self.variables):
+            return assignment
+
+        # get the first variable in the CSP but not in the assignment
+        variable = self.select_unassigned_variable(assignment)
+        # get every possible domain value that are in order for this unassigned variable
+        for value in self.order_domain_values(variable, assignment):
+            # check if there is a conflicts between variables and assignments
+            if FC in self.csp_types and value not in self.curr_domains[variable]:
+                continue
+            if FC in self.csp_types or self.nconflicts2(variable, value, assignment) == 0:
+                # perfect! no conflict, assign the value to variable
+                self.assign(variable, value, assignment)
+                no_solution_flag_FC = False
+                if FC in self.csp_types:
+                    # check forward if this helps us or there is no solution
+                    for var in self.variables:
+                        if len(self.curr_domains[var]) == 0 and var != variable:
+                            no_solution_flag_FC = True
+                            break
+                # backtrack baby
+                if not no_solution_flag_FC:
+                    result = self.backtracking_search_rec(assignment)
+                else:
+                    # this was a bad value, reverse the pruning now:
+                    for tuple_pruned in self.pruned[variable]:
+                        self.curr_domains[tuple_pruned[0]].append(tuple_pruned[1])
+                    self.pruned[variable] = []
+                    continue
+                # if we didn't find the result, we will end up backtracking
+                if result is not None:
+                    return result
+            # this might be a failure assigning, but don't give up, we will try again!
+            self.unassign(variable, assignment)
+        return None
+
     def backtracking_search_rec(self, assignment=None):
         """ this is the recursive backtracking search"""
         # assignment is complete if every variable is assigned (our base case)
@@ -193,13 +226,11 @@ class CSP:
         # get every possible domain value that are in order for this unassigned variable
         for value in self.order_domain_values(variable, assignment):
             # check if there is a conflicts between variables and assignments
-
             if FC in self.csp_types or self.nconflicts2(variable, value, assignment) == 0:
                 # perfect! no conflict, assign the value to variable
                 self.assign(variable, value, assignment)
 
                 # backtrack baby
-
                 result = self.backtracking_search_rec(assignment)
 
                 # if we didn't find the result, we will end up backtracking
@@ -210,9 +241,7 @@ class CSP:
                     for (other_variable, other_value) in self.pruned[variable]:
                         self.curr_domains[other_variable].append(other_value)
                     self.pruned[variable] = []
-
             # this might be a failure assigning, but don't give up, we will try again!
-
             self.unassign(variable, assignment)
         return None
 
@@ -268,13 +297,33 @@ class CSP:
             domain_for_var = [val[0] for val in sorted_conflicts]
 
         return domain_for_var
-
+        #
         # while domain_for_var:
         #     yield domain_for_var.pop()
 
-    def forward_check(self, variable, value, assignment):
-        """Do forward checking for this assignment."""
+    def forward_check_old(self, variable, value, assignment):
+        "Do forward checking for this assignment."
         if self.curr_domains:
+            # Restore prunings from previous value of var
+            for (other_variable, other_value) in self.pruned[variable]:
+                self.curr_domains[other_variable].append(other_value)
+            self.pruned[variable] = []
+            # Prune any other other_variable=other_value assignment that conflict with variable=value
+            temp_assignment = {variable: value}
+            for other_variable in self.neighbors[variable]:
+                if other_variable not in assignment:
+                    temp_assignment[other_variable] = None
+                    for other_value in self.curr_domains[other_variable][:]:
+                        temp_assignment[other_variable] = other_value
+                        if not self.consistent(variable, temp_assignment):
+                            self.curr_domains[other_variable].remove(other_value)
+                            self.pruned[variable].append((other_variable, other_value))
+                    temp_assignment.pop(other_variable, None)
+
+    def forward_check(self, variable, value, assignment):
+        "Do forward checking for this assignment."
+        if self.curr_domains:
+
             for other_variable in self.neighbors[variable]:
                 if other_variable not in assignment:
                     for other_value in self.curr_domains[other_variable][:]:
@@ -290,17 +339,14 @@ class CSP:
         while queue:
             (curr_var, var_neighbor) = queue.pop()
             if self.remove_inconsistent_values(curr_var, var_neighbor):
-                # if self.remove_inconsistent_values(var_neighbor, curr_var):
                 for another_neighbor in self.neighbors[curr_var]:
                     queue.append((another_neighbor, curr_var))
 
     def remove_inconsistent_values(self, variable, other_variable):
-        """a helper function for AC3 - Return true if we remove a value."""
+        "a helper function for AC3 - Return true if we remove a value."
         removed = False
         for value in self.curr_domains[variable][:]:
             # If variable=value conflicts with other_variable=other_value for every possible other_value, eliminate Xi=x
-            if not self.curr_domains[other_variable]:
-                print()
             if all(map(lambda y: not self.consistent2(variable, value, other_variable, y),
                        self.curr_domains[other_variable])):
                 self.curr_domains[variable].remove(value)
@@ -462,162 +508,163 @@ def get_constrains_and_neighbors(board):
 
 
 # -----------------------
+cur_csp = None
 
 
-def run_CSP(board, types_of_csps=None):
-    # if not CSP.created_or_not:
-    variables, domains = get_variables_and_domains(board)
-    the_constraints, neighbors = get_constrains_and_neighbors(board)
-    our_csp = CSP(variables, domains, neighbors, board)
+def run_CSP(board, same_board, types_of_csps=None):
+    global cur_csp
+    if not same_board:
+        variables, domains = get_variables_and_domains(board)
+        the_constraints, neighbors = get_constrains_and_neighbors(board)
+        our_csp = CSP(variables, domains, neighbors, board)
 
-    for con in the_constraints:
-        our_csp.add_constraint(con)
+        for con in the_constraints:
+            our_csp.add_constraint(con)
 
-    print(types_of_csps)
+        cur_csp = our_csp
 
     # MRV, DEGREE, LCV, FC, AC, ALL_CSPS
     if types_of_csps is None:
-        types_of_csps = {AC}
-    res = our_csp.backtracking_search(types_of_csps)
-    if res:
-        print_result(res, str("Normal"))
+        types_of_csps = set()
+    cur_csp.backtracking_search(types_of_csps, same_board)
+    # if res:
+    #     print_result(res, str("Normal"))
 
-    return our_csp.board
-
+    return cur_csp.board
 
 # ------------------------
-
-def test_all_new(game):
-    board = game.board
-    variables, domains = get_variables_and_domains(board)
-    the_constraints, neighbors = get_constrains_and_neighbors(board)
-
-    dict_all = select_all_csps()
-    new_dict_all = {}
-    for k, v in dict_all.items():
-        new_dict_all[k] = (v, CSP(variables, domains, neighbors, board))
-
-    for con in the_constraints:
-        for value in new_dict_all.values():
-            value[1].add_constraint(con)
-
-    all_csps_results = []
-    for type_of_csp, csp in new_dict_all.items():
-        # TODO - time start
-        res = csp[1].backtracking_search(csp[0])
-        # TODO - time finish
-        if res:
-            all_csps_results.append(print_result(res, type_of_csp))
-        else:
-            print("------------------------------------------")
-            print("None results: " + type_of_csp)
-
-    first_set = all_csps_results[0]
-    for second_set in all_csps_results:
-        ans = first_set.symmetric_difference(second_set)
-        if ans:
-            print(first_set)
-            print()
-            print(second_set)
-            break
-    else:
-        print("all correct")
-
-
-def select_csp_types(csp):
-    result = set()
-    # individuals:
-    if csp == MRV:
-        result.add(MRV)
-    if csp == DEGREE:
-        result.add(DEGREE)
-    if csp == LCV:
-        result.add(LCV)
-    if csp == FC:
-        result.add(FC)
-    if csp == AC:
-        result.add(AC)
-
-    return result
-
-
-def csp_names(csp_set):
-    ans = ""
-    for csp in csp_set:
-        if csp == MRV:
-            ans += "MRV "
-        if csp == DEGREE:
-            ans += "DEGREE "
-        if csp == LCV:
-            ans += "LCV "
-        if csp == FC:
-            ans += "FC "
-        if csp == AC:
-            ans += "AC "
-    return ans
-
-
-def select_all_csps():
-    # all_things_test2 = []
-    all_things_test = dict()
-
-    # NO CSP
-    # all_things_test.append({0})
-    all_things_test["Normal"] = list({0})
-    # individuals:
-    for csp1 in ALL_CSPS:
-        curr_1 = select_csp_types(csp1)
-        for csp2 in ALL_CSPS:
-            curr_2 = curr_1.union(select_csp_types(csp2))
-            if len(curr_2) < 2:
-                continue
-            for csp3 in ALL_CSPS:
-                curr_3 = curr_2.union(select_csp_types(csp3))
-                if len(curr_3) < 3:
-                    continue
-                for csp4 in ALL_CSPS:
-                    curr_4 = curr_3.union(select_csp_types(csp4))
-                    if len(curr_4) < 4:
-                        continue
-                    all_things_test[csp_names(curr_4)] = list(curr_4)
-                all_things_test[csp_names(curr_3)] = list(curr_3)
-            all_things_test[csp_names(curr_2)] = list(curr_2)
-        all_things_test[csp_names(curr_1)] = list(curr_1)
-
-    all_things_test["ALL"] = ALL_CSPS
-    return all_things_test
-
-
-def print_result(dic, type_of_csp):
-    print("------------------------------------------")
-    sorted_dic = dict(sorted(dic.items()))
-    rows = []
-    cols = []
-    for k, v in sorted_dic.items():
-        if k[0] == ROWS:
-            rows.append(v)
-        else:
-            cols.append(v)
-
-    # print(type_of_csp + ":")
-
-    rows_from_cols = []
-    for v in zip(*cols):
-        rows_from_cols.append(v)
-
-    first_set = set(map(tuple, rows))
-    second_set = set(map(tuple, rows_from_cols))
-    ans = first_set.symmetric_difference(second_set)
-    if ans:
-        print(type_of_csp)
-        print()
-        print("ROWS")
-        for s in rows:
-            print(*s)
-        print("COLUMNS")
-        for d in rows_from_cols:
-            print(*d)
-        return type_of_csp
-    else:
-        print(type_of_csp + ": Perfect!")
-        return first_set
+#
+# def test_all_new(game):
+#     board = game.board
+#     variables, domains = get_variables_and_domains(board)
+#     the_constraints, neighbors = get_constrains_and_neighbors(board)
+#
+#     dict_all = select_all_csps()
+#     new_dict_all = {}
+#     for k, v in dict_all.items():
+#         new_dict_all[k] = (v, CSP(variables, domains, neighbors, board))
+#
+#     for con in the_constraints:
+#         for value in new_dict_all.values():
+#             value[1].add_constraint(con)
+#
+#     all_csps_results = []
+#     for type_of_csp, csp in new_dict_all.items():
+#         # TODO - time start
+#         res = csp[1].backtracking_search(csp[0])
+#         # TODO - time finish
+#         if res:
+#             all_csps_results.append(print_result(res, type_of_csp))
+#         else:
+#             print("------------------------------------------")
+#             print("None results: " + type_of_csp)
+#
+#     first_set = all_csps_results[0]
+#     for second_set in all_csps_results:
+#         ans = first_set.symmetric_difference(second_set)
+#         if ans:
+#             print(first_set)
+#             print()
+#             print(second_set)
+#             break
+#     else:
+#         print("all correct")
+#
+#
+# def select_csp_types(csp):
+#     result = set()
+#     # individuals:
+#     if csp == MRV:
+#         result.add(MRV)
+#     if csp == DEGREE:
+#         result.add(DEGREE)
+#     if csp == LCV:
+#         result.add(LCV)
+#     if csp == FC:
+#         result.add(FC)
+#     if csp == AC:
+#         result.add(AC)
+#
+#     return result
+#
+#
+# def csp_names(csp_set):
+#     ans = ""
+#     for csp in csp_set:
+#         if csp == MRV:
+#             ans += "MRV "
+#         if csp == DEGREE:
+#             ans += "DEGREE "
+#         if csp == LCV:
+#             ans += "LCV "
+#         if csp == FC:
+#             ans += "FC "
+#         if csp == AC:
+#             ans += "AC "
+#     return ans
+#
+#
+# def select_all_csps():
+#     # all_things_test2 = []
+#     all_things_test = dict()
+#
+#     # NO CSP
+#     # all_things_test.append({0})
+#     all_things_test["Normal"] = list({0})
+#     # individuals:
+#     for csp1 in ALL_CSPS:
+#         curr_1 = select_csp_types(csp1)
+#         for csp2 in ALL_CSPS:
+#             curr_2 = curr_1.union(select_csp_types(csp2))
+#             if len(curr_2) < 2:
+#                 continue
+#             for csp3 in ALL_CSPS:
+#                 curr_3 = curr_2.union(select_csp_types(csp3))
+#                 if len(curr_3) < 3:
+#                     continue
+#                 for csp4 in ALL_CSPS:
+#                     curr_4 = curr_3.union(select_csp_types(csp4))
+#                     if len(curr_4) < 4:
+#                         continue
+#                     all_things_test[csp_names(curr_4)] = list(curr_4)
+#                 all_things_test[csp_names(curr_3)] = list(curr_3)
+#             all_things_test[csp_names(curr_2)] = list(curr_2)
+#         all_things_test[csp_names(curr_1)] = list(curr_1)
+#
+#     all_things_test["ALL"] = ALL_CSPS
+#     return all_things_test
+#
+#
+# def print_result(dic, type_of_csp):
+#     print("------------------------------------------")
+#     sorted_dic = dict(sorted(dic.items()))
+#     rows = []
+#     cols = []
+#     for k, v in sorted_dic.items():
+#         if k[0] == ROWS:
+#             rows.append(v)
+#         else:
+#             cols.append(v)
+#
+#     # print(type_of_csp + ":")
+#
+#     rows_from_cols = []
+#     for v in zip(*cols):
+#         rows_from_cols.append(v)
+#
+#     first_set = set(map(tuple, rows))
+#     second_set = set(map(tuple, rows_from_cols))
+#     ans = first_set.symmetric_difference(second_set)
+#     if ans:
+#         print(type_of_csp)
+#         print()
+#         print("ROWS")
+#         for s in rows:
+#             print(*s)
+#         print("COLUMNS")
+#         for d in rows_from_cols:
+#             print(*d)
+#         return type_of_csp
+#     else:
+#         print(type_of_csp + ": Perfect!")
+#         return first_set

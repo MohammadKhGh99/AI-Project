@@ -4,17 +4,7 @@ import time
 import Board
 import util
 from config import *
-#
-# if current[0].gui is not None:
-#     bef = time.time()
-#     Board.Board.gui.canvas.delete('rect')
-#     for i in range(len(current[0].rects)):
-#         r, c = current[0].rects[i].row, current[0].rects[i].col
-#         temp = Board.Board.gui.board_rectangles_locs[r][c]
-#         Board.Board.gui.canvas.create_rectangle(temp[0], temp[1], temp[2], temp[3],
-#                                                 fill=COLORS_DICT[repr(current[0].board[r][c])], tags='rect')
-#     Board.Board.gui.root.update()
-#     Board.Board.different_time += (time.time() - bef)
+
 
 def gui_helper(board):
     if board.gui is not None:
@@ -172,7 +162,7 @@ def local_beam_search_helper(problem, k_states, k):  #, value_function):
                 problem.board = successor[0]
                 if search_helper(problem, successor[0], successor[1]):
                     if problem.is_goal_state(successor[0]):
-                        # gui_helper(current.state)
+                        gui_helper(current.state)
                         return current.state
                     value = successor[0].filled_cells
                     all_successors.push(StateAndActions(successor[0], successor[1], value, current.initial_cells), value)
@@ -218,6 +208,7 @@ def local_beam_search(problem, k):  #, value_function=null_heuristic):
               list of StateAndActions objects.
     """
     k_states = []
+    # k_states = [StateAndActions(problem.board, [], 0, set()]
     for i in range(k):
         n = problem.board.num_cols * problem.board.num_rows
         random_state, initial_cells = get_random_stats(problem.board, random.randint(0, n))
@@ -226,7 +217,7 @@ def local_beam_search(problem, k):  #, value_function=null_heuristic):
 
     for current in k_states:
         if problem.is_goal_state(current.state):
-            # gui_helper(current.state)
+            gui_helper(current.state)
             return current.state
     return local_beam_search_helper(problem, k_states, k)  #, value_function)
 

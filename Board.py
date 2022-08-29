@@ -172,8 +172,9 @@ class Board:
             return True
         return False
 
-    def fill(self, r, c, color, brute_force=SEARCH_PROBLEMS, from_unassign=False):
+    def fill(self, r, c, color, brute_force=SEARCH_PROBLEMS):
         if r < self.num_rows and c < self.num_cols:
+            filled_before = True if self.board[r][c].color != EMPTY else False
             self.board[r][c].color = color
             self.flipped[c][r].color = color
             if Board.gui:
@@ -182,24 +183,18 @@ class Board:
             # I found that this way is faster
             self.to_print = self.to_print[:cur] + repr(self.board[r][c]) + self.to_print[cur + 1:]
 
-            # Board.gui.canvas.delete('rect')
-            self.filled_cells += 1
-            if (brute_force == BRUTE or brute_force == CSP_P) and Board.gui is not None:
-                # if self.board[r][c] not in Board.moves:
-                # Board.moves.append(self.board[r][c])
+            self.filled_cells += 0 if filled_before else 1
+            if (brute_force == BRUTE or brute_force == CSP_P) and Board.gui is not None and Board.gui.canvas is not None:
                 before = time.time()
                 # time.sleep(0.1)
                 temp = Board.gui.board_rectangles_locs[r][c]
                 Board.gui.canvas.create_rectangle(temp[0], temp[1], temp[2], temp[3],
                                                   fill=COLORS_DICT[self.board[r][c].__repr__()], tags='rect')
-                # if not from_unassign:
                 Board.gui.root.update()
                 Board.different_time += (time.time() - before)
 
             if Board.gui is not None:
                 self.rects.append(self.board[r][c])
-
-            # self.print_board()
             return True
         return False
 
