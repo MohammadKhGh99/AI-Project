@@ -16,7 +16,9 @@ from config import *
 #     Board.Board.gui.root.update()
 #     Board.Board.different_time += (time.time() - bef)
 
+
 def gui_helper(board):
+    print(board.results)
     if board.gui is not None:
         bef = time.time()
         Board.Board.gui.canvas.delete('rect')
@@ -25,7 +27,8 @@ def gui_helper(board):
             temp = Board.Board.gui.board_rectangles_locs[r][c]
             Board.Board.gui.canvas.create_rectangle(temp[0], temp[1], temp[2], temp[3],
                                                     fill=COLORS_DICT[repr(board.board[r][c])], tags='rect')
-        Board.Board.gui.root.update()
+        if board.results == PROCESS:
+            Board.Board.gui.root.update()
         Board.Board.different_time += (time.time() - bef)
 
 
@@ -101,7 +104,7 @@ def breadth_first_search(problem):
         get_successors = True
         current[0].current_cell = Board.Cell(0, 0)
 
-        gui_helper(current[0])
+        # gui_helper(current[0])
 
         # Reset Board
         for action in current[1][:-1]:
@@ -124,6 +127,7 @@ def breadth_first_search(problem):
         if get_successors:
             # Get the successors of the current board, if it is not the goal state.
             if problem.is_goal_state(current[0]):
+                gui_helper(current[0])
                 return current[0]
             current[0].moves = current[1]
             for child in problem.get_successors(current[0]):
@@ -148,10 +152,10 @@ def a_star_search(problem, heuristic=null_heuristic):
     while not fringe.isEmpty():
         current = fringe.pop()
         problem.cost = current.cost
-        gui_helper(current.state)
         if search_helper(problem, current.state, current.actions):
             # Get the successors of the current board, if it is not the goal state.
             if problem.is_goal_state(current.state):
+                gui_helper(current.state)
                 return current.state
             for child in problem.get_successors(current.state):
                 child_cost = problem.get_cost_of_actions(child[1])
@@ -160,19 +164,19 @@ def a_star_search(problem, heuristic=null_heuristic):
     return -1  # No Solution
 
 
-def local_beam_search_helper(problem, k_states, k):  #, value_function):
+def local_beam_search_helper(problem, k_states, k):  # , value_function):
     """
         Helper function for LBS, none of the k_states is a goal state.
     """
     all_successors = util.PriorityQueue()
     while True:
         for current in k_states:
-
+            # gui_helper(current.state)
             for successor in problem.get_successors(current.state):
                 problem.board = successor[0]
                 if search_helper(problem, successor[0], successor[1]):
                     if problem.is_goal_state(successor[0]):
-                        # gui_helper(current.state)
+                        gui_helper(current.state)
                         return current.state
                     value = successor[0].filled_cells
                     all_successors.push(StateAndActions(successor[0], successor[1], value, current.initial_cells), value)
@@ -217,12 +221,13 @@ def local_beam_search(problem, k):  #, value_function=null_heuristic):
     k_states: a list of k-states, each state is a board and the actions (coordinates of non-empty cells),
               list of StateAndActions objects.
     """
-    k_states = []
-    for i in range(k):
-        n = problem.board.num_cols * problem.board.num_rows
-        random_state, initial_cells = get_random_stats(problem.board, random.randint(0, n))
-        copy_state = StateAndActions(random_state, [], 0, initial_cells)
-        k_states.append(copy_state)
+    board = StateAndActions(problem.board, [], 0, set())
+    k_states = [board]
+    # for i in range(k):
+    #     n = problem.board.num_cols * problem.board.num_rows
+    #     random_state, initial_cells = get_random_stats(problem.board, random.randint(0, n))
+    #     copy_state = StateAndActions(random_state, [], 0, initial_cells)
+    #     k_states.append(copy_state)
 
     for current in k_states:
         if problem.is_goal_state(current.state):
@@ -235,6 +240,11 @@ def local_beam_search(problem, k):  #, value_function=null_heuristic):
 bfs = breadth_first_search
 dfs = depth_first_search
 astar = a_star_search
+
+
+
+
+
 
 # import time
 #

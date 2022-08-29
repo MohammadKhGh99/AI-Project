@@ -344,13 +344,18 @@ class Game:
                 resulted_board = csp.run_CSP(self.board, types_of_csps=self.csps)
             elif solve_type == LBS:
                 print("LBS")
-                resulted_board = search.local_beam_search(nonogram_problem, 5)  #, value_function=lambda: game.board.filled_cells)
+                resulted_board = search.local_beam_search(nonogram_problem, 1)  #, value_function=lambda: game.board.filled_cells)
 
         after = time.time()
         all_time = after - Board.before_time - Board.different_time
         print(f"Time:  {all_time} Seconds")
-
+        if Board.gui is not None:
+            Board.gui.root.update()
+        resulted_board.print_board()
         self.times_lst[solve_type] = [all_time]
+
+        if self.board.results == FINAL:
+            self.board.results = PROCESS
 
         if self.gui_or_print == IS_GUI:
             if resulted_board is not None and type(resulted_board) is not int:

@@ -62,7 +62,7 @@ class NonogramCellsProblem(SearchProblem):
             Goal state when we reach the last cell (right bottom corner),
             and we find a legal fill for it.
         """
-        return self.board.current_cell.row == self.board.num_rows and self.board.current_cell.col == 0
+        return self.board.current_cell.row == self.board.num_rows - 1 and self.board.current_cell.col == self.board.num_cols -  1
 
     def get_successors(self, state):
         """

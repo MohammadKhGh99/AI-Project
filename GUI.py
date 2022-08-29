@@ -1,4 +1,5 @@
 # this file contains the gui code to represent our solving process.
+import time
 import time as t
 from tkinter import messagebox
 from copy import deepcopy
@@ -48,15 +49,22 @@ class GUI:
             self.__cur_game = self.__cur_game.new_game(self.__cur_game)
 
         # def create_new_button():
-        new_game_button = Button(self.canvas, text="new game", command=new_game)
+        new_game_button = Button(self.root, text="new game", command=new_game)
         new_game_button.config(height=1, width=8)
-        new_game_button.place(x=100, y=2)
+        new_game_button.place(x=100, y=5)
 
         def clear_func():
             csps = []
+            nonlocal final_results_check
             self.__cur_game.csps = []
             for label in self.labels:
                 label.destroy()
+
+            final_results_check.destroy()
+
+            final_results_check = Checkbutton(self.root, text="Final Result?", command=final_result)
+            final_results_check.config(height=1, width=10)
+            final_results_check.place(x=860, y=680)
 
             self.labels = []
             for chk_b in check_buttons:
@@ -71,6 +79,8 @@ class GUI:
         choose_label.place(x=830, y=50)
 
         def run_brute():
+            if self.board.results == FINAL:
+                self.canvas.delete('rect')
             self.__cur_game.run(BRUTE)
 
         brute_button = Button(self.root, text="Brute Force", command=run_brute)
@@ -78,6 +88,8 @@ class GUI:
         brute_button.place(x=865, y=80)
 
         def run_dfs():
+            if self.board.results == FINAL:
+                self.canvas.delete('rect')
             self.__cur_game.run(DFS)
 
         dfs_button = Button(self.root, text="DFS", command=run_dfs)
@@ -85,6 +97,8 @@ class GUI:
         dfs_button.place(x=865, y=140)
 
         def run_bfs():
+            if self.board.results == FINAL:
+                self.canvas.delete('rect')
             self.__cur_game.run(BFS)
 
         bfs_button = Button(self.root, text="BFS", command=run_bfs)
@@ -92,6 +106,8 @@ class GUI:
         bfs_button.place(x=865, y=200)
 
         def run_astar():
+            if self.board.results == FINAL:
+                self.canvas.delete('rect')
             self.__cur_game.run(ASTAR)
 
         astar_button = Button(self.root, text="ASTAR", command=run_astar)
@@ -99,6 +115,8 @@ class GUI:
         astar_button.place(x=865, y=260)
 
         def run_lbs():
+            if self.board.results == FINAL:
+                self.canvas.delete('rect')
             self.__cur_game.run(LBS)
 
         lbs_button = Button(self.root, text="LBS", command=run_lbs)
@@ -116,6 +134,7 @@ class GUI:
         check_buttons = []
 
         def select_csps():
+            bef = time.time()
             self.__cur_game.csps = set()
             mrv_check = Checkbutton(self.root, text="MRV", command=lambda: add_csp(MRV))
             mrv_check.place(x=865, y=435)
@@ -142,6 +161,7 @@ class GUI:
             check_buttons.append(fc_check)
             check_buttons.append(ac_check)
             check_buttons.append(run_csp_button)
+            self.board.different_time += (time.time() - bef)
             # self.__cur_game.run(CSP_P)
 
         select_csp_button = Button(self.root, text="CSP", command=select_csps)
@@ -150,6 +170,8 @@ class GUI:
 
         def run_csp():
             print(self.__cur_game.csps)
+            if self.board.results == FINAL:
+                self.canvas.delete('rect')
             self.__cur_game.run(CSP_P)
 
         # def exit_game():
@@ -159,6 +181,13 @@ class GUI:
         # exit_button.config(height=1, width=4)
         # exit_button.place(x=5, y=1)
 
+        def final_result():
+            self.board.results = FINAL if self.board.results == PROCESS else PROCESS
+            # print(self.board.results)
+
+        final_results_check = Checkbutton(self.root, text="Final Result?", command=final_result)
+        final_results_check.config(height=1, width=10)
+        final_results_check.place(x=860, y=680)
 
         self.board_rectangles_locs = []
         self.board = None

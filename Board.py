@@ -64,6 +64,7 @@ class Board:
     # moves = []
     before_time = 0
     different_time = 0
+    results = PROCESS
 
     def __init__(self, rows_constraints: List[List[Constraint]], cols_constraints: List[List[Constraint]],
                  randomly=False, size=(5, 5), cur_game=None):
@@ -174,6 +175,9 @@ class Board:
 
     def fill(self, r, c, color, brute_force=SEARCH_PROBLEMS, from_unassign=False):
         if r < self.num_rows and c < self.num_cols:
+            filler_before = False
+            if self.board[r][c].color != EMPTY:
+                filler_before = True
             self.board[r][c].color = color
             self.flipped[c][r].color = color
             if Board.gui:
@@ -182,19 +186,18 @@ class Board:
             # I found that this way is faster
             self.to_print = self.to_print[:cur] + repr(self.board[r][c]) + self.to_print[cur + 1:]
 
-            # Board.gui.canvas.delete('rect')
-            self.filled_cells += 1
+            self.filled_cells += 1 if filler_before else 0
             if (brute_force == BRUTE or brute_force == CSP_P) and Board.gui is not None:
                 # if self.board[r][c] not in Board.moves:
                 # Board.moves.append(self.board[r][c])
-                before = time.time()
-                # time.sleep(0.1)
-                temp = Board.gui.board_rectangles_locs[r][c]
-                Board.gui.canvas.create_rectangle(temp[0], temp[1], temp[2], temp[3],
-                                                  fill=COLORS_DICT[self.board[r][c].__repr__()], tags='rect')
-                # if not from_unassign:
-                Board.gui.root.update()
-                Board.different_time += (time.time() - before)
+                if Board.gui is not None:
+                    before = time.time()
+                    # time.sleep(0.1)
+                    temp = Board.gui.board_rectangles_locs[r][c]
+                    Board.gui.canvas.create_rectangle(temp[0], temp[1], temp[2], temp[3],
+                                                      fill=COLORS_DICT[self.board[r][c].__repr__()], tags='rect')
+                    # Board.gui.root.update()
+                    Board.different_time += (time.time() - before)
 
             if Board.gui is not None:
                 self.rects.append(self.board[r][c])
@@ -212,7 +215,7 @@ class Board:
             for j in range(self.num_rows):
                 loc = Board.gui.board_rectangles_locs[j][i]
                 Board.gui.canvas.create_rectangle(loc, fill=COLORS_DICT[repr(self.board[j][i])], tags='rect')
-        Board.gui.root.update()
+        # Board.gui.root.update()
 
     def fill_n_cells(self, con_i, con_j, start_index, constraint_type=ROWS):
         """

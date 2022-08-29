@@ -54,10 +54,13 @@ COLORS_N_DICT = {EMPTY: ' ', WHITE: 'w', BLACK: 'b', RED: 'r'}
 
 LOCS_DICT = {BRUTE: (865, 80), DFS: (865, 140), BFS: (865, 200), ASTAR: (865, 260), CSP_P: (865, 380), LBS: (865, 320)}
 
-## CSP TYPES ##:
+# CSP TYPES #:
 MRV = 1
 DEGREE = 2
 LCV = 3
 FC = 4
 AC = 5
 ALL_CSPS = {1, 2, 3, 4, 5}
+
+PROCESS = True
+FINAL = False
