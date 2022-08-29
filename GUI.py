@@ -54,6 +54,7 @@ class GUI:
 
         def clear_func():
             csps = []
+            self.__cur_game.csps = []
             for label in self.labels:
                 label.destroy()
 
@@ -74,66 +75,66 @@ class GUI:
 
         brute_button = Button(self.root, text="Brute Force", command=run_brute)
         brute_button.config(height=1, width=10)
-        brute_button.place(x=865, y=100)
+        brute_button.place(x=865, y=80)
 
         def run_dfs():
             self.__cur_game.run(DFS)
 
         dfs_button = Button(self.root, text="DFS", command=run_dfs)
         dfs_button.config(height=1, width=10)
-        dfs_button.place(x=865, y=180)
+        dfs_button.place(x=865, y=140)
 
         def run_bfs():
             self.__cur_game.run(BFS)
 
         bfs_button = Button(self.root, text="BFS", command=run_bfs)
         bfs_button.config(height=1, width=10)
-        bfs_button.place(x=865, y=260)
+        bfs_button.place(x=865, y=200)
 
         def run_astar():
             self.__cur_game.run(ASTAR)
 
         astar_button = Button(self.root, text="ASTAR", command=run_astar)
         astar_button.config(height=1, width=10)
-        astar_button.place(x=865, y=340)
+        astar_button.place(x=865, y=260)
 
-        # def exit_game():
-        #     self.root.quit()
-        #
-        # exit_button = Button(self.root, text="exit", command=exit_game, background='red')
-        # exit_button.config(height=1, width=4)
-        # exit_button.place(x=5, y=1)
-        csps = set()
+        def run_lbs():
+            self.__cur_game.run(LBS)
+
+        lbs_button = Button(self.root, text="LBS", command=run_lbs)
+        lbs_button.config(height=1, width=10)
+        lbs_button.place(x=865, y=320)
+
+        self.__cur_game.csps = set()
 
         def add_csp(csp_to_add_or_delete):
-            if csp_to_add_or_delete in csps:
-                csps.remove(csp_to_add_or_delete)
+            if csp_to_add_or_delete in self.__cur_game.csps:
+                self.__cur_game.csps.remove(csp_to_add_or_delete)
             else:
-                csps.add(csp_to_add_or_delete)
+                self.__cur_game.csps.add(csp_to_add_or_delete)
 
         check_buttons = []
 
         def select_csps():
-            nonlocal csps
-            csps = set()
+            self.__cur_game.csps = set()
             mrv_check = Checkbutton(self.root, text="MRV", command=lambda: add_csp(MRV))
-            mrv_check.place(x=865, y=475)
+            mrv_check.place(x=865, y=435)
 
             degree_check = Checkbutton(self.root, text="DEGREE", command=lambda: add_csp(DEGREE))
-            degree_check.place(x=865, y=510)
+            degree_check.place(x=865, y=470)
 
             lcv_check = Checkbutton(self.root, text="LCV", command=lambda: add_csp(LCV))
-            lcv_check.place(x=865, y=545)
+            lcv_check.place(x=865, y=505)
 
             fc_check = Checkbutton(self.root, text="FC", command=lambda: add_csp(FC))
-            fc_check.place(x=865, y=580)
+            fc_check.place(x=865, y=540)
 
             ac_check = Checkbutton(self.root, text="AC", command=lambda: add_csp(AC))
-            ac_check.place(x=865, y=615)
+            ac_check.place(x=865, y=575)
 
             run_csp_button = Button(self.root, text="Run CSP", command=run_csp)
             run_csp_button.config(height=1, width=10)
-            run_csp_button.place(x=865, y=650)
+            run_csp_button.place(x=865, y=610)
 
             check_buttons.append(mrv_check)
             check_buttons.append(degree_check)
@@ -145,11 +146,19 @@ class GUI:
 
         select_csp_button = Button(self.root, text="CSP", command=select_csps)
         select_csp_button.config(height=1, width=10)
-        select_csp_button.place(x=865, y=420)
+        select_csp_button.place(x=865, y=380)
 
         def run_csp():
-            print(csps)
-            self.__cur_game.run(CSP_P, csps=csps)
+            print(self.__cur_game.csps)
+            self.__cur_game.run(CSP_P)
+
+        # def exit_game():
+        #     self.root.quit()
+        #
+        # exit_button = Button(self.root, text="exit", command=exit_game, background='red')
+        # exit_button.config(height=1, width=4)
+        # exit_button.place(x=5, y=1)
+
 
         self.board_rectangles_locs = []
         self.board = None
@@ -208,9 +217,14 @@ class GUI:
     def failed_msg(self):
         messagebox.showerror('Failed', 'You didn\'t find the solution')
 
-    def put_time(self, solve_type, timing):
+    def success_time(self, solve_type, timing):
         loc = LOCS_DICT[solve_type]
         label = Label(self.root, text=str(timing), bg='light green')
         label.place(x=loc[0] - 30, y=loc[1] + 30)
         self.labels.append(label)
-        # self.canvas.create_text((loc[0], loc[1] + 30), text=str(timing))
+
+    def failure_time(self, solve_type, timing):
+        loc = LOCS_DICT[solve_type]
+        label = Label(self.root, text=str(timing), bg='red')
+        label.place(x=loc[0] - 30, y=loc[1] + 30)
+        self.labels.append(label)

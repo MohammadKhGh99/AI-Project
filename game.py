@@ -1,3 +1,4 @@
+import itertools
 import random
 import sys
 import time
@@ -12,10 +13,10 @@ from Board import *
 
 class Game:
     first_one = True
+    # times_lst = []
 
-    def __init__(self, csv_file=None, rows_constraints=None, cols_constraints=None, colors=BLACK_WHITE,
-                 size=(5, 5), always_solvable=True, rows_or_cols=ROWS, gui_or_print=IS_GUI, difficulty=EASY,
-                 solve_type=BRUTE):
+    def __init__(self, csv_file=None, rows_constraints=None, cols_constraints=None, size=(5, 5), always_solvable=True,
+                 rows_or_cols=ROWS, gui_or_print=IS_GUI, difficulty=HARD, csps=None):
         """
         Initializing the board of the game, we have 3 different ways:
         1) from CSV file
@@ -25,10 +26,14 @@ class Game:
         the variables above:
         csv_file: if we want to build board from CSV file.
         rows_constraints and cols_constraints: if we want to build board from giving lists.
-        colors: we have two options - BLACK_WHITE: black and white board (two colors) [DEFAULT option]
-                                    - COLORFUL: red, black and white board (three colors)
         size: if the given board is random, with specific size, then we change the size here [DEFAULT is 5x5]
-
+        always_solvable: the random board that will be generated will be always solvable or not.
+        rows_or_cols: in EASY mode, do you want to make the board easy by the rows or columns.
+        gui_or_print: do you want to present the result as gui or prints on the stdout.
+        difficulty: HARD will make a random board with random colors values in each cell, EASY will make an easy random
+                    board that will contain some continuous random cells with the same color.
+        solve_type: in which way do you want to solve the board, BRUTE, BFS, DFS, ASTAR or CSP_P.
+        csps: if the way chosen was CSP_P here will be the types of csps that you want to solve the board by them.
         expected constraints format: if BLACK_WHITE: ^\d+[bB](?:-\d+[bB])*$|^\d+(?:-\d+)*$    examples: 5b-8b, 12, 5-84
                                      if COLORFUL: ^\d+[bBrR](?:-\d+[bBrR])*$    examples: 3b, 5r-15B.
 
@@ -36,13 +41,16 @@ class Game:
         self.csv_file = csv_file
         self.rows_constraints = rows_constraints
         self.cols_constraints = cols_constraints
-        self.colors = colors
         self.size = size
         self.always_solvable = always_solvable
         self.rows_or_cols = rows_or_cols
         self.gui_or_print = gui_or_print
         self.difficulty = difficulty
         self.board = None
+        self.csps = set()
+        self.times_lst = dict()
+        if csps is not None:
+            self.csps.update(set(csps))
 
         if self.csv_file:
             """
@@ -67,7 +75,7 @@ class Game:
             this means that each one of rows_constraints and cols_constraints should be as list of strings and each
             string is the constraint of the row in its place.
             """
-            self.__our_building(colors, rows_constraints, cols_constraints)
+            self.__our_building(rows_constraints, cols_constraints)
         else:
             """
             create a random board from giving size and color
@@ -75,38 +83,33 @@ class Game:
             (Back&White or Black&Red&White) and the dimensions of the board, the default size will be 5x5 and
             the default colors will be Black & White.
             """
-            self.__random_building(size, colors)
+            self.__random_building(size)
 
         if Game.first_one and gui_or_print == IS_GUI:
             Board.start_gui(self.board)
-        elif gui_or_print == PRINT:
-            self.run(solve_type)
+        # elif gui_or_print == PRINT:
+        #     self.run(solve_type)
 
     @staticmethod
     def new_game(cur_game):
         Board.gui.root.destroy()
-        # Board.gui.canvas.delete('all')
-        # print(Game.first_one)
         new_game_object = Game(csv_file=cur_game.csv_file, rows_constraints=cur_game.rows_constraints,
-                               cols_constraints=cur_game.cols_constraints, colors=cur_game.colors, size=cur_game.size,
+                               cols_constraints=cur_game.cols_constraints, size=cur_game.size,
                                always_solvable=cur_game.always_solvable, rows_or_cols=cur_game.rows_or_cols,
-                               gui_or_print=cur_game.gui_or_print, difficulty=cur_game.difficulty)
+                               gui_or_print=cur_game.gui_or_print, difficulty=cur_game.difficulty, csps=cur_game.csps)
         if Board.gui is None:
             Board.start_gui(new_game_object.board)
-        # Board.gui.create_board(new_game_object.board)
+        # Game.times_lst = []
         Game.first_one = True
         return new_game_object
 
-    def __our_building(self, colors, rows_constraints, cols_constraints):
+    def __our_building(self, rows_constraints, cols_constraints):
         """
         This function build the board by our choice.
         Parameters:
-            colors: the colors of the Nonogram Game.
             rows_constraints: the rows constraints
             cols_constraints: the cols constraints
         """
-        self.colors = colors
-
         # remove the '-' between each constraint and put it in a cell in a list of a row constraints.
         temp_rows_constraints = [list(map(lambda x: Constraint(x), row.split('-'))) for row in rows_constraints]
 
@@ -123,11 +126,7 @@ class Game:
         with open(csv_file, 'r') as f:
             all_lines = f.readlines()
 
-        # todo - this tries to take just the lines that have something in them and not empty lines.
-        # check - so check it !
         lines = [line for line in all_lines if line.replace(' ', '') != '']
-
-        self.colors = lines[3:6]
 
         # take the second row in csv file, the columns constraints and put each constraint in a list in a
         # list of columns constraints.
@@ -143,6 +142,9 @@ class Game:
         self.board = Board(temp_rows_constraints, temp_cols_constraints, cur_game=self)
 
     def __build_rows_constraints(self, temp_board, temp_rows_constraints):
+        """
+        This function builds rows constraints from the given board
+        """
         for row in range(self.num_rows):
             seq = 1
             row_constraints = []
@@ -161,6 +163,9 @@ class Game:
         return temp_rows_constraints
 
     def __build_cols_constraints(self, temp_board, temp_cols_constraints):
+        """
+        This function builds columns constraints from the given board
+        """
         for col in range(self.num_cols):
             seq = 1
             col_constraints = []
@@ -180,6 +185,10 @@ class Game:
 
     @staticmethod
     def __build_easy(m, n, temp_board, temp_constraints, rows_cols=ROWS):
+        """
+        This function builds a board with easy mode, this means that we will see several times a continuous random
+        cells with the same color, we can build easy board with this technique by rows or columns.
+        """
         for i in range(m):
             con_lst = []
             j = 0
@@ -201,11 +210,10 @@ class Game:
             temp_constraints.append(con_lst)
         return temp_constraints
 
-    def __random_building(self, size, colors):
+    def __random_building(self, size):
         """
-                building a board randomly from giving size and colors
-                """
-        self.colors = colors
+        building a board randomly from giving size and colors
+        """
         self.num_rows = size[0]
         self.num_cols = size[1]
 
@@ -220,6 +228,7 @@ class Game:
             temp_rows_constraints, temp_cols_constraints = [], []
 
             if self.difficulty == EASY:
+                # builds an easy mode board with continuous random cells with tehe same color.
                 temp_board = [[Cell(r, c) for c in range(self.num_cols)] for r in range(self.num_rows)]
                 if self.rows_or_cols == COLUMNS:
                     temp_cols_constraints = Game.__build_easy(self.num_cols, self.num_rows, temp_board,
@@ -229,37 +238,52 @@ class Game:
                     temp_rows_constraints = Game.__build_easy(self.num_rows, self.num_cols, temp_board,
                                                               temp_rows_constraints, rows_cols=ROWS)
                     temp_cols_constraints = self.__build_cols_constraints(temp_board, temp_cols_constraints)
-            else:
+            else:  # HARD mode
+                # builds a hard mode board, by building a fully random board then building the appropriate constraints
+                # for it then empty it.
                 temp_board = [[Cell(r, c, color=random.choice(COLORS_LST)) for c in range(self.num_cols)] for r in
                               range(self.num_rows)]
 
+                # check if there is any empty column, if yes fill one cell in random way with random color
                 for c in range(len(temp_board[0])):
                     all_empty = True
                     for r in range(len(temp_board)):
-                        if temp_board[r][c].color != EMPTY:
+                        if temp_board[r][c].color != EMPTY and temp_board[r][c].color != WHITE:
                             all_empty = False
                             break
                     if all_empty:
-                        r = random.randint(0, len(temp_board))
-                        temp_board[r][c].color = random.choice(COLORS_LST_WITHOUT_WHITE)
+                        row = random.randint(0, len(temp_board))
+                        temp_board[row][c].color = random.choice(COLORS_LST_WITHOUT_WHITE)
 
+                # check if there is any empty column, if yes fill one cell in random way with random color
+                for r in range(len(temp_board)):
+                    all_empty = True
+                    for c in range(len(temp_board[0])):
+                        if temp_board[r][c].color != EMPTY and temp_board[r][c].color != WHITE:
+                            all_empty = False
+                            break
+                    if all_empty:
+                        col = random.randint(0, len(temp_board[0]))
+                        temp_board[r][col].color = random.choice(COLORS_LST_WITHOUT_WHITE)
+
+                # builds the constraints
                 temp_rows_constraints = self.__build_rows_constraints(temp_board, temp_rows_constraints)
                 temp_cols_constraints = self.__build_cols_constraints(temp_board, temp_cols_constraints)
 
         self.board = Board(temp_rows_constraints, temp_cols_constraints, randomly=True, size=size, cur_game=self)
 
     def __build_constraints(self, m, n):
+        """
+        This function builds constraints for not always solvable board.
+        """
         all_constraints = []
-        colors_lst = ['b']
-        if self.colors == COLORFUL:
-            colors_lst.append('r')
 
         for j in range(m):
             i = 0
             constraint_lst = []
             while i < n:
                 num = random.randint(1, n - i)
-                color = random.choice(colors_lst)
+                color = random.choice(COLORS_LST_WITHOUT_WHITE)
 
                 # if the current color is the same as the previous color and there is no room for it,
                 # we should try again and choose another color or number of colored cells by this color.
@@ -281,18 +305,22 @@ class Game:
             all_constraints.append(constraint_lst)
         return all_constraints
 
-    def run(self, solve_type, csps=None):
-        # runs the brute force algorithm on the board.
-        # print(Game.first_one)
+    def run(self, solve_type):
+        """
+        This function runs the game with the given solve type.
+        """
+        # if this is no the first time we run this function, we clear the board.
         if not Game.first_one:
             self.board.clear_board()
             if Board.gui is not None:
                 Board.gui.board = deepcopy(self.board)
 
-        # Board.start_gui(self.board)
         resulted_board = None
         if Game.first_one:
             Game.first_one = False
+
+        cur_gui = self.board.gui
+
         Board.before_time = time.time()
         # before = time.time()
         if solve_type == BRUTE:
@@ -300,40 +328,42 @@ class Game:
             result = agent.BruteForce(self.board).brute_force()
             resulted_board = result.board if result else None
         else:
-            nonogram_problem = agent.NonogramProblem(self.board)
+            bfs_problem = agent.BFSProblem(self.board)
+            nonogram_problem = agent.NonogramCellsProblem(self.board)
             if solve_type == BFS:
                 print("BFS")
-                resulted_board = search.breadth_first_search(problem=nonogram_problem)
+                resulted_board = search.breadth_first_search(problem=bfs_problem)
             elif solve_type == DFS:
                 print("DFS")
-                # self.board.print_board()
                 resulted_board = search.depth_first_search(problem=nonogram_problem)
             elif solve_type == ASTAR:
                 print("A*")
-                # self.board.print_board()
                 resulted_board = search.a_star_search(problem=nonogram_problem)
             elif solve_type == CSP_P:
                 print("CSP")
-                # self.board.print_board()
-                resulted_board = csp.run_CSP(self.board, types_of_csps=csps)
+                resulted_board = csp.run_CSP(self.board, types_of_csps=self.csps)
+            elif solve_type == LBS:
+                print("LBS")
+                resulted_board = search.local_beam_search(nonogram_problem, 5)  #, value_function=lambda: game.board.filled_cells)
 
         after = time.time()
-
         all_time = after - Board.before_time - Board.different_time
-        print(f"Time:  {all_time}")
+        print(f"Time:  {all_time} Seconds")
 
-        # show time of the running algorithm
-        # self.board.gui.put_time(solve_type, after - before)
+        self.times_lst[solve_type] = [all_time]
 
-        if self.gui_or_print:
-            # gui_helper(self.board, solve_type)
+        if self.gui_or_print == IS_GUI:
             if resulted_board is not None and type(resulted_board) is not int:
-                resulted_board.gui.put_time(solve_type, all_time)
+                # show time of the running algorithm
+                resulted_board.gui.success_time(solve_type, all_time)
                 Board.gui.success_msg()
             else:
+                # todo - check this
+                cur_gui.failure_time(solve_type, all_time)
                 Board.gui.failed_msg()
+            # to keep the window running
             Board.gui.root.mainloop()
-        else:
+        elif self.gui_or_print == PRINT:
             if resulted_board is not None and type(resulted_board) is not int:
                 print(f"Success!\nYou Got the Solution, Time Taken: {all_time}")
                 print("This is the resulted board:")
@@ -342,57 +372,106 @@ class Game:
             else:
                 print(f"Failure!\nYou didn\'t find the Solution, Time Taken: {all_time}")
                 print("End")
-        # Game.first_one = False
 
 
-def gui_helper(board, solve_type):
-    # if solve_type == BRUTE:
-    # Board.gui.canvas.delete('rect')
-    for r in range(board.num_rows):
-        for c in range(board.num_cols):
-            time.sleep(0.1)
-            temp = Board.gui.board_rectangles_locs[r][c]
-            Board.gui.canvas.create_rectangle(temp[0], temp[1], temp[2], temp[3],
-                                              fill=COLORS_DICT[repr(board.board[r][c])], tags='rect')
-            Board.gui.root.update()
-    # elif solve_type == DFS or solve_type == BFS or solve_type == ASTAR:
-    #     for cell in Board.moves:
-    #         # r, c = move
-    #         r, c = cell.row, cell.col
-    #         # time.sleep(0.1)
-    #         temp = Board.gui.board_rectangles_locs[r][c]
-    #         Board.gui.canvas.create_rectangle(temp[0], temp[1], temp[2], temp[3],
-    #                                           fill=COLORS_DICT[repr(board.board[r][c])], tags='rect')
-    #         Board.gui.root.update()
+# def gui_helper(board, solve_type):
+#     # if solve_type == BRUTE:
+#     # Board.gui.canvas.delete('rect')
+#     for r in range(board.num_rows):
+#         for c in range(board.num_cols):
+#             time.sleep(0.1)
+#             temp = Board.gui.board_rectangles_locs[r][c]
+#             Board.gui.canvas.create_rectangle(temp[0], temp[1], temp[2], temp[3],
+#                                               fill=COLORS_DICT[repr(board.board[r][c])], tags='rect')
+#             Board.gui.root.update()
+#     # elif solve_type == DFS or solve_type == BFS or solve_type == ASTAR:
+#     #     for cell in Board.moves:
+#     #         # r, c = move
+#     #         r, c = cell.row, cell.col
+#     #         # time.sleep(0.1)
+#     #         temp = Board.gui.board_rectangles_locs[r][c]
+#     #         Board.gui.canvas.create_rectangle(temp[0], temp[1], temp[2], temp[3],
+#     #                                           fill=COLORS_DICT[repr(board.board[r][c])], tags='rect')
+#     #         Board.gui.root.update()
 
 
 def main():
+    # All combinations of all the csp's types
+    combs = []
+    for i in range(1, len(ALL_CSPS) + 1):
+        combs.append(list(itertools.combinations(ALL_CSPS, i)))
+
     print("\nTwo Colors Nonogram Game - Wellcome!\n")
-    # inputs = sys.argv[1:]
-    # todo - what about letting the user enter constraints?
+    # size, rows_or_cols, difficulty, csps
+    print("\nTesting the Algorithms with 5x5 random board...\n")
 
-    print("Testing the Algorithms with 5x5 random board...\n")
-    print("Not Always Solvable:\n")
-    my_game = Game(colors=COLORFUL, size=(5, 5), always_solvable=False, gui_or_print=PRINT)
+
+    # Finding which one of the algorithms is the fastest one in finding out that there is no solution.
+    print("\nNot Always Solvable:\n")
+    for _ in range(10):
+        csps = {}
+        my_game = Game(size=(5, 5), difficulty=HARD, csps=csps, gui_or_print=PRINT)
+        for solve_type in ALL_ALGOS:
+            for _ in range(5):
+                my_game.run(solve_type)
+            print(f"Didn\'t Find Solution in Average Time is {sum(my_game.times_lst[solve_type])} Seconds for {solve_type}\n")
+
+    # todo - make easy mode just for large board like 8x8 or 10x10
+    # Which of the algorithms is the fastest one in finding the solution if the board made as the rows are easy.
+    print("\nEasy Mode (By Rows):\n")
+    csps = {}
+    my_game = Game(size=(8, 8), difficulty=EASY, csps=csps, rows_or_cols=ROWS, gui_or_print=PRINT)
     for solve_type in ALL_ALGOS:
-        my_game.run(solve_type)
+        for _ in range(5):
+            my_game.run(solve_type)
+        print(f"Average Time for {solve_type} is {sum(my_game.times_lst[solve_type])} Seconds\n")
 
-    print("Always Solvable:\n")
-    print("Easy Mode (By Rows):")
+    # Which of the algorithms is the fastest one in finding the solution if the board made as the columns are easy.
+    print("\nEasy Mode (By Columns):\n")
+    csps = {}
+    my_game = Game(size=(8, 8), difficulty=EASY, csps=csps, rows_or_cols=COLUMNS, gui_or_print=PRINT)
+    for solve_type in ALL_ALGOS:
+        for _ in range(5):
+            my_game.run(solve_type)
+        print(f"Average Time for {solve_type} is {sum(my_game.times_lst[solve_type])} Seconds\n")
 
-    # game = Game(colos=COLORFUL, size=(5, 5), )
+    # Which of the algorithms is the fastest one in finding the solution if the board made as hard to solve.
+    print("\nHard Mode:\n")
+    csps = {}
+    my_game = Game(size=(5, 5), difficulty=HARD, csps=csps, gui_or_print=PRINT)
+    for solve_type in ALL_ALGOS:
+        for _ in range(5):
+            my_game.run(solve_type)
+        print(f"Average Time for {solve_type} is {sum(my_game.times_lst[solve_type])} Seconds\n")
+
+    print("Now we will test larger boards with hard mode and different csps:\n")
+    # Sizes
+    print("\n7x7 Board:\n")
+    csps = {}
+    my_game = Game(size=(7, 7), difficulty=HARD, csps=csps, gui_or_print=PRINT)
+    for solve_type in ALL_ALGOS:
+        for _ in range(5):
+            my_game.run(solve_type)
+        print(f"Average Time for {solve_type} is {sum(my_game.times_lst[solve_type])} Seconds\n")
+
+    print("\n8x8 Board:\n")
+    csps = {}
+    my_game = Game(size=(8, 8), difficulty=HARD, csps=csps, gui_or_print=PRINT)
+    for solve_type in ALL_ALGOS:
+        for _ in range(5):
+            my_game.run(solve_type)
+        print(f"Average Time for {solve_type} is {sum(my_game.times_lst[solve_type])} Seconds\n")
 
 
 if __name__ == "__main__":
     # print("Hello World!")
     # main()
 
-
     # game = Game(colors=COLORFUL, size=(9, 9), difficulty=HARD, gui_or_print=IS_GUI)
     # game = Game(colors=COLORFUL, size=(20, 20), difficulty=HARD, gui_or_print=IS_GUI)
     # game = Game(csv_file='example1.csv')
-    game = Game(colors=COLORFUL, difficulty=HARD)
-
+    game = Game(difficulty=HARD, size=(7, 7), gui_or_print=IS_GUI, csps=ALL_CSPS)
+    # game.run(CSP_P)
     # Brute Force can solve up to 31x31 boards - the others will come to maximum recursion depth Error
     # game = Game(colors=COLORFUL, size=(7, 7), difficulty=HARD, gui_or_print=IS_GUI, solve_type=BRUTE)
 

@@ -1,8 +1,10 @@
 import math
 from abc import abstractmethod
 
+import Board
 from config import *
 from typing import Dict, List
+import Board
 
 
 class ConstraintForVariable:
@@ -81,16 +83,13 @@ class CSP:
     def assign(self, var, val, assignment):
         """ assign a value to this variable"""
         assignment[var] = val
-        row_or_col = var[0]
-        index = var[1]
-        to_fill = val
-        if row_or_col == ROWS:
+        if var[0] == ROWS:
             for i in range(self.board.num_cols):
-                self.board.fill(index, i, to_fill[i], brute_force=CSP_P)
+                self.board.fill(var[1], i, val[i], brute_force=CSP_P)
                 # self.board.board[index][i].color = to_fill[i]
-        elif row_or_col == COLUMNS:
+        elif var[0] == COLUMNS:
             for i in range(self.board.num_rows):
-                self.board.fill(i, index, to_fill[i], brute_force=CSP_P)
+                self.board.fill(i, var[1], val[i], brute_force=CSP_P)
         # print(assignment)
 
         # TODO - MHMD - we need to fill (one assignment only!)
@@ -103,6 +102,32 @@ class CSP:
         if var in assignment:
             if self.curr_domains:
                 self.curr_domains[var] = self.domains[var][:]
+
+            # unfill the wrong assignment
+            if var[0] == ROWS:
+                for i in range(self.board.num_cols):
+                    self.board.unfill(var[1], i)
+            elif var[0] == COLUMNS:
+                for i in range(self.board.num_rows):
+                    self.board.unfill(i, var[1])
+            if Board.Board.gui is not None:
+                Board.Board.gui.root.update()
+
+            for var1 in assignment.keys():
+                if var1 == var:
+                    continue
+                val = assignment[var1]
+                if var1[0] == ROWS:
+                    for i in range(self.board.num_cols):
+                        if self.board.board[var1[1]][i].color == EMPTY:
+                            self.board.fill(var1[1], i, val[i], brute_force=CSP_P)
+                        # self.board.board[index][i].color = to_fill[i]
+                elif var1[0] == COLUMNS:
+                    for i in range(self.board.num_rows):
+                        if self.board.board[i][var1[1]].color == EMPTY:
+                            self.board.fill(i, var1[1], val[i], brute_force=CSP_P)
+            # Board.Board.gui.root.update()
+
             del assignment[var]
             # TODO - MHMD - we need to fill all the assignments over!
 
@@ -168,27 +193,26 @@ class CSP:
         # get every possible domain value that are in order for this unassigned variable
         for value in self.order_domain_values(variable, assignment):
             # check if there is a conflicts between variables and assignments
-            if FC in self.csp_types and value not in self.curr_domains[variable]:
-                continue
+
             if FC in self.csp_types or self.nconflicts2(variable, value, assignment) == 0:
                 # perfect! no conflict, assign the value to variable
                 self.assign(variable, value, assignment)
-                no_solution_flag_FC = False
-                if FC in self.csp_types:
-                    # check forward if this helps us or there is no solution
-                    for var in self.variables:
-                        if len(self.curr_domains[var]) == 0 and var != variable:
-                            no_solution_flag_FC = True
-                            break
+
                 # backtrack baby
-                if not no_solution_flag_FC:
-                    result = self.backtracking_search_rec(assignment)
-                else:
-                    continue
+
+                result = self.backtracking_search_rec(assignment)
+
                 # if we didn't find the result, we will end up backtracking
                 if result is not None:
                     return result
+                elif FC in self.csp_types:
+                    # Restore prunings from previous value of var
+                    for (other_variable, other_value) in self.pruned[variable]:
+                        self.curr_domains[other_variable].append(other_value)
+                    self.pruned[variable] = []
+
             # this might be a failure assigning, but don't give up, we will try again!
+
             self.unassign(variable, assignment)
         return None
 
@@ -251,21 +275,12 @@ class CSP:
     def forward_check(self, variable, value, assignment):
         """Do forward checking for this assignment."""
         if self.curr_domains:
-            # Restore prunings from previous value of var
-            for (other_variable, other_value) in self.pruned[variable]:
-                self.curr_domains[other_variable].append(other_value)
-            self.pruned[variable] = []
-            # Prune any other other_variable=other_value assignment that conflict with variable=value
-            temp_assignment = {variable: value}
             for other_variable in self.neighbors[variable]:
                 if other_variable not in assignment:
-                    temp_assignment[other_variable] = None
                     for other_value in self.curr_domains[other_variable][:]:
-                        temp_assignment[other_variable] = other_value
-                        if not self.consistent(variable, temp_assignment):
+                        if not self.consistent2(variable, value, other_variable, other_value):
                             self.curr_domains[other_variable].remove(other_value)
                             self.pruned[variable].append((other_variable, other_value))
-                    temp_assignment.pop(other_variable, None)
 
     def AC3(self, queue):
         """ applying the rules of Arc Consistency"""
@@ -457,6 +472,8 @@ def run_CSP(board, types_of_csps=None):
 
     for con in the_constraints:
         our_csp.add_constraint(con)
+
+    print(types_of_csps)
 
     # MRV, DEGREE, LCV, FC, AC, ALL_CSPS
     if types_of_csps is None:
