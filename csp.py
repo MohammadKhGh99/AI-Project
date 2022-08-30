@@ -81,10 +81,10 @@ class CSP:
         assignment[var] = val
         if var[0] == ROWS:
             for i in range(self.board.num_cols):
-                self.board.fill(var[1], i, val[i], brute_force=CSP_P)
+                self.board.fill(var[1], i, val[i], solve_type=CSP_P)
         elif var[0] == COLUMNS:
             for i in range(self.board.num_rows):
-                self.board.fill(i, var[1], val[i], brute_force=CSP_P)
+                self.board.fill(i, var[1], val[i], solve_type=CSP_P)
 
         if self.curr_domains:
             if FC in self.csp_types:
@@ -113,11 +113,11 @@ class CSP:
                 if var1[0] == ROWS:
                     for i in range(self.board.num_cols):
                         if self.board.board[var1[1]][i].color == EMPTY:
-                            self.board.fill(var1[1], i, val[i], brute_force=CSP_P)
+                            self.board.fill(var1[1], i, val[i], solve_type=CSP_P)
                 elif var1[0] == COLUMNS:
                     for i in range(self.board.num_rows):
                         if self.board.board[i][var1[1]].color == EMPTY:
-                            self.board.fill(i, var1[1], val[i], brute_force=CSP_P)
+                            self.board.fill(i, var1[1], val[i], solve_type=CSP_P)
 
             del assignment[var]
 

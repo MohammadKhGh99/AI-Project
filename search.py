@@ -24,7 +24,7 @@ class StateAndActions:
 
 
 def gui_helper(board):
-    if board.gui is not None:
+    if board is not None and board.gui is not None:
         bef = time.time()
         Board.Board.gui.canvas.delete('rect')
         for i in range(len(board.rects)):
@@ -68,18 +68,18 @@ def search_helper(problem, actions, search_type=DFS):
     get_successors = True
     for move in actions:
         # Try to fill the move on the board, and check if it legal.
-        problem.board.fill(move.row, move.col, move.color)
+        problem.board.fill(move.row, move.col, move.color, search_type)
         if not problem.board.check_move(move.col, move.row):
             get_successors = False
             problem.board.back_to_the_prev_cell()
             problem.board.filled_cells -= 1
             if search_type == DFS:
                 while problem.board.current_cell.color == WHITE:
-                    problem.board.fill(problem.board.current_cell.row, problem.board.current_cell.col, EMPTY)
+                    problem.board.fill(problem.board.current_cell.row, problem.board.current_cell.col, EMPTY, search_type)
                     problem.board.back_to_the_prev_cell()
                     problem.board.filled_cells -= 1
             else:
-                problem.board.fill(problem.board.current_cell.row, problem.board.current_cell.col, EMPTY)
+                problem.board.fill(problem.board.current_cell.row, problem.board.current_cell.col, EMPTY, search_type)
             break
     return get_successors
 
@@ -93,56 +93,12 @@ def depth_first_search(problem):
     while not fringe.isEmpty():
         current = fringe.pop()
         problem.board = current[0]
-
+        gui_helper(current[0])
         if search_helper(problem, current[1]):
             # Get the successors of the current board, if it is not the goal state.
             if problem.is_goal_state(current[0]):
                 gui_helper(current[0])
                 return current[0]
-            for child in problem.get_successors(current[0]):
-                fringe.push((child[0], child[1]))
-    return -1  # No Solution
-
-
-def breadth_first_search1(problem):
-    """
-        Search the shallowest nodes in the search tree first.
-        In bfs we save a list of all moves we did,
-    """
-    fringe = util.Queue()
-    fringe.push((problem.get_start_state(), []))
-    while not fringe.isEmpty():
-        # delete the previous child's actions rectangles
-
-        current = fringe.pop()
-        get_successors = True
-        current[0].current_cell = Board.Cell(0, 0)
-
-        gui_helper(current[0])
-
-        # Reset Board
-        for action in current[1][:-1]:
-            current[0].fill(action.row, action.col, action.color)
-
-        # for i in range(current[0].num_cols):
-        #     for j in range(current[0].num_rows):
-        #         current[0].fill(j, i, EMPTY)
-        # print(current[1])
-        if len(current[1]) > 0:
-            for move in [current[1][-1]]:
-                # Try to fill the move on the board, and check if it legal.
-                current[0].fill(move.row, move.col, move.color)
-                if not current[0].check_move(move.col, move.row):
-                    get_successors = False
-                    current[0].fill(move.row, move.col, EMPTY)
-                    break
-                else:
-                    problem.board.move_to_the_next_cell()
-        if get_successors:
-            # Get the successors of the current board, if it is not the goal state.
-            if problem.is_goal_state(current[0]):
-                return current[0]
-            current[0].moves = current[1]
             for child in problem.get_successors(current[0]):
                 fringe.push((child[0], child[1]))
     return -1  # No Solution
@@ -163,7 +119,7 @@ def bfs_helper(problem, depth):
             problem.board.back_to_the_prev_cell()
             current_row = problem.board.current_cell.row
             current_col = problem.board.current_cell.col
-            problem.board.fill(current_row, current_col, EMPTY)
+            problem.board.fill(current_row, current_col, EMPTY, solve_type=BFS)
     return None
 
 
@@ -172,6 +128,8 @@ def breadth_first_search(problem):
     depth = problem.board.num_cols * problem.board.num_rows
     for i in range(depth + 1):
         state = bfs_helper(problem, i)
+        if depth == i:
+            gui_helper(state)
         if state is not None:
             return state
     return None
@@ -198,6 +156,7 @@ def a_star_search(problem, heuristic=null_heuristic):
         if search_helper(problem, current.actions, current.actions):
             # Get the successors of the current board, if it is not the goal state.
             if problem.is_goal_state(current.state):
+                gui_helper(current.state)
                 return current.state
             for child in problem.get_successors(current.state):
                 child_cost = problem.get_cost_of_actions(child[1])
@@ -221,7 +180,6 @@ def local_beam_search_helper(problem, k_states, k):
                 if (move_coordinates in current.initial_cells) and (
                         successor[1][0].color != problem.board.board[move_coordinates[0]][move_coordinates[1]].color):
                     continue
-
                 if search_helper(problem, successor[1]):
                     if problem.is_goal_state(problem.board):
                         gui_helper(problem.board)
@@ -230,7 +188,7 @@ def local_beam_search_helper(problem, k_states, k):
                     all_successors.push(
                         StateAndActions(deepcopy(successor[0]), successor[1], value, current.initial_cells), value)
                     problem.board.back_to_the_prev_cell()
-                    problem.board.fill(problem.board.current_cell.row, problem.board.current_cell.col, EMPTY)
+                    problem.board.fill(problem.board.current_cell.row, problem.board.current_cell.col, EMPTY, LBS)
                     problem.board.filled_cells -= 1
         k_successors = []
         for i in range(k):
@@ -251,7 +209,7 @@ def get_random_stats(board, n):
     while cur_k < n:
         r = random.randint(0, board.num_rows - 1)
         c = random.randint(0, board.num_cols - 1)
-        color = random.choice(COLORS_LST_WITHOUT_WHITE)
+        # color = random.choice(COLORS_LST_WITHOUT_WHITE)
         while (r, c) in initial_cells:
             r = random.randint(0, board.num_rows - 1)
             c = random.randint(0, board.num_cols - 1)
@@ -259,7 +217,7 @@ def get_random_stats(board, n):
         cur_k += 1
 
     for loc in initial_cells:
-        random_state.fill(loc[0], loc[1], color=random.choice(COLORS_LST_WITHOUT_WHITE))
+        random_state.fill(loc[0], loc[1], color=random.choice(COLORS_LST_WITHOUT_WHITE), solve_type=LBS)
 
     return random_state, initial_cells
 
@@ -296,6 +254,7 @@ def local_beam_search(problem, k):
                 break
         if is_legal:
             legal_k_states.append(current)
+    print(len(legal_k_states))
     return local_beam_search_helper(problem, legal_k_states, k)  # , value_function)
 
 

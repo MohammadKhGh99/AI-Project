@@ -14,7 +14,7 @@ class GUI:
 
         self.root = Tk()
         self.root.title(title)
-        self.root.configure(background="grey")
+        self.root.configure(background="white")
         my_title = Label(self.root, text="Two Colors Nonogram Game", font=("times new roman", 20, "bold"), bg="white",
                          fg="black")
         my_title.pack(side=TOP)
@@ -26,17 +26,17 @@ class GUI:
                              highlightbackground='black')
         # self.canvas.pack(anchor='n', side=LEFT)
         self.canvas.place(x=10, y=40)
-        flag = False
+        self.__flag = False
+        self.board = None
 
         def play_sound():
-            nonlocal flag
-            if not flag:
-                flag = True
+            if not self.__flag and self.board is not None:
+                self.__flag = True
                 return PlaySound(r'gui_files\background_music.wav', SND_ALIAS | SND_ASYNC)
             else:
-                flag = False
+                self.__flag = False
                 return PlaySound(None, SND_PURGE)
-
+        play_sound()
         # sound_icon = PhotoImage(file=r'gui_files\test.png')
         sound_button = Button(self.root, text="sound", command=play_sound)
         sound_button.config(height=1, width=5)
@@ -71,7 +71,7 @@ class GUI:
         clear_button.config(height=1, width=5)
         clear_button.place(x=800, y=1)
 
-        choose_label = Label(self.root, text="Choose the way to solve:", bg='grey')
+        choose_label = Label(self.root, text="Choose the way to solve:", bg='white')
         choose_label.place(x=830, y=35)
 
         def run_brute():
@@ -103,7 +103,7 @@ class GUI:
         astar_button.place(x=865, y=245)
 
         def run_lbs():
-            self.__cur_game.run(LBS, k=int(lbs_text_box.get("1.0", "end-1c").replace(' ', '')))
+            self.__cur_game.run(LBS, k=lbs_text_box.get("1.0", "end-1c").replace(' ', ''))
 
         # chosen_k = StringVar(self.root)
         # chosen_k.set("1")
@@ -117,6 +117,7 @@ class GUI:
         astar_heus_menu = OptionMenu(self.root, chosen_heu, *astar_heus)
         astar_heus_menu.config(height=1, width=1)
         astar_heus_menu.place(x=815, y=245)
+
         # k_options = [str(x) for x in range(1, self.board.num_rows * self.board.num_cols + 1)]
         # lbs_option_menu = OptionMenu(self.root, chosen_k, *k_options)
         # lbs_option_menu.config(height=1, width=1)
@@ -170,7 +171,7 @@ class GUI:
         select_csp_button.place(x=865, y=365)
 
         def run_csp():
-            self.__cur_game.run(CSP_P)
+            self.__cur_game.run(CSP_P, csps=self.__cur_game.csps)
 
         # def exit_game():
         #     self.root.quit()
@@ -180,20 +181,23 @@ class GUI:
         # exit_button.place(x=5, y=1)
 
     def create_board(self, board):
-        print(board)
+        # print(board)
         self.board = deepcopy(board)
 
         x, y = 260, 230
         tmp = min((self.canvas_width - x) // self.board.num_rows, (self.canvas_height - y) // self.board.num_cols)
         col_width, row_width = tmp, tmp
         # create lines to create a look-like table
-        for i in range(self.board.num_rows + 1):
-            self.canvas.create_line(0, y + i * row_width, self.canvas_width, y + i * row_width)
-        for i in range(self.board.num_cols + 1):
-            self.canvas.create_line(x + i * col_width, 0, x + i * col_width, self.canvas_height)
-            if i == self.board.num_cols:
-                for j in range(1, 31):
-                    self.canvas.create_line(x + i * col_width + 3 * j, 0, x + i * col_width + 3 * j, self.canvas_height)
+        # for i in range(self.board.num_rows + 1):
+        #     self.canvas.create_line(0, y + i * row_width, self.canvas_width, y + i * row_width)
+        #     if i == self.board.num_rows:
+        #         for j in range(1, 51):
+        #             self.canvas.create_line(0, y + i * row_width + 3 * j, self.canvas_width, y + i * col_width + 3 * j)
+        # for i in range(self.board.num_cols + 1):
+        #     self.canvas.create_line(x + i * col_width, 0, x + i * col_width, self.canvas_height)
+        #     if i == self.board.num_cols:
+        #         for j in range(1, 51):
+        #             self.canvas.create_line(x + i * col_width + 3 * j, 0, x + i * col_width + 3 * j, self.canvas_height)
 
         self.board_rectangles_locs = []
         for i in range(self.board.num_rows):
@@ -212,7 +216,7 @@ class GUI:
                 row_text += str(con) + ' '
             row_text = row_text[:-1]
 
-            self.canvas.create_text((5, y + row_width // 3 + row_width * i), text=row_text, anchor='nw',
+            self.canvas.create_text((x - 2, y + row_width // 3 + row_width * i), text=row_text, anchor='e',
                                     font=('lucida', '9'))
 
         for i, col_con in enumerate(self.board.cols_constraints):

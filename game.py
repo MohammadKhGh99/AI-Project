@@ -49,7 +49,7 @@ class Game:
         self.difficulty = difficulty
         self.board = None
         self.csps = set()
-        self.times_lst = dict()
+        self.times_dict = dict()
         self.ran_before = False
 
         if csps is not None:
@@ -309,7 +309,7 @@ class Game:
             all_constraints.append(constraint_lst)
         return all_constraints
 
-    def run(self, solve_type, k=1, heu=0):
+    def run(self, solve_type, k=1, heu=0, csps=None):
         """
         This function runs the game with the given solve type.
         """
@@ -348,118 +348,321 @@ class Game:
                 resulted_board = search.a_star_search(problem=astar_problem)
             elif solve_type == LBS:
                 print("LBS")
+                if k == '':
+                    k = 1
+                else:
+                    k = int(k)
                 resulted_board = search.local_beam_search(problem=lbs_problem, k=k)
             elif solve_type == CSP_P:
                 print("CSP")
-                print(self.ran_before)
-                resulted_board = csp.run_CSP(self.board, types_of_csps=self.csps, same_board=self.ran_before)
+                # print(self.ran_before)
+                print(csps)
+                resulted_board = csp.run_CSP(self.board, types_of_csps=csps, same_board=self.ran_before)
+                # resulted_board = csp.run_CSP(self.board, types_of_csps=self.csps, same_board=self.ran_before)
                 self.ran_before = True
 
         after = time.time()
         all_time = after - Board.before_time - Board.different_time
-        print(f"Time:  {all_time} Seconds")
+        # print(f"Time:  {all_time} Seconds")
+        result = False
+        if resulted_board is not None and type(resulted_board) is not int:
+            result = True
+        else:
+            result = False
 
-        self.times_lst[solve_type] = [all_time]
+        if solve_type not in self.times_dict.keys():
+            if solve_type == ASTAR:
+                self.times_dict[(solve_type, heu, result)] = [all_time]
+            elif solve_type == CSP_P:
+                self.times_dict[(solve_type, *self.csps)] = [all_time]
+            else:
+                self.times_dict[solve_type] = [all_time]
+        else:
+            if solve_type == ASTAR:
+                self.times_dict[(solve_type, heu)].append(all_time)
+            elif solve_type == CSP_P:
+                self.times_dict[(solve_type, *self.csps)].append(all_time)
+            else:
+                self.times_dict[solve_type].append(all_time)
 
-        if self.gui_or_print == IS_GUI:
-            if resulted_board is not None and type(resulted_board) is not int:
-                resulted_board.print_board()
-                # show time of the running algorithm
-                resulted_board.gui.success_time(solve_type, all_time)
-                Board.gui.success_msg()
-            else:
-                cur_gui.failure_time(solve_type, all_time)
-                Board.gui.failed_msg()
-            # to keep the window running
-            Board.gui.root.mainloop()
-        elif self.gui_or_print == PRINT:
-            if resulted_board is not None and type(resulted_board) is not int:
-                print(f"Success!\nYou Got the Solution, Time Taken: {all_time}")
-                print("This is the resulted board:")
-                resulted_board.print_board()
-                print("End")
-            else:
-                print(f"Failure!\nYou didn\'t find the Solution, Time Taken: {all_time}")
-                print("End")
+        # if self.gui_or_print == IS_GUI:
+        #     if resulted_board is not None and type(resulted_board) is not int:
+        #         resulted_board.print_board()
+        #         # show time of the running algorithm
+        #         resulted_board.gui.success_time(solve_type, all_time)
+        #         Board.gui.success_msg()
+        #     else:
+        #         cur_gui.failure_time(solve_type, all_time)
+        #         Board.gui.failed_msg()
+        #     # to keep the window running
+        #     Board.gui.root.mainloop()
+        # elif self.gui_or_print == PRINT:
+        #     if resulted_board is not None and type(resulted_board) is not int:
+        #         print(f"Success!\nYou Got the Solution, Time Taken: {all_time}")
+        #         print("This is the resulted board:")
+        #         resulted_board.print_board()
+        #         print("End")
+        #     else:
+        #         print(f"Failure!\nYou didn\'t find the Solution, Time Taken: {all_time}")
+        #         print("End")
 
 
 def main():
     # All combinations of all the csp's types
+    combinations = [list(itertools.combinations(ALL_CSPS - {FC}, i)) for i in range(1, len(ALL_CSPS) + 1)]
     combs = []
-    for i in range(1, len(ALL_CSPS) + 1):
-        combs.append(list(itertools.combinations(ALL_CSPS, i)))
-
-    print("\nTwo Colors Nonogram Game - Wellcome!\n")
-    # size, rows_or_cols, difficulty, csps
-    print("\nTesting the Algorithms with 5x5 random board...\n")
-
-
+    # combs = [com for com in row for row in combinations]
+    for row in combinations:
+        for com in row:
+            combs.append(set(com))
+    # print(combs)
+    print("\n🎉🤩 Wellcome To Two Colors Nonogram Game 🎉🤩\n")
     # Finding which one of the algorithms is the fastest one in finding out that there is no solution.
-    print("\nNot Solvable:\n")
-    not_solvable_boards = []
-    for _ in range(10):
-        csps = {}
-        my_game = Game(size=(5, 5), difficulty=HARD, csps=csps, gui_or_print=PRINT)
+    # todo - Testing with all the 5 unsolvable boards (boards made by Ibraheem.com)
+    not_solvable_boards = [r".\cases to check\Not_solvable_1.csv", r".\cases to check\Not_solvable_2.csv",
+                           r".\cases to check\Not_solvable_3.csv", r".\cases to check\Not_solvable_4.csv",
+                           r".\cases to check\Not_solvable_5.csv"]
+
+    print("\nNot Solvable 7x7 boards:\n")
+    not_solvable_times = dict()
+    for file in not_solvable_boards:
+        # make a game with the current csv file
+        my_game = Game(csv_file=file, gui_or_print=PRINT)
+        # testing with all the algorithms
         for solve_type in ALL_ALGOS:
-            for _ in range(5):
+            if solve_type == CSP_P:
+                continue
+                # testing with all the combinations of the csp
+                # for comb in combs:
+                #     if comb == {FC}:
+                #         continue
+                #     my_game.run(solve_type, csps=comb)
+            else:
                 my_game.run(solve_type)
-            print(f"Didn\'t Find Solution in Average Time is {sum(my_game.times_lst[solve_type])} Seconds for {solve_type}\n")
+        # saving the times of each board
+        for k, v in my_game.times_dict.items():
+            if k in not_solvable_times.keys():
+                not_solvable_times[k] += v
+            else:
+                not_solvable_times[k] = v
+    not_solvable_times = {k: sum(v) / 5 for k, v in not_solvable_times.items()}
 
-    # todo - make easy mode just for large board like 8x8 or 10x10
+    # # Saving the average time of each algorithm
+    # for k, v in times_dict.items():
+    #     if type(k) is int:
+    #         all_times_dict[f"Not Solvable for {ALGOS_DICT[k]}"] = sum(times_dict[k]) / 5
+    #     else:
+    #         all_times_dict[f"Not Solvable for {ALGOS_DICT[k[0]]} with {k[1]}"] = sum(times_dict[k]) / 5
+
+    easy_rows_times = dict()
     # Which of the algorithms is the fastest one in finding the solution if the board made as the rows are easy.
-    print("\nEasy Mode (By Rows):\n")
-    csps = {}
-    my_game = Game(size=(8, 8), difficulty=EASY, csps=csps, rows_or_cols=ROWS, gui_or_print=PRINT)
-    for solve_type in ALL_ALGOS:
-        for _ in range(5):
-            my_game.run(solve_type)
-        print(f"Average Time for {solve_type} is {sum(my_game.times_lst[solve_type])} Seconds\n")
+    print("\nEasy Mode (By Rows) 7x7:\n")
+    for _ in range(10):
+        my_game = Game(size=(7, 7), difficulty=EASY, rows_or_cols=ROWS, gui_or_print=PRINT)
+        for solve_type in ALL_ALGOS:
+            if solve_type == CSP_P:
+                continue
+                # testing with all the combinations of the csp
+                # for comb in combs:
+                #     if comb == {FC}:
+                #         continue
+                #     my_game.run(solve_type, csps=comb)
+            else:
+                my_game.run(solve_type)
 
+        # saving the times of each board
+        for k, v in my_game.times_dict.items():
+            if k in easy_rows_times.keys():
+                easy_rows_times[k] += v
+            else:
+                easy_rows_times[k] = v
+    easy_rows_times = {k: sum(v) / 10 for k, v in easy_rows_times.items()}
+
+    # # Saving the average time of each algorithm
+    # for k, v in times_dict.items():
+    #     if type(k) is int:
+    #         all_times_dict[f"Easy Boards (ROWS) for {ALGOS_DICT[k]}"] = sum(times_dict[k]) / 5
+    #     else:
+    #         all_times_dict[f"Easy Boards (ROWS) for {ALGOS_DICT[k[0]]} with {k[1]}"] = sum(times_dict[k]) / 5
+
+    easy_cols_times = dict()
     # Which of the algorithms is the fastest one in finding the solution if the board made as the columns are easy.
-    print("\nEasy Mode (By Columns):\n")
-    csps = {}
-    my_game = Game(size=(8, 8), difficulty=EASY, csps=csps, rows_or_cols=COLUMNS, gui_or_print=PRINT)
-    for solve_type in ALL_ALGOS:
-        for _ in range(5):
-            my_game.run(solve_type)
-        print(f"Average Time for {solve_type} is {sum(my_game.times_lst[solve_type])} Seconds\n")
+    print("\nEasy Mode (By Columns) 7x7:\n")
+    for _ in range(10):
+        my_game = Game(size=(7, 7), difficulty=EASY, rows_or_cols=COLUMNS, gui_or_print=PRINT)
+        for solve_type in ALL_ALGOS:
+            if solve_type == CSP_P:
+                continue
+                # testing with all the combinations of the csp
+                # for comb in combs:
+                #     if comb == {FC}:
+                #         continue
+                #     my_game.run(solve_type, csps=comb)
+            else:
+                my_game.run(solve_type)
 
+        # saving the times of each board
+        for k, v in my_game.times_dict.items():
+            if k in easy_cols_times.keys():
+                easy_cols_times[k] += v
+            else:
+                easy_cols_times[k] = v
+    easy_cols_times = {k: sum(v) / 10 for k, v in easy_cols_times.items()}
+
+    hard_5_times = dict()
     # Which of the algorithms is the fastest one in finding the solution if the board made as hard to solve.
-    print("\nHard Mode:\n")
-    csps = {}
-    my_game = Game(size=(5, 5), difficulty=HARD, csps=csps, gui_or_print=PRINT)
-    for solve_type in ALL_ALGOS:
-        for _ in range(5):
-            my_game.run(solve_type)
-        print(f"Average Time for {solve_type} is {sum(my_game.times_lst[solve_type])} Seconds\n")
+    print("\nHard Mode 5x5 Boards:\n")
+    for _ in range(10):
+        my_game = Game(size=(5, 5), difficulty=HARD, gui_or_print=PRINT)
+        for solve_type in ALL_ALGOS:
+            if solve_type == CSP_P:
+                continue
+                # testing with all the combinations of the csp
+                # for comb in combs:
+                #     if comb == {FC}:
+                #         continue
+                #     my_game.run(solve_type, csps=comb)
+            else:
+                my_game.run(solve_type)
 
-    print("Now we will test larger boards with hard mode and different csps:\n")
-    # Sizes
-    print("\n7x7 Board:\n")
-    csps = {}
-    my_game = Game(size=(7, 7), difficulty=HARD, csps=csps, gui_or_print=PRINT)
-    for solve_type in ALL_ALGOS:
-        for _ in range(5):
-            my_game.run(solve_type)
-        print(f"Average Time for {solve_type} is {sum(my_game.times_lst[solve_type])} Seconds\n")
+            # saving the times of each board
+        for k, v in my_game.times_dict.items():
+            if k in hard_5_times.keys():
+                hard_5_times[k] += v
+            else:
+                hard_5_times[k] = v
+    hard_5_times = {k: sum(v) / 10 for k, v in hard_5_times.items()}
 
-    print("\n8x8 Board:\n")
-    csps = {}
-    my_game = Game(size=(8, 8), difficulty=HARD, csps=csps, gui_or_print=PRINT)
-    for solve_type in ALL_ALGOS:
-        for _ in range(5):
-            my_game.run(solve_type)
-        print(f"Average Time for {solve_type} is {sum(my_game.times_lst[solve_type])} Seconds\n")
+    hard_8_times = dict()
+    # Which of the algorithms is the fastest one in finding the solution if the board made as hard to solve.
+    print("\nHard Mode 8x8 Boards:\n")
+    for _ in range(10):
+        my_game = Game(size=(8, 8), difficulty=HARD, gui_or_print=PRINT)
+        for solve_type in ALL_ALGOS:
+            if solve_type == CSP_P:
+                continue
+                # testing with all the combinations of the csp
+                # for comb in combs:
+                #     if comb == {FC}:
+                #         continue
+                #     my_game.run(solve_type, csps=comb)
+            else:
+                my_game.run(solve_type)
+
+            # saving the times of each board
+        for k, v in my_game.times_dict.items():
+            if k in hard_8_times.keys():
+                hard_8_times[k] += v
+            else:
+                hard_8_times[k] = v
+    hard_8_times = {k: sum(v) / 10 for k, v in hard_8_times.items()}
+
+    hard_15_times = dict()
+    # Which of the algorithms is the fastest one in finding the solution if the board made as hard to solve.
+    print("\nHard Mode 15x15 Boards:\n")
+    for _ in range(10):
+        my_game = Game(size=(15, 15), difficulty=HARD, gui_or_print=PRINT)
+        for solve_type in ALL_ALGOS:
+            if solve_type == CSP_P:
+                continue
+                # testing with all the combinations of the csp
+                # for comb in combs:
+                #     if comb == {FC}:
+                #         continue
+                #     my_game.run(solve_type, csps=comb)
+            else:
+                my_game.run(solve_type)
+
+            # saving the times of each board
+        for k, v in my_game.times_dict.items():
+            if k in hard_15_times.keys():
+                hard_15_times[k] += v
+            else:
+                hard_15_times[k] = v
+    hard_15_times = {k: sum(v) / 10 for k, v in hard_15_times.items()}
+
+    hard_10x3_times = dict()
+    # Which of the algorithms is the fastest one in finding the solution if the board made as hard to solve.
+    print("\nHard Mode 10x3 Boards:\n")
+    for _ in range(10):
+        my_game = Game(size=(10, 3), difficulty=HARD, gui_or_print=PRINT)
+        for solve_type in ALL_ALGOS:
+            if solve_type == CSP_P:
+                continue
+                # testing with all the combinations of the csp
+                # for comb in combs:
+                #     if comb == {FC}:
+                #         continue
+                #     my_game.run(solve_type, csps=comb)
+            else:
+                my_game.run(solve_type)
+
+            # saving the times of each board
+        for k, v in my_game.times_dict.items():
+            if k in hard_10x3_times.keys():
+                hard_10x3_times[k] += v
+            else:
+                hard_10x3_times[k] = v
+    hard_10x3_times = {k: sum(v) / 10 for k, v in hard_10x3_times.items()}
+
+    hard_3x10_times = dict()
+    # Which of the algorithms is the fastest one in finding the solution if the board made as hard to solve.
+    print("\nHard Mode 3x10 Boards:\n")
+    for _ in range(10):
+        my_game = Game(size=(3, 10), difficulty=HARD, gui_or_print=PRINT)
+        for solve_type in ALL_ALGOS:
+            if solve_type == CSP_P:
+                continue
+                # testing with all the combinations of the csp
+                # for comb in combs:
+                #     if comb == {FC}:
+                #         continue
+                #     # move on FC for testing
+                #     my_game.run(solve_type, csps=comb)
+            else:
+                my_game.run(solve_type)
+
+            # saving the times of each board
+        for k, v in my_game.times_dict.items():
+            if k in hard_3x10_times.keys():
+                hard_3x10_times[k] += v
+            else:
+                hard_3x10_times[k] = v
+    hard_3x10_times = {k: sum(v) / 10 for k, v in hard_3x10_times.items()}
+
+    print("Not Solvable Results:")
+    print(not_solvable_times)
+
+    print("Easy Mode (ROWS) Results:")
+    print(easy_rows_times)
+
+    print("Easy Mode (COLUMNS) Results:")
+    print(easy_cols_times)
+
+    print("Hard Mode 5x5 Results:")
+    print(hard_5_times)
+
+    print("Hard Mode 8x8 Results:")
+    print(hard_8_times)
+
+    print("Hard Mode 15x15 Results:")
+    print(hard_15_times)
+
+    print("Hard Mode 10x3 Results:")
+    print(hard_10x3_times)
+
+    print("Hard Mode 3x10 Results:")
+    print(hard_3x10_times)
 
 
 if __name__ == "__main__":
     # print("Hello World!")
-    # main()
+    main()
 
     # game = Game(colors=COLORFUL, size=(9, 9), difficulty=HARD, gui_or_print=IS_GUI)
     # game = Game(colors=COLORFUL, size=(20, 20), difficulty=HARD, gui_or_print=IS_GUI)
     # game = Game(csv_file='example1.csv')
-    game = Game(difficulty=HARD, size=(7, 7), gui_or_print=IS_GUI, csps=ALL_CSPS)
+    # game = Game(difficulty=HARD, size=(7, 7), gui_or_print=IS_GUI, csps=ALL_CSPS)
     # game.run(CSP_P)
     # Brute Force can solve up to 31x31 boards - the others will come to maximum recursion depth Error
     # game = Game(colors=COLORFUL, size=(7, 7), difficulty=HARD, gui_or_print=IS_GUI, solve_type=BRUTE)

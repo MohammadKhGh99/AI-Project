@@ -36,6 +36,8 @@ ASTAR = 3
 LBS = 4
 CSP_P = 5
 
+ALGOS_DICT = {BRUTE: "Brute Force", BFS: "BFS", DFS: "DFS", ASTAR: "A*", LBS: "LBS", CSP_P: "CSP"}
+
 ALL_ALGOS = [BRUTE, BFS, DFS, ASTAR, LBS, CSP_P]
 
 IS_GUI = True
@@ -55,3 +57,7 @@ LCV = 3
 FC = 4
 AC = 5
 ALL_CSPS = {1, 2, 3, 4, 5}
+
+
+NULL_HEU = 0
+OUR_HEU = 1

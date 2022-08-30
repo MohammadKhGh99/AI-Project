@@ -106,7 +106,7 @@ class Board:
         for r in range(self.num_rows):
             for c in range(self.num_cols):
                 self.board[r][c].color = EMPTY
-                self.flipped[r][c].color = EMPTY
+                self.flipped[c][r].color = EMPTY
                 self.moves = []
                 self.current_cell = Cell(0, -1)
                 self.current_row_constraint = -1
@@ -159,7 +159,7 @@ class Board:
             return True
         return False
 
-    def fill(self, r, c, color, brute_force=SEARCH_PROBLEMS):
+    def fill(self, r, c, color, solve_type):
         if r < self.num_rows and c < self.num_cols:
             if self.board[r][c].color == EMPTY:
                 self.filled_cells += 1
@@ -173,7 +173,7 @@ class Board:
             self.to_print = self.to_print[:cur] + repr(self.board[r][c]) + self.to_print[cur + 1:]
 
             # self.filled_cells += 0 if filled_before else 1
-            if (brute_force == BRUTE or brute_force == CSP_P) and Board.gui is not None and Board.gui.canvas is not None:
+            if (solve_type == BRUTE or solve_type == CSP_P or solve_type == BFS) and Board.gui is not None and Board.gui.canvas is not None:
                 before = time.time()
                 # time.sleep(0.1)
                 temp = Board.gui.board_rectangles_locs[r][c]
@@ -197,30 +197,6 @@ class Board:
                 loc = Board.gui.board_rectangles_locs[j][i]
                 Board.gui.canvas.create_rectangle(loc, fill=COLORS_DICT[repr(self.board[j][i])], tags='rect')
         Board.gui.root.update()
-
-    def fill_n_cells(self, con_i, con_j, start_index, constraint_type=ROWS):
-        """
-        Function fill the board, in a valid way. It fills n cells according to the given constraint.
-        constraint_type: on which constraints list we will work: columns or rows.
-        con_i: the index of the working constraints group.
-        con_j: the index of the working constraint in the group.
-        start_index: from where to start to fill (row/column)
-        """
-        child = deepcopy(self)
-        if not constraint_type:
-            constraint = child.rows_constraints[con_i][con_j]
-            for i in range(start_index):
-                # Assign the cells that must be white.
-                if child.board[con_i][i].color == EMPTY:
-                    child.fill(con_i, i, WHITE)
-            for i in range(constraint.length):
-                if child.fill(con_i, i + start_index, constraint.color) \
-                        and child.check_move(i + start_index, con_i, problem_type=SEARCH_PROBLEMS):
-                    continue
-                else:
-                    return None
-        child.complete_constraints(con_i, con_j, constraint_type)
-        return child
 
     def init_board_print(self):
         self.to_print = ""

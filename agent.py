@@ -202,7 +202,7 @@ class BruteForce:
         this is a recursion function, we do recursion to solve it in brute force.
         """
         for color in [RED, BLACK, WHITE]:
-            self.board.fill(row_id, col_id, color, brute_force=BRUTE)
+            self.board.fill(row_id, col_id, color, solve_type=BRUTE)
             # check if this move works, if yes go to next cell.
             if self.board.check_move(col_id, row_id):
                 if col_id + 1 < len(self.board.cols_constraints):
@@ -217,5 +217,5 @@ class BruteForce:
                     #  finished - the board is complete
                     return self
         # no color is correct
-        self.board.fill(row_id, col_id, EMPTY, brute_force=BRUTE)
+        self.board.fill(row_id, col_id, EMPTY, solve_type=BRUTE)
         return
