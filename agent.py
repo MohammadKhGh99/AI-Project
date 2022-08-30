@@ -50,9 +50,10 @@ class NonogramCellsProblem(SearchProblem):
         A* and DFS solve this problem.
     """
 
-    def __init__(self, board):
+    def __init__(self, board, search_type=DFS):
         self.board = board
         self.cost = 0
+        self.search_type = search_type
 
     def get_start_state(self):
         return self.board
@@ -62,7 +63,12 @@ class NonogramCellsProblem(SearchProblem):
             Goal state when we reach the last cell (right bottom corner),
             and we find a legal fill for it.
         """
-        return self.board.current_cell.row == self.board.num_rows and self.board.current_cell.col == 0
+        for i in range(self.board.num_cols):
+            for j in range(self.board.num_rows):
+                if self.board.board[j][i].color == EMPTY or not self.board.check_move(j, i):
+                    return False
+        return True
+        # return self.board.current_cell.row == self.board.num_rows and self.board.current_cell.col == 0
 
     def get_successors(self, state):
         """
@@ -70,12 +76,15 @@ class NonogramCellsProblem(SearchProblem):
             Each successor is a cell, the cell we want to fill in the board.
         """
         successors = []
-
+        if self.search_type == DFS:
+            colors = [WHITE, RED, BLACK]
+        else:
+            colors = [BLACK, RED, WHITE]
         if self.board.current_cell.row == self.board.num_rows:
             # We finished all the cells.
             return successors
 
-        for color in [WHITE, RED, BLACK]:
+        for color in colors:
             actions = []
             cell = Cell(self.board.current_cell.row, self.board.current_cell.col, color)
             actions.append(cell)

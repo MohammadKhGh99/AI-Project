@@ -174,6 +174,8 @@ class Board:
 
     def fill(self, r, c, color, brute_force=SEARCH_PROBLEMS, from_unassign=False):
         if r < self.num_rows and c < self.num_cols:
+            if self.board[r][c].color == EMPTY:
+                self.filled_cells += 1
             self.board[r][c].color = color
             self.flipped[c][r].color = color
             if Board.gui:
@@ -183,7 +185,7 @@ class Board:
             self.to_print = self.to_print[:cur] + repr(self.board[r][c]) + self.to_print[cur + 1:]
 
             # Board.gui.canvas.delete('rect')
-            self.filled_cells += 1
+
             if (brute_force == BRUTE or brute_force == CSP_P) and Board.gui is not None:
                 # if self.board[r][c] not in Board.moves:
                 # Board.moves.append(self.board[r][c])
