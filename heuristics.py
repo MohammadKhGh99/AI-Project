@@ -1,5 +1,6 @@
 from config import *
 
+
 def heuristic(action, problem):
     current_row = problem.board.current_cell.row
 

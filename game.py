@@ -50,6 +50,8 @@ class Game:
         self.board = None
         self.csps = set()
         self.times_lst = dict()
+        self.ran_before = False
+
         if csps is not None:
             self.csps.update(set(csps))
 
@@ -94,6 +96,7 @@ class Game:
     @staticmethod
     def new_game(cur_game):
         Board.gui.root.destroy()
+        Board.gui = None
         new_game_object = Game(csv_file=cur_game.csv_file, rows_constraints=cur_game.rows_constraints,
                                cols_constraints=cur_game.cols_constraints, size=cur_game.size,
                                always_solvable=cur_game.always_solvable, rows_or_cols=cur_game.rows_or_cols,
@@ -253,7 +256,7 @@ class Game:
                             all_empty = False
                             break
                     if all_empty:
-                        row = random.randint(0, len(temp_board))
+                        row = random.randint(0, len(temp_board) - 1)
                         temp_board[row][c].color = random.choice(COLORS_LST_WITHOUT_WHITE)
 
                 # check if there is any empty column, if yes fill one cell in random way with random color
@@ -264,7 +267,7 @@ class Game:
                             all_empty = False
                             break
                     if all_empty:
-                        col = random.randint(0, len(temp_board[0]))
+                        col = random.randint(0, len(temp_board[0]) - 1)
                         temp_board[r][col].color = random.choice(COLORS_LST_WITHOUT_WHITE)
 
                 # builds the constraints
@@ -306,7 +309,7 @@ class Game:
             all_constraints.append(constraint_lst)
         return all_constraints
 
-    def run(self, solve_type):
+    def run(self, solve_type, k=1, heu=0):
         """
         This function runs the game with the given solve type.
         """
@@ -323,7 +326,6 @@ class Game:
         cur_gui = self.board.gui
 
         Board.before_time = time.time()
-        # before = time.time()
         if solve_type == BRUTE:
             print("Brute Force")
             result = agent.BruteForce(self.board).brute_force()
@@ -333,6 +335,8 @@ class Game:
             lbs_problem = agent.NonogramCellsProblem(self.board, LBS)
             dfs_problem = agent.NonogramCellsProblem(self.board, DFS)
             astar_problem = agent.NonogramCellsProblem(self.board, ASTAR)
+            # bfs_problem = agent.BFSProblem(self.board)
+            # nonogram_problem = agent.NonogramCellsProblem(self.board)
             if solve_type == BFS:
                 print("BFS")
                 resulted_board = search.breadth_first_search(problem=bfs_problem)
@@ -342,12 +346,14 @@ class Game:
             elif solve_type == ASTAR:
                 print("A*")
                 resulted_board = search.a_star_search(problem=astar_problem)
-            elif solve_type == CSP_P:
-                print("CSP")
-                resulted_board = csp.run_CSP(self.board, types_of_csps=self.csps)
             elif solve_type == LBS:
                 print("LBS")
-                resulted_board = search.local_beam_search(lbs_problem, 4)  #, value_function=lambda: game.board.filled_cells)
+                resulted_board = search.local_beam_search(problem=lbs_problem, k=k)
+            elif solve_type == CSP_P:
+                print("CSP")
+                print(self.ran_before)
+                resulted_board = csp.run_CSP(self.board, types_of_csps=self.csps, same_board=self.ran_before)
+                self.ran_before = True
 
         after = time.time()
         all_time = after - Board.before_time - Board.different_time
@@ -357,11 +363,11 @@ class Game:
 
         if self.gui_or_print == IS_GUI:
             if resulted_board is not None and type(resulted_board) is not int:
+                resulted_board.print_board()
                 # show time of the running algorithm
                 resulted_board.gui.success_time(solve_type, all_time)
                 Board.gui.success_msg()
             else:
-                # todo - check this
                 cur_gui.failure_time(solve_type, all_time)
                 Board.gui.failed_msg()
             # to keep the window running
@@ -377,27 +383,6 @@ class Game:
                 print("End")
 
 
-# def gui_helper(board, solve_type):
-#     # if solve_type == BRUTE:
-#     # Board.gui.canvas.delete('rect')
-#     for r in range(board.num_rows):
-#         for c in range(board.num_cols):
-#             time.sleep(0.1)
-#             temp = Board.gui.board_rectangles_locs[r][c]
-#             Board.gui.canvas.create_rectangle(temp[0], temp[1], temp[2], temp[3],
-#                                               fill=COLORS_DICT[repr(board.board[r][c])], tags='rect')
-#             Board.gui.root.update()
-#     # elif solve_type == DFS or solve_type == BFS or solve_type == ASTAR:
-#     #     for cell in Board.moves:
-#     #         # r, c = move
-#     #         r, c = cell.row, cell.col
-#     #         # time.sleep(0.1)
-#     #         temp = Board.gui.board_rectangles_locs[r][c]
-#     #         Board.gui.canvas.create_rectangle(temp[0], temp[1], temp[2], temp[3],
-#     #                                           fill=COLORS_DICT[repr(board.board[r][c])], tags='rect')
-#     #         Board.gui.root.update()
-
-
 def main():
     # All combinations of all the csp's types
     combs = []
@@ -410,7 +395,8 @@ def main():
 
 
     # Finding which one of the algorithms is the fastest one in finding out that there is no solution.
-    print("\nNot Always Solvable:\n")
+    print("\nNot Solvable:\n")
+    not_solvable_boards = []
     for _ in range(10):
         csps = {}
         my_game = Game(size=(5, 5), difficulty=HARD, csps=csps, gui_or_print=PRINT)
@@ -471,11 +457,11 @@ if __name__ == "__main__":
     # main()
 
     # game = Game(colors=COLORFUL, size=(9, 9), difficulty=HARD, gui_or_print=IS_GUI)
-    # game = Game(size=(30, 30), difficulty=HARD, gui_or_print=PRINT)
-    game = Game(csv_file='example1.csv')
-    # game = Game(difficulty=HARD, size=(15, 15), gui_or_print=IS_GUI, csps=ALL_CSPS)
-    # game.run(DFS)
+    # game = Game(colors=COLORFUL, size=(20, 20), difficulty=HARD, gui_or_print=IS_GUI)
+    # game = Game(csv_file='example1.csv')
+    game = Game(difficulty=HARD, size=(7, 7), gui_or_print=IS_GUI, csps=ALL_CSPS)
+    # game.run(CSP_P)
     # Brute Force can solve up to 31x31 boards - the others will come to maximum recursion depth Error
     # game = Game(colors=COLORFUL, size=(7, 7), difficulty=HARD, gui_or_print=IS_GUI, solve_type=BRUTE)
 
-    # game.run(solve_type=DFS)
+    # game.run(solve_type=CSP_P)
