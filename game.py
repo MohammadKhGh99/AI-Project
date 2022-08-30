@@ -411,7 +411,7 @@ def main():
 
 
     # Finding which one of the algorithms is the fastest one in finding out that there is no solution.
-    print("\nNot Always Solvable:\n")
+    print("\nNot Solvable:\n")
     for _ in range(10):
         csps = {}
         my_game = Game(size=(5, 5), difficulty=HARD, csps=csps, gui_or_print=PRINT)
@@ -469,12 +469,12 @@ def main():
 
 if __name__ == "__main__":
     # print("Hello World!")
-    # main()
+    main()
 
     # game = Game(colors=COLORFUL, size=(9, 9), difficulty=HARD, gui_or_print=IS_GUI)
     # game = Game(colors=COLORFUL, size=(20, 20), difficulty=HARD, gui_or_print=IS_GUI)
     # game = Game(csv_file='example1.csv')
-    game = Game(difficulty=HARD, size=(7, 7), gui_or_print=IS_GUI, csps=ALL_CSPS)
+    game = Game(difficulty=HARD, size=(7, 7), gui_or_print=PRINT, csps=ALL_CSPS)
     # game.run(CSP_P)
     # Brute Force can solve up to 31x31 boards - the others will come to maximum recursion depth Error
     # game = Game(colors=COLORFUL, size=(7, 7), difficulty=HARD, gui_or_print=IS_GUI, solve_type=BRUTE)
