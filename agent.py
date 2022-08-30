@@ -47,12 +47,13 @@ class SearchProblem:
 class NonogramCellsProblem(SearchProblem):
     """
         Class that defining the nonogram game as a problem. Solving it by checking cell by cell.
-        A* and DFS solve this problem.
+        BFS, DFS and A* solve this problem.
     """
 
-    def __init__(self, board):
+    def __init__(self, board, search_type):
         self.board = board
         self.cost = 0
+        self.search_type = search_type
 
     def get_start_state(self):
         return self.board
@@ -62,7 +63,14 @@ class NonogramCellsProblem(SearchProblem):
             Goal state when we reach the last cell (right bottom corner),
             and we find a legal fill for it.
         """
+        if self.search_type == LBS:
+            for i in range(self.board.num_cols):
+                for j in range(self.board.num_rows):
+                    if self.board.board[j][i].color == EMPTY or not self.board.check_move(j, i):
+                        return False
+            return True
         return self.board.current_cell.row == self.board.num_rows and self.board.current_cell.col == 0
+        # return self.board.current_cell.row == self.board.num_rows and self.board.current_cell.col == 0
 
     def get_successors(self, state):
         """
@@ -70,12 +78,15 @@ class NonogramCellsProblem(SearchProblem):
             Each successor is a cell, the cell we want to fill in the board.
         """
         successors = []
-
+        if self.search_type == DFS:
+            colors = [WHITE, RED, BLACK]
+        else:
+            colors = [BLACK, RED, WHITE]
         if self.board.current_cell.row == self.board.num_rows:
             # We finished all the cells.
             return successors
 
-        for color in [WHITE, RED, BLACK]:
+        for color in colors:
             actions = []
             cell = Cell(self.board.current_cell.row, self.board.current_cell.col, color)
             actions.append(cell)
@@ -88,45 +99,90 @@ class NonogramCellsProblem(SearchProblem):
             return self.cost - 0.5
         return self.cost - 1
 
+# delete - No need for this class
+# class BFSProblem(SearchProblem):
+#     """
+#     Class that defining the nonogram game as a problem.
+#     """
+#
+#     def __init__(self, board):
+#         self.board = board
+#
+#     def get_start_state(self):
+#         return self.board
+#
+#     def is_goal_state(self, state):
+#         """
+#             Goal state when we reach the last cell (right bottom corner),
+#             and we find a legal fill for it.
+#         """
+#         return self.board.current_cell.row == self.board.num_rows and self.board.current_cell.col == 0
+#
+#     def get_successors(self, state):
+#         """
+#         Successors are all the 3 possible colors: white, red and black.
+#         Each successor is a cell, the cell we want to fill in the board.
+#         """
+#         successors = []
+#         if self.board.current_cell.row == self.board.num_rows:
+#             # We finished all the cells.
+#             return successors
+#
+#         for color in [WHITE, BLACK, RED]:
+#             actions = deepcopy(self.board.moves)
+#             cell = Cell(self.board.current_cell.row, self.board.current_cell.col, color)
+#             actions.append(cell)
+#             successors.append((self.board, actions))
+#         return successors
+#
+#     def get_cost_of_actions(self, actions):
+#         # Actions are a set of cell's coordinates we colored to get a new state.
+#         return
 
-class BFSProblem(SearchProblem):
-    """
-    Class that defining the nonogram game as a problem.
-    """
 
-    def __init__(self, board):
-        self.board = board
-
-    def get_start_state(self):
-        return self.board
-
-    def is_goal_state(self, state):
-        """
-            Goal state when we reach the last cell (right bottom corner),
-            and we find a legal fill for it.
-        """
-        return self.board.current_cell.row == self.board.num_rows and self.board.current_cell.col == 0
-
-    def get_successors(self, state):
-        """
-        Successors are all the 3 possible colors: white, red and black.
-        Each successor is a cell, the cell we want to fill in the board.
-        """
-        successors = []
-        if self.board.current_cell.row == self.board.num_rows:
-            # We finished all the cells.
-            return successors
-
-        for color in [WHITE, BLACK, RED]:
-            actions = deepcopy(self.board.moves)
-            cell = Cell(self.board.current_cell.row, self.board.current_cell.col, color)
-            actions.append(cell)
-            successors.append((self.board, actions))
-        return successors
-
-    def get_cost_of_actions(self, actions):
-        # Actions are a set of cell's coordinates we colored to get a new state.
-        return
+# class NonogramProblem(SearchProblem):
+#     """
+#         Class that defining the nonogram game as a problem.
+#     """
+#
+#     def __init__(self, board):
+#         self.board = board
+#
+#     def get_start_state(self):
+#         return self.board
+#
+#     def is_goal_state(self, state):
+#         return (state.get_first_incomplete_constraint(COLUMNS) is None) and \
+#                (state.get_first_incomplete_constraint(ROWS) is None)
+#
+#     def get_successors(self, state):
+#         successors = []
+#         constraint_coord = state.get_first_incomplete_constraint(ROWS)
+#
+#         if constraint_coord is None:
+#             # We have done all the constraints
+#             return successors
+#
+#         for start_index in range(state.num_cols):
+#             child = state.fill_n_cells(constraint_coord[0], constraint_coord[1], start_index, ROWS)
+#             if child is not None:
+#                 actions = set()
+#                 constraint = state.rows_constraints[constraint_coord[0]][constraint_coord[1]]
+#                 for i in range(constraint.length):
+#                     actions.add((constraint_coord[0], start_index + i))  #, constraint.color))
+#                 successors.append((child, actions))
+#         return successors
+#
+#     def get_cost_of_actions(self, state):
+#         # Actions are a set of cell's coordinates we colored to get a new state.
+#         # Todo it looks like a heuristic function, discuss this with team.
+#         # cost zero.
+#         sum_completed_constrains = 0
+#         for row_con in state.rows_constraints:
+#             for constraint in row_con:
+#                 if constraint.completed:
+#                     sum_completed_constrains += 1
+#         return -1 * sum_completed_constrains
 
 
 class BruteForce:

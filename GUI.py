@@ -42,12 +42,15 @@ class GUI:
         sound_button.config(height=1, width=5)
         sound_button.place(x=950, y=1)
 
-        self.labels = []
+        self.board_rectangles_locs = []
+        self.board = board
+
+        self.create_board(board)
+        self.labels = dict()
 
         def new_game():
             self.__cur_game = self.__cur_game.new_game(self.__cur_game)
 
-        # def create_new_button():
         new_game_button = Button(self.canvas, text="new game", command=new_game)
         new_game_button.config(height=1, width=8)
         new_game_button.place(x=100, y=2)
@@ -55,10 +58,11 @@ class GUI:
         def clear_func():
             csps = []
             self.__cur_game.csps = []
-            for label in self.labels:
-                label.destroy()
+            for label in self.labels.keys():
+                self.labels[label].destroy()
+                # self.labels.pop(label)
 
-            self.labels = []
+            self.labels = dict()
             for chk_b in check_buttons:
                 chk_b.destroy()
             self.__cur_game.board.clear_board()
@@ -68,42 +72,59 @@ class GUI:
         clear_button.place(x=800, y=1)
 
         choose_label = Label(self.root, text="Choose the way to solve:", bg='grey')
-        choose_label.place(x=830, y=50)
+        choose_label.place(x=830, y=35)
 
         def run_brute():
             self.__cur_game.run(BRUTE)
 
         brute_button = Button(self.root, text="Brute Force", command=run_brute)
         brute_button.config(height=1, width=10)
-        brute_button.place(x=865, y=80)
+        brute_button.place(x=865, y=65)
 
         def run_dfs():
             self.__cur_game.run(DFS)
 
         dfs_button = Button(self.root, text="DFS", command=run_dfs)
         dfs_button.config(height=1, width=10)
-        dfs_button.place(x=865, y=140)
+        dfs_button.place(x=865, y=125)
 
         def run_bfs():
             self.__cur_game.run(BFS)
 
         bfs_button = Button(self.root, text="BFS", command=run_bfs)
         bfs_button.config(height=1, width=10)
-        bfs_button.place(x=865, y=200)
+        bfs_button.place(x=865, y=185)
 
         def run_astar():
-            self.__cur_game.run(ASTAR)
+            self.__cur_game.run(ASTAR, heu=int(chosen_heu.get()))
 
         astar_button = Button(self.root, text="ASTAR", command=run_astar)
         astar_button.config(height=1, width=10)
-        astar_button.place(x=865, y=260)
+        astar_button.place(x=865, y=245)
 
         def run_lbs():
-            self.__cur_game.run(LBS)
+            self.__cur_game.run(LBS, k=int(lbs_text_box.get("1.0", "end-1c").replace(' ', '')))
+
+        # chosen_k = StringVar(self.root)
+        # chosen_k.set("1")
+        lbs_text_box = Text(self.root)
+        lbs_text_box.config(height=1, width=3)
+        lbs_text_box.place(x=822, y=310)
+
+        chosen_heu = StringVar(self.root)
+        chosen_heu.set("0")
+        astar_heus = ["1", "2"]
+        astar_heus_menu = OptionMenu(self.root, chosen_heu, *astar_heus)
+        astar_heus_menu.config(height=1, width=1)
+        astar_heus_menu.place(x=815, y=245)
+        # k_options = [str(x) for x in range(1, self.board.num_rows * self.board.num_cols + 1)]
+        # lbs_option_menu = OptionMenu(self.root, chosen_k, *k_options)
+        # lbs_option_menu.config(height=1, width=1)
+        # lbs_option_menu.place(x=810, y=305)
 
         lbs_button = Button(self.root, text="LBS", command=run_lbs)
         lbs_button.config(height=1, width=10)
-        lbs_button.place(x=865, y=320)
+        lbs_button.place(x=865, y=305)
 
         self.__cur_game.csps = set()
 
@@ -118,23 +139,23 @@ class GUI:
         def select_csps():
             self.__cur_game.csps = set()
             mrv_check = Checkbutton(self.root, text="MRV", command=lambda: add_csp(MRV))
-            mrv_check.place(x=865, y=435)
+            mrv_check.place(x=865, y=420)
 
             degree_check = Checkbutton(self.root, text="DEGREE", command=lambda: add_csp(DEGREE))
-            degree_check.place(x=865, y=470)
+            degree_check.place(x=865, y=455)
 
             lcv_check = Checkbutton(self.root, text="LCV", command=lambda: add_csp(LCV))
-            lcv_check.place(x=865, y=505)
+            lcv_check.place(x=865, y=490)
 
             fc_check = Checkbutton(self.root, text="FC", command=lambda: add_csp(FC))
-            fc_check.place(x=865, y=540)
+            fc_check.place(x=865, y=525)
 
             ac_check = Checkbutton(self.root, text="AC", command=lambda: add_csp(AC))
-            ac_check.place(x=865, y=575)
+            ac_check.place(x=865, y=560)
 
             run_csp_button = Button(self.root, text="Run CSP", command=run_csp)
             run_csp_button.config(height=1, width=10)
-            run_csp_button.place(x=865, y=610)
+            run_csp_button.place(x=865, y=595)
 
             check_buttons.append(mrv_check)
             check_buttons.append(degree_check)
@@ -146,7 +167,7 @@ class GUI:
 
         select_csp_button = Button(self.root, text="CSP", command=select_csps)
         select_csp_button.config(height=1, width=10)
-        select_csp_button.place(x=865, y=380)
+        select_csp_button.place(x=865, y=365)
 
         def run_csp():
             self.__cur_game.run(CSP_P)
@@ -158,13 +179,8 @@ class GUI:
         # exit_button.config(height=1, width=4)
         # exit_button.place(x=5, y=1)
 
-
-        self.board_rectangles_locs = []
-        self.board = None
-
-        self.create_board(board)
-
     def create_board(self, board):
+        print(board)
         self.board = deepcopy(board)
 
         x, y = 260, 230
@@ -217,13 +233,20 @@ class GUI:
         messagebox.showerror('Failed', 'You didn\'t find the solution')
 
     def success_time(self, solve_type, timing):
+        if solve_type in self.labels.keys():
+            self.labels[solve_type].destroy()
+            self.labels.pop(solve_type)
+
         loc = LOCS_DICT[solve_type]
         label = Label(self.root, text=str(timing), bg='light green')
-        label.place(x=loc[0] - 30, y=loc[1] + 30)
-        self.labels.append(label)
+        label.place(x=loc[0] - 30, y=loc[1] + 27)
+        self.labels[solve_type] = label
 
     def failure_time(self, solve_type, timing):
+        if solve_type in self.labels.keys():
+            self.labels[solve_type].destroy()
+            self.labels.pop(solve_type)
         loc = LOCS_DICT[solve_type]
         label = Label(self.root, text=str(timing), bg='red')
         label.place(x=loc[0] - 30, y=loc[1] + 30)
-        self.labels.append(label)
+        self.labels[solve_type] = label

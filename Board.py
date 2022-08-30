@@ -110,6 +110,7 @@ class Board:
                 self.moves = []
                 self.current_cell = Cell(0, -1)
                 self.current_row_constraint = -1
+                self.filled_cells = 0
                 if Board.gui:
                     Board.gui.board.board[r][c].color = EMPTY
                     Board.gui.board.cells_locations = []
@@ -139,42 +140,30 @@ class Board:
 
             # adding the correct color char to the appropriate place in to_print variable.
             cur = self.cells_locations[r][c]
-            # self.cells_locations.remove(self.cells_locations[r][c])
+
             # I found that this way is faster
             self.to_print = self.to_print[:cur] + ' ' + self.to_print[cur + 1:]
 
+            # adding the cell to the gui.
             # time.sleep(0.1)
             if Board.gui is not None:
                 before = time.time()
                 temp = Board.gui.board_rectangles_locs[r][c]
                 Board.gui.canvas.create_rectangle(temp[0], temp[1], temp[2], temp[3], fill='white', tags='rect')
-                # Board.gui.root.update()
                 Board.different_time += (time.time() - before)
 
-            # Board.gui.canvas.delete('rect')
-
-            # if brute_force == BRUTE or brute_force == CSP_P and Board.gui is not None:
-            #     # if self.board[r][c] not in Board.moves:
-            #     # Board.moves.append(self.board[r][c])
-            #     before = time.time()
-            #     # time.sleep(0.1)
-            #     temp = Board.gui.board_rectangles_locs[r][c]
-            #     Board.gui.canvas.create_rectangle(temp[0], temp[1], temp[2], temp[3],
-            #                                       fill=COLORS_DICT[self.board[r][c].__repr__()], tags='rect')
-            #     Board.gui.root.update()
-            #     Board.different_time += (time.time() - before)
-
+            # removing the cell from the gui
             if Board.gui is not None:
                 self.rects.remove(self.board[r][c])
-                # self.rects.append(self.board[r][c])
 
-            # self.print_board()
             return True
         return False
 
     def fill(self, r, c, color, brute_force=SEARCH_PROBLEMS):
         if r < self.num_rows and c < self.num_cols:
-            filled_before = True if self.board[r][c].color != EMPTY else False
+            if self.board[r][c].color == EMPTY:
+                self.filled_cells += 1
+            # filled_before = True if self.board[r][c].color != EMPTY else False
             self.board[r][c].color = color
             self.flipped[c][r].color = color
             if Board.gui:
@@ -183,7 +172,7 @@ class Board:
             # I found that this way is faster
             self.to_print = self.to_print[:cur] + repr(self.board[r][c]) + self.to_print[cur + 1:]
 
-            self.filled_cells += 0 if filled_before else 1
+            # self.filled_cells += 0 if filled_before else 1
             if (brute_force == BRUTE or brute_force == CSP_P) and Board.gui is not None and Board.gui.canvas is not None:
                 before = time.time()
                 # time.sleep(0.1)
@@ -231,7 +220,6 @@ class Board:
                 else:
                     return None
         child.complete_constraints(con_i, con_j, constraint_type)
-        # Board.gui.canvas.delete('rect')
         return child
 
     def init_board_print(self):

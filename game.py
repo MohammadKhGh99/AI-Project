@@ -9,6 +9,7 @@ import agent
 import csp
 import search
 from Board import *
+import heuristics
 
 
 class Game:
@@ -255,7 +256,7 @@ class Game:
                             all_empty = False
                             break
                     if all_empty:
-                        row = random.randint(0, len(temp_board))
+                        row = random.randint(0, len(temp_board) - 1)
                         temp_board[row][c].color = random.choice(COLORS_LST_WITHOUT_WHITE)
 
                 # check if there is any empty column, if yes fill one cell in random way with random color
@@ -266,7 +267,7 @@ class Game:
                             all_empty = False
                             break
                     if all_empty:
-                        col = random.randint(0, len(temp_board[0]))
+                        col = random.randint(0, len(temp_board[0]) - 1)
                         temp_board[r][col].color = random.choice(COLORS_LST_WITHOUT_WHITE)
 
                 # builds the constraints
@@ -308,7 +309,7 @@ class Game:
             all_constraints.append(constraint_lst)
         return all_constraints
 
-    def run(self, solve_type):
+    def run(self, solve_type, k=1, heu=0):
         """
         This function runs the game with the given solve type.
         """
@@ -330,25 +331,29 @@ class Game:
             result = agent.BruteForce(self.board).brute_force()
             resulted_board = result.board if result else None
         else:
-            bfs_problem = agent.BFSProblem(self.board)
-            nonogram_problem = agent.NonogramCellsProblem(self.board)
+            bfs_problem = agent.NonogramCellsProblem(self.board, BFS)
+            lbs_problem = agent.NonogramCellsProblem(self.board, LBS)
+            dfs_problem = agent.NonogramCellsProblem(self.board, DFS)
+            astar_problem = agent.NonogramCellsProblem(self.board, ASTAR)
+            # bfs_problem = agent.BFSProblem(self.board)
+            # nonogram_problem = agent.NonogramCellsProblem(self.board)
             if solve_type == BFS:
                 print("BFS")
                 resulted_board = search.breadth_first_search(problem=bfs_problem)
             elif solve_type == DFS:
                 print("DFS")
-                resulted_board = search.depth_first_search(problem=nonogram_problem)
+                resulted_board = search.depth_first_search(problem=dfs_problem)
             elif solve_type == ASTAR:
                 print("A*")
-                resulted_board = search.a_star_search(problem=nonogram_problem)
+                resulted_board = search.a_star_search(problem=astar_problem)
+            elif solve_type == LBS:
+                print("LBS")
+                resulted_board = search.local_beam_search(problem=lbs_problem, k=k)
             elif solve_type == CSP_P:
                 print("CSP")
                 print(self.ran_before)
                 resulted_board = csp.run_CSP(self.board, types_of_csps=self.csps, same_board=self.ran_before)
                 self.ran_before = True
-            elif solve_type == LBS:
-                print("LBS")
-                resulted_board = search.local_beam_search(nonogram_problem, 1)  #, value_function=lambda: game.board.filled_cells)
 
         after = time.time()
         all_time = after - Board.before_time - Board.different_time
@@ -378,27 +383,6 @@ class Game:
                 print("End")
 
 
-# def gui_helper(board, solve_type):
-#     # if solve_type == BRUTE:
-#     # Board.gui.canvas.delete('rect')
-#     for r in range(board.num_rows):
-#         for c in range(board.num_cols):
-#             time.sleep(0.1)
-#             temp = Board.gui.board_rectangles_locs[r][c]
-#             Board.gui.canvas.create_rectangle(temp[0], temp[1], temp[2], temp[3],
-#                                               fill=COLORS_DICT[repr(board.board[r][c])], tags='rect')
-#             Board.gui.root.update()
-#     # elif solve_type == DFS or solve_type == BFS or solve_type == ASTAR:
-#     #     for cell in Board.moves:
-#     #         # r, c = move
-#     #         r, c = cell.row, cell.col
-#     #         # time.sleep(0.1)
-#     #         temp = Board.gui.board_rectangles_locs[r][c]
-#     #         Board.gui.canvas.create_rectangle(temp[0], temp[1], temp[2], temp[3],
-#     #                                           fill=COLORS_DICT[repr(board.board[r][c])], tags='rect')
-#     #         Board.gui.root.update()
-
-
 def main():
     # All combinations of all the csp's types
     combs = []
@@ -411,7 +395,8 @@ def main():
 
 
     # Finding which one of the algorithms is the fastest one in finding out that there is no solution.
-    print("\nNot Always Solvable:\n")
+    print("\nNot Solvable:\n")
+    not_solvable_boards = []
     for _ in range(10):
         csps = {}
         my_game = Game(size=(5, 5), difficulty=HARD, csps=csps, gui_or_print=PRINT)
