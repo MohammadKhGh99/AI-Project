@@ -9,6 +9,7 @@ import agent
 import csp
 import search
 from Board import *
+import heuristics
 
 
 class Game:
@@ -328,23 +329,25 @@ class Game:
             result = agent.BruteForce(self.board).brute_force()
             resulted_board = result.board if result else None
         else:
-            bfs_problem = agent.BFSProblem(self.board)
-            nonogram_problem = agent.NonogramCellsProblem(self.board)
+            bfs_problem = agent.NonogramCellsProblem(self.board, BFS)
+            lbs_problem = agent.NonogramCellsProblem(self.board, LBS)
+            dfs_problem = agent.NonogramCellsProblem(self.board, DFS)
+            astar_problem = agent.NonogramCellsProblem(self.board, ASTAR)
             if solve_type == BFS:
                 print("BFS")
                 resulted_board = search.breadth_first_search(problem=bfs_problem)
             elif solve_type == DFS:
                 print("DFS")
-                resulted_board = search.depth_first_search(problem=nonogram_problem)
+                resulted_board = search.depth_first_search(problem=dfs_problem)
             elif solve_type == ASTAR:
                 print("A*")
-                resulted_board = search.a_star_search(problem=nonogram_problem)
+                resulted_board = search.a_star_search(problem=astar_problem)
             elif solve_type == CSP_P:
                 print("CSP")
                 resulted_board = csp.run_CSP(self.board, types_of_csps=self.csps)
             elif solve_type == LBS:
                 print("LBS")
-                resulted_board = search.local_beam_search(nonogram_problem, 5)  #, value_function=lambda: game.board.filled_cells)
+                resulted_board = search.local_beam_search(lbs_problem, 4)  #, value_function=lambda: game.board.filled_cells)
 
         after = time.time()
         all_time = after - Board.before_time - Board.different_time
@@ -468,11 +471,11 @@ if __name__ == "__main__":
     # main()
 
     # game = Game(colors=COLORFUL, size=(9, 9), difficulty=HARD, gui_or_print=IS_GUI)
-    # game = Game(colors=COLORFUL, size=(20, 20), difficulty=HARD, gui_or_print=IS_GUI)
-    # game = Game(csv_file='example1.csv')
-    game = Game(difficulty=HARD, size=(7, 7), gui_or_print=IS_GUI, csps=ALL_CSPS)
-    # game.run(CSP_P)
+    # game = Game(size=(30, 30), difficulty=HARD, gui_or_print=PRINT)
+    game = Game(csv_file='example1.csv')
+    # game = Game(difficulty=HARD, size=(15, 15), gui_or_print=IS_GUI, csps=ALL_CSPS)
+    # game.run(DFS)
     # Brute Force can solve up to 31x31 boards - the others will come to maximum recursion depth Error
     # game = Game(colors=COLORFUL, size=(7, 7), difficulty=HARD, gui_or_print=IS_GUI, solve_type=BRUTE)
 
-    # game.run(solve_type=CSP_P)
+    # game.run(solve_type=DFS)
