@@ -94,28 +94,28 @@ class GUI:
         bfs_button.config(height=1, width=10)
         bfs_button.place(x=865, y=185)
 
-        def run_astar():
-            self.__cur_game.run(ASTAR, heu=int(chosen_heu.get()))
-
-        astar_button = Button(self.root, text="ASTAR", command=run_astar)
-        astar_button.config(height=1, width=10)
-        astar_button.place(x=865, y=245)
+        # def run_astar():
+        #     self.__cur_game.run(ASTAR)
+        #
+        # astar_button = Button(self.root, text="ASTAR", command=run_astar)
+        # astar_button.config(height=1, width=10)
+        # astar_button.place(x=865, y=245)
 
         def run_lbs():
             self.__cur_game.run(LBS, k=lbs_text_box.get("1.0", "end-1c").replace(' ', ''))
 
         # chosen_k = StringVar(self.root)
         # chosen_k.set("1")
-        lbs_text_box = Text(self.root)
+        lbs_text_box = Text(self.root, bg="grey")
         lbs_text_box.config(height=1, width=3)
-        lbs_text_box.place(x=822, y=310)
+        lbs_text_box.place(x=822, y=250)
 
-        chosen_heu = StringVar(self.root)
-        chosen_heu.set("0")
-        astar_heus = ["1", "2"]
-        astar_heus_menu = OptionMenu(self.root, chosen_heu, *astar_heus)
-        astar_heus_menu.config(height=1, width=1)
-        astar_heus_menu.place(x=815, y=245)
+        # chosen_heu = StringVar(self.root)
+        # chosen_heu.set("0")
+        # astar_heus = ["1", "2"]
+        # astar_heus_menu = OptionMenu(self.root, chosen_heu, *astar_heus)
+        # astar_heus_menu.config(height=1, width=1)
+        # astar_heus_menu.place(x=815, y=245)
 
         # k_options = [str(x) for x in range(1, self.board.num_rows * self.board.num_cols + 1)]
         # lbs_option_menu = OptionMenu(self.root, chosen_k, *k_options)
@@ -124,7 +124,7 @@ class GUI:
 
         lbs_button = Button(self.root, text="LBS", command=run_lbs)
         lbs_button.config(height=1, width=10)
-        lbs_button.place(x=865, y=305)
+        lbs_button.place(x=865, y=245)
 
         self.__cur_game.csps = set()
 
@@ -139,23 +139,23 @@ class GUI:
         def select_csps():
             self.__cur_game.csps = set()
             mrv_check = Checkbutton(self.root, text="MRV", command=lambda: add_csp(MRV))
-            mrv_check.place(x=865, y=420)
+            mrv_check.place(x=865, y=365)
 
             degree_check = Checkbutton(self.root, text="DEGREE", command=lambda: add_csp(DEGREE))
-            degree_check.place(x=865, y=455)
+            degree_check.place(x=865, y=400)
 
             lcv_check = Checkbutton(self.root, text="LCV", command=lambda: add_csp(LCV))
-            lcv_check.place(x=865, y=490)
+            lcv_check.place(x=865, y=435)
 
             fc_check = Checkbutton(self.root, text="FC", command=lambda: add_csp(FC))
-            fc_check.place(x=865, y=525)
+            fc_check.place(x=865, y=470)
 
             ac_check = Checkbutton(self.root, text="AC", command=lambda: add_csp(AC))
-            ac_check.place(x=865, y=560)
+            ac_check.place(x=865, y=505)
 
             run_csp_button = Button(self.root, text="Run CSP", command=run_csp)
             run_csp_button.config(height=1, width=10)
-            run_csp_button.place(x=865, y=595)
+            run_csp_button.place(x=865, y=540)
 
             check_buttons.append(mrv_check)
             check_buttons.append(degree_check)
@@ -167,36 +167,26 @@ class GUI:
 
         select_csp_button = Button(self.root, text="CSP", command=select_csps)
         select_csp_button.config(height=1, width=10)
-        select_csp_button.place(x=865, y=365)
+        select_csp_button.place(x=865, y=310)
 
         def run_csp():
             self.__cur_game.run(CSP_P, csps=self.__cur_game.csps)
 
-        # def exit_game():
-        #     self.root.quit()
-        #
-        # exit_button = Button(self.root, text="exit", command=exit_game, background='red')
-        # exit_button.config(height=1, width=4)
-        # exit_button.place(x=5, y=1)
+        def exit_game():
+            del self.__cur_game
+            # del self
+            exit(1)
+
+        exit_button = Button(self.root, text="exit", command=exit_game, background='red')
+        exit_button.config(height=1, width=4)
+        exit_button.place(x=5, y=1)
 
     def create_board(self, board):
-        # print(board)
         self.board = deepcopy(board)
 
         x, y = 260, 230
-        tmp = min((self.canvas_width - x) // self.board.num_rows, (self.canvas_height - y) // self.board.num_cols)
+        tmp = min((self.canvas_height - x) // self.board.num_rows, (self.canvas_width - y) // self.board.num_cols)
         col_width, row_width = tmp, tmp
-        # create lines to create a look-like table
-        # for i in range(self.board.num_rows + 1):
-        #     self.canvas.create_line(0, y + i * row_width, self.canvas_width, y + i * row_width)
-        #     if i == self.board.num_rows:
-        #         for j in range(1, 51):
-        #             self.canvas.create_line(0, y + i * row_width + 3 * j, self.canvas_width, y + i * col_width + 3 * j)
-        # for i in range(self.board.num_cols + 1):
-        #     self.canvas.create_line(x + i * col_width, 0, x + i * col_width, self.canvas_height)
-        #     if i == self.board.num_cols:
-        #         for j in range(1, 51):
-        #             self.canvas.create_line(x + i * col_width + 3 * j, 0, x + i * col_width + 3 * j, self.canvas_height)
 
         self.board_rectangles_locs = []
         for i in range(self.board.num_rows):
@@ -211,7 +201,6 @@ class GUI:
         for i, row_con in enumerate(self.board.rows_constraints):
             row_text = ''
             for con in row_con:
-                # text = StringVar(value=str(con), )
                 row_text += str(con) + ' '
             row_text = row_text[:-1]
 
