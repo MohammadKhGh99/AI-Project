@@ -652,66 +652,66 @@ def main():
 
 
 if __name__ == "__main__":
-    # main()
+    main()
 
-    # default running: python3 game.py
-    how_to_run = input("Enter how do you want to run the program, gui or print:  ")
-    if how_to_run == "gui":
-        default_board = input("Do you want to enter board size or use the default size (5x5): y/n ? ")
-        # while default_board != 'n' and default_board != 'y':
-        #     default_board = input("Do you want to enter board size or use the default size (5x5): y/n ? ")
-        if default_board == 'n':
-            game = Game(gui_or_print=IS_GUI)
-        elif default_board == 'y':
-            rows, columns = input("Enter size m,n  (m=rows n=columns): ").split(',')
-            try:
-                rows = int(rows)
-                columns = int(columns)
-            except Exception:
-                exit(1)
-            game = Game(size=(rows, columns), gui_or_print=IS_GUI)
-        else:
-            exit(1)
-    elif how_to_run == 'print':
-        default_board = input("Do you want to enter board size or use the default size (5x5): y/n ? ")
-        # while default_board != 'n' and default_board != 'y':
-        #     default_board = input("Do you want to enter board size or use the default size (5x5): y/n ? ")
-        rows, columns = 5, 5
-        if default_board == 'y':
-            rows, columns = input("Enter size m,n  (m=rows n=columns): ").split(',')
-            try:
-                rows = int(rows)
-                columns = int(columns)
-            except Exception:
-                exit(1)
-        else:
-            exit(1)
-        solve_type = input("Enter Which algorithm you want to run brute,bfs,dfs,astar,lbs,csp: ")
-        k = 1
-        csp_heus = set()
-        if solve_type not in ALGOS_SYS_DICT.keys():
-            exit(1)
-        if ALGOS_SYS_DICT[solve_type] == LBS:
-            k = input("Enter the number of initial states for LBS (as a number): ")
-            try:
-                k = int(k)
-            except Exception:
-                exit(1)
-        elif ALGOS_SYS_DICT[solve_type] == CSP_P:
-            csps = input("Enter the csp heuristics mrv,degree,lcv,fc,ac (separated with comma without spaces): ").split(',')
-            csp_heus = set()
-            for cs in csps:
-                if cs == 'mrv':
-                    csp_heus.add(MRV)
-                elif cs == 'degree':
-                    csp_heus.add(DEGREE)
-                elif cs == 'lcv':
-                    csp_heus.add(LCV)
-                elif cs == 'fc':
-                    csp_heus.add(FC)
-                elif cs == 'ac':
-                    csp_heus.add(AC)
-
-        game = Game(size=(rows, columns), gui_or_print=PRINT)
-        game.run(solve_type=ALGOS_SYS_DICT[solve_type], k=k, csps=csp_heus)
+    # # default running: python3 game.py
+    # how_to_run = input("Enter how do you want to run the program, gui or print:  ")
+    # if how_to_run == "gui":
+    #     default_board = input("Do you want to enter board size or use the default size (5x5): y/n ? ")
+    #     # while default_board != 'n' and default_board != 'y':
+    #     #     default_board = input("Do you want to enter board size or use the default size (5x5): y/n ? ")
+    #     if default_board == 'n':
+    #         game = Game(gui_or_print=IS_GUI)
+    #     elif default_board == 'y':
+    #         rows, columns = input("Enter size m,n  (m=rows n=columns): ").split(',')
+    #         try:
+    #             rows = int(rows)
+    #             columns = int(columns)
+    #         except Exception:
+    #             exit(1)
+    #         game = Game(size=(rows, columns), gui_or_print=IS_GUI)
+    #     else:
+    #         exit(1)
+    # elif how_to_run == 'print':
+    #     default_board = input("Do you want to enter board size or use the default size (5x5): y/n ? ")
+    #     # while default_board != 'n' and default_board != 'y':
+    #     #     default_board = input("Do you want to enter board size or use the default size (5x5): y/n ? ")
+    #     rows, columns = 5, 5
+    #     if default_board == 'y':
+    #         rows, columns = input("Enter size m,n  (m=rows n=columns): ").split(',')
+    #         try:
+    #             rows = int(rows)
+    #             columns = int(columns)
+    #         except Exception:
+    #             exit(1)
+    #     else:
+    #         exit(1)
+    #     solve_type = input("Enter Which algorithm you want to run brute,bfs,dfs,astar,lbs,csp: ")
+    #     k = 1
+    #     csp_heus = set()
+    #     if solve_type not in ALGOS_SYS_DICT.keys():
+    #         exit(1)
+    #     if ALGOS_SYS_DICT[solve_type] == LBS:
+    #         k = input("Enter the number of initial states for LBS (as a number): ")
+    #         try:
+    #             k = int(k)
+    #         except Exception:
+    #             exit(1)
+    #     elif ALGOS_SYS_DICT[solve_type] == CSP_P:
+    #         csps = input("Enter the csp heuristics mrv,degree,lcv,fc,ac (separated with comma without spaces): ").split(',')
+    #         csp_heus = set()
+    #         for cs in csps:
+    #             if cs == 'mrv':
+    #                 csp_heus.add(MRV)
+    #             elif cs == 'degree':
+    #                 csp_heus.add(DEGREE)
+    #             elif cs == 'lcv':
+    #                 csp_heus.add(LCV)
+    #             elif cs == 'fc':
+    #                 csp_heus.add(FC)
+    #             elif cs == 'ac':
+    #                 csp_heus.add(AC)
+    #
+    #     game = Game(size=(rows, columns), gui_or_print=PRINT)
+    #     game.run(solve_type=ALGOS_SYS_DICT[solve_type], k=k, csps=csp_heus)
 
