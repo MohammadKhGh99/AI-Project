@@ -100,6 +100,42 @@ class NonogramCellsProblem(SearchProblem):
         return self.cost - 1
 
 
+class BruteForce:
+    def __init__(self, board):
+        self.board = board
+
+    def brute_force(self):
+        """
+        try to solve a board of nonogram by trying everything (brute force)
+        """
+        result = self._brute_force_helper(0, 0)
+        if result:
+            return self
+
+    def _brute_force_helper(self, row_id, col_id):
+        """
+        this is a recursion function, we do recursion to solve it in brute force.
+        """
+        for color in [RED, BLACK, WHITE]:
+            self.board.fill(row_id, col_id, color, solve_type=BRUTE)
+            # check if this move works, if yes go to next cell.
+            if self.board.check_move(col_id, row_id):
+                if col_id + 1 < len(self.board.cols_constraints):
+                    res = self._brute_force_helper(row_id, col_id + 1)
+                    if res:
+                        return res
+                elif row_id + 1 < len(self.board.rows_constraints):
+                    res2 = self._brute_force_helper(row_id + 1, 0)
+                    if res2:
+                        return res2
+                else:
+                    #  finished - the board is complete
+                    return self
+        # no color is correct
+        self.board.fill(row_id, col_id, EMPTY, solve_type=BRUTE)
+        return
+
+
 # We didn't use this problem, because we got better results using the cells problem.
 class NonogramConstraintsProblem(SearchProblem):
     """
@@ -167,39 +203,3 @@ class NonogramConstraintsProblem(SearchProblem):
                         self.board.fill(row, col, EMPTY)
                 # Update the done rows list
                 self.board.filling_row_order = self.board.filling_row_order[:index_in_list]
-
-
-class BruteForce:
-    def __init__(self, board):
-        self.board = board
-
-    def brute_force(self):
-        """
-        try to solve a board of nonogram by trying everything (brute force)
-        """
-        result = self._brute_force_helper(0, 0)
-        if result:
-            return self
-
-    def _brute_force_helper(self, row_id, col_id):
-        """
-        this is a recursion function, we do recursion to solve it in brute force.
-        """
-        for color in [RED, BLACK, WHITE]:
-            self.board.fill(row_id, col_id, color, solve_type=BRUTE)
-            # check if this move works, if yes go to next cell.
-            if self.board.check_move(col_id, row_id):
-                if col_id + 1 < len(self.board.cols_constraints):
-                    res = self._brute_force_helper(row_id, col_id + 1)
-                    if res:
-                        return res
-                elif row_id + 1 < len(self.board.rows_constraints):
-                    res2 = self._brute_force_helper(row_id + 1, 0)
-                    if res2:
-                        return res2
-                else:
-                    #  finished - the board is complete
-                    return self
-        # no color is correct
-        self.board.fill(row_id, col_id, EMPTY, solve_type=BRUTE)
-        return

@@ -57,7 +57,8 @@ def search_helper(problem, actions, search_type=DFS):
             problem.board.filled_cells -= 1
             if search_type == DFS or search_type == ASTAR:
                 while problem.board.current_cell.color == WHITE:
-                    problem.board.fill(problem.board.current_cell.row, problem.board.current_cell.col, EMPTY, search_type)
+                    problem.board.fill(problem.board.current_cell.row, problem.board.current_cell.col, EMPTY,
+                                       search_type)
                     problem.board.back_to_the_prev_cell()
                     problem.board.filled_cells -= 1
             else:
@@ -124,39 +125,6 @@ def breadth_first_search(problem):
     return None
 
 
-def null_heuristic(state, problem=None):
-    """
-    A heuristic function estimates the cost from the current state to the nearest
-    goal in the provided SearchProblem.  This heuristic is trivial.
-    """
-    return 0
-
-
-def a_star_search(problem, heuristic=null_heuristic):
-    """
-    Search the node that has the lowest combined cost and heuristic first.
-    """
-    fringe = util.PriorityQueue()
-    fringe.push(StateAndActions(problem.get_start_state(), [], 0), 0)
-    while not fringe.isEmpty():
-        current = fringe.pop()
-        problem.cost = current.cost
-        gui_helper(current.state)
-        res = search_helper(problem, current.actions, search_type=ASTAR)
-        if res == -1:
-            return -1
-        elif res:
-            # Get the successors of the current board, if it is not the goal state.
-            if problem.is_goal_state(current.state):
-                gui_helper(current.state)
-                return current.state
-            for child in problem.get_successors(current.state):
-                child_cost = problem.get_cost_of_actions(child[1])
-                heuristic_cost = child_cost + heuristic(child[1][0], problem)  # TODO
-                fringe.push(StateAndActions(child[0], child[1], heuristic_cost), heuristic_cost)
-    return None  # No Solution
-
-
 def local_beam_search_helper(problem, k_states, k):
     """
     Helper function for LBS, none of the k_states is a goal state.
@@ -197,7 +165,7 @@ def local_beam_search_helper(problem, k_states, k):
 
 def get_random_stats(board, n):
     random_state = Board.Board(rows_constraints=board.rows_constraints, cols_constraints=board.cols_constraints,
-                        randomly=board.randomly, size=board.size, cur_game=board.cur_game)
+                               randomly=board.randomly, size=board.size, cur_game=board.cur_game)
     initial_cells = set()
     cur_k = 0
     while cur_k < n:
@@ -245,3 +213,64 @@ def local_beam_search(problem, k):
         if is_legal:
             legal_k_states.append(current)
     return local_beam_search_helper(problem, legal_k_states, k)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# def null_heuristic(state, problem=None):
+#     """
+#     A heuristic function estimates the cost from the current state to the nearest
+#     goal in the provided SearchProblem.  This heuristic is trivial.
+#     """
+#     return 0
+#
+#
+# def a_star_search(problem, heuristic=null_heuristic):
+#     """
+#     Search the node that has the lowest combined cost and heuristic first.
+#     """
+#     fringe = util.PriorityQueue()
+#     fringe.push(StateAndActions(problem.get_start_state(), [], 0), 0)
+#     while not fringe.isEmpty():
+#         current = fringe.pop()
+#         problem.cost = current.cost
+#         gui_helper(current.state)
+#         res = search_helper(problem, current.actions, search_type=ASTAR)
+#         if res == -1:
+#             return -1
+#         elif res:
+#             # Get the successors of the current board, if it is not the goal state.
+#             if problem.is_goal_state(current.state):
+#                 gui_helper(current.state)
+#                 return current.state
+#             for child in problem.get_successors(current.state):
+#                 child_cost = problem.get_cost_of_actions(child[1])
+#                 heuristic_cost = child_cost + heuristic(child[1][0], problem)
+#                 fringe.push(StateAndActions(child[0], child[1], heuristic_cost), heuristic_cost)
+#     return None  # No Solution

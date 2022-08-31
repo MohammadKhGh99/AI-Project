@@ -1,4 +1,5 @@
 import math
+import time
 from abc import abstractmethod
 
 from config import *
@@ -225,6 +226,8 @@ class CSP:
         variable = self.select_unassigned_variable(assignment)
         # get every possible domain value that are in order for this unassigned variable
         for value in self.order_domain_values(variable, assignment):
+            if (time.time() - Board.Board.different_time - Board.Board.before_time) >= 180:
+                return -1
             # check if there is a conflicts between variables and assignments
             if FC in self.csp_types or self.nconflicts2(variable, value, assignment) == 0:
                 # perfect! no conflict, assign the value to variable
@@ -232,7 +235,8 @@ class CSP:
 
                 # backtrack baby
                 result = self.backtracking_search_rec(assignment)
-
+                if result == -1:
+                    return -1
                 # if we didn't find the result, we will end up backtracking
                 if result is not None:
                     return result
@@ -520,7 +524,11 @@ def run_CSP(board, same_board, types_of_csps=None):
     # MRV, DEGREE, LCV, FC, AC, ALL_CSPS
     if types_of_csps is None:
         types_of_csps = set()
-    cur_csp.backtracking_search(types_of_csps, same_board)
+    res = cur_csp.backtracking_search(types_of_csps, same_board)
+    if res == -1:
+        return -1
+    elif res is None:
+        return None
 
     return cur_csp.board
 

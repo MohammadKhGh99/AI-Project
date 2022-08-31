@@ -60,7 +60,6 @@ class Constraint:
 
 class Board:
     gui = None
-    # moves = []
     before_time = 0
     different_time = 0
 
@@ -95,7 +94,6 @@ class Board:
     @staticmethod
     def start_gui(board):
         Board.gui = GUI(board=board, cur_game=board.cur_game)
-        # Board.gui.create_board(board)
         Board.gui.root.mainloop()
 
     def clear_board(self):
@@ -125,10 +123,6 @@ class Board:
         for col_con in self.cols_constraints:
             for con in col_con:
                 con.completed = False
-        # Board.moves = []
-
-        # Board.gui.board = Board(rows_constraints=self.rows_constraints, cols_constraints=self.cols_constraints, randomly=self.randomly, size=self.size, cur_game=self.cur_game)
-        # return Board(rows_constraints=self.rows_constraints, cols_constraints=self.cols_constraints, randomly=self.randomly, size=self.size, cur_game=self.cur_game)
 
     def unfill(self, r, c):
         if r < self.num_rows and c < self.num_cols:
@@ -162,7 +156,6 @@ class Board:
         if r < self.num_rows and c < self.num_cols:
             if self.board[r][c].color == EMPTY:
                 self.filled_cells += 1
-            # filled_before = True if self.board[r][c].color != EMPTY else False
             self.board[r][c].color = color
             self.flipped[c][r].color = color
             if Board.gui:
@@ -171,13 +164,12 @@ class Board:
             # I found that this way is faster
             self.to_print = self.to_print[:cur] + repr(self.board[r][c]) + self.to_print[cur + 1:]
 
-            # self.filled_cells += 0 if filled_before else 1
             if (solve_type == BRUTE or solve_type == CSP_P or solve_type == BFS) and Board.gui is not None and Board.gui.canvas is not None:
                 before = time.time()
-                # time.sleep(0.1)
+                time.sleep(0.1)
                 temp = Board.gui.board_rectangles_locs[r][c]
                 Board.gui.canvas.create_rectangle(temp[0], temp[1], temp[2], temp[3],
-                                                  fill=COLORS_DICT[self.board[r][c].__repr__()], tags='rect')
+                                                  fill=COLORS_DICT[repr(self.board[r][c])], tags='rect')
                 Board.gui.root.update()
                 Board.different_time += (time.time() - before)
 
@@ -305,12 +297,10 @@ class Board:
         else:
             constraints_for_row = self.rows_constraints[row_id]
 
-        # constraints_for_row = self.rows_constraints[row_id] if not flipped else self.cols_constraints[row_id]
         if flipped:
             current_row = self.flipped[row_id]
         else:
             current_row = self.board[row_id]
-        # current_row = self.flipped[row_id] if flipped else self.board[row_id]
 
         # constraint:
         curr_constraint_id = 0

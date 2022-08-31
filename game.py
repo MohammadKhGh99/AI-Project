@@ -86,8 +86,6 @@ class Game:
 
         if Game.first_one and gui_or_print == IS_GUI:
             Board.start_gui(self.board)
-        # elif gui_or_print == PRINT:
-        #     self.run(solve_type)
 
     @staticmethod
     def new_game(cur_game):
@@ -337,39 +335,38 @@ class Game:
             elif solve_type == DFS:
                 print("DFS")
                 resulted_board = search.depth_first_search(problem=dfs_problem)
-            elif solve_type == ASTAR:
-                print("A*")
-                resulted_board = search.a_star_search(problem=astar_problem)
             elif solve_type == LBS:
                 print("LBS")
                 k = 1 if k == '' else int(k)
                 resulted_board = search.local_beam_search(problem=lbs_problem, k=k)
             elif solve_type == CSP_P:
                 print("CSP")
-                print(csps)
                 resulted_board = csp.run_CSP(self.board, types_of_csps=csps, same_board=self.ran_before)
                 self.ran_before = True
 
         after = time.time()
         all_time = after - Board.before_time - Board.different_time
-        # print(f"Time:  {all_time} Seconds")
+
         if resulted_board == -1:
             result = -1
-        elif resulted_board is not None:  # and type(resulted_board) is not int:
+        elif resulted_board is not None:
             result = True
         else:
             result = False
 
-        if not result:
-            print(solve_type)
+
         if solve_type not in self.times_dict.keys():
             if solve_type == CSP_P:
                 self.times_dict[(solve_type, *csps, result)] = [all_time]
+            elif solve_type == LBS:
+                self.times_dict[(solve_type, k, result)] = [all_time]
             else:
                 self.times_dict[(solve_type, result)] = [all_time]
         else:
             if solve_type == CSP_P:
                 self.times_dict[(solve_type, *csps, result)].append(all_time)
+            elif solve_type == LBS:
+                self.times_dict[(solve_type, k, result)].append(all_time)
             else:
                 self.times_dict[(solve_type, result)].append(all_time)
 
@@ -378,7 +375,7 @@ class Game:
                 if resulted_board == -1:
                     cur_gui.timeout_time(solve_type)
                     Board.gui.timeout_msg()
-                elif resulted_board is not None:  # and type(resulted_board) is not int:
+                elif resulted_board is not None:
                     # show time of the running algorithm
                     resulted_board.gui.success_time(solve_type, all_time)
                     Board.gui.success_msg()
@@ -391,7 +388,7 @@ class Game:
                 if resulted_board == -1:
                     print("Timeout Reached!", file=sys.stderr)
                     print("End")
-                elif resulted_board is not None:  # and type(resulted_board) is not int:
+                elif resulted_board is not None:
                     print(f"Success!\nYou Got the Solution, Time Taken: {all_time}")
                     print("This is the resulted board:")
                     resulted_board.print_board()
@@ -653,16 +650,73 @@ def main():
     print("Hard Mode 10x10 Results:")
     print(hard_10_times)
 
+    hard_15_times = dict()
+    # Which of the algorithms is the fastest one in finding the solution if the board made as hard to solve.
+    print("\nHard Mode 15x15 Boards:\n")
+    for _ in range(10):
+        my_game = Game(size=(15, 15), difficulty=HARD, gui_or_print=PRINT)
+        n = my_game.board.num_cols * my_game.board.num_rows
+        lbs_k = [1] + [(n // 2) * i for i in range(1, 5)]
+        # testing with all the algorithms
+        for solve_type in ALL_ALGOS:
+            if solve_type == CSP_P:
+                # testing with all the combinations of the csp
+                for comb in combs:
+                    my_game.run(solve_type, csps=comb, test=True)
+            elif solve_type == LBS:
+                for k in lbs_k:
+                    my_game.run(solve_type, k=k, test=True)
+            else:
+                my_game.run(solve_type, test=True)
+
+            # saving the times of each board
+        for k, v in my_game.times_dict.items():
+            if k in hard_15_times.keys():
+                hard_15_times[k] += v
+            else:
+                hard_15_times[k] = v
+    hard_15_times = {k: sum(v) / len(v) for k, v in hard_15_times.items()}
+
+    print("Hard Mode 15x15 Results:")
+    print(hard_15_times)
+
 
 if __name__ == "__main__":
     main()
 
-    # default running: python3 game.py
+    # game = Game(csv_file="example1.csv")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    # # default running: python3 game.py
     # how_to_run = input("Enter how do you want to run the program, gui or print:  ")
     # if how_to_run == "gui":
     #     default_board = input("Do you want to enter board size or use the default size (5x5): y/n ? ")
-    #     # while default_board != 'n' and default_board != 'y':
-    #     #     default_board = input("Do you want to enter board size or use the default size (5x5): y/n ? ")
     #     if default_board == 'n':
     #         game = Game(gui_or_print=IS_GUI)
     #     elif default_board == 'y':
@@ -677,8 +731,6 @@ if __name__ == "__main__":
     #         exit(1)
     # elif how_to_run == 'print':
     #     default_board = input("Do you want to enter board size or use the default size (5x5): y/n ? ")
-    #     # while default_board != 'n' and default_board != 'y':
-    #     #     default_board = input("Do you want to enter board size or use the default size (5x5): y/n ? ")
     #     rows, columns = 5, 5
     #     if default_board == 'y':
     #         rows, columns = input("Enter size m,n  (m=rows n=columns): ").split(',')
@@ -689,7 +741,7 @@ if __name__ == "__main__":
     #             exit(1)
     #     else:
     #         exit(1)
-    #     solve_type = input("Enter Which algorithm you want to run brute,bfs,dfs,astar,lbs,csp: ")
+    #     solve_type = input("Enter Which algorithm you want to run brute,bfs,dfs,lbs,csp: ")
     #     k = 1
     #     csp_heus = set()
     #     if solve_type not in ALGOS_SYS_DICT.keys():

@@ -22,11 +22,10 @@ class GUI:
 
         self.canvas = Canvas(self.root, width=self.canvas_width, height=self.canvas_height, bg="white",
                              highlightbackground='black')
-        # self.canvas.pack(anchor='n', side=LEFT)
         self.canvas.place(x=10, y=40)
+
         # self.__flag = False
         # self.board = None
-
         # def play_sound():
         #     if not self.__flag and self.board is not None:
         #         self.__flag = True
@@ -58,7 +57,6 @@ class GUI:
             self.__cur_game.csps = []
             for label in self.labels.keys():
                 self.labels[label].destroy()
-                # self.labels.pop(label)
 
             self.labels = dict()
             for chk_b in check_buttons:
@@ -93,33 +91,12 @@ class GUI:
         bfs_button.config(height=1, width=10)
         bfs_button.place(x=865, y=185)
 
-        # def run_astar():
-        #     self.__cur_game.run(ASTAR)
-        #
-        # astar_button = Button(self.root, text="ASTAR", command=run_astar)
-        # astar_button.config(height=1, width=10)
-        # astar_button.place(x=865, y=245)
-
         def run_lbs():
             self.__cur_game.run(LBS, k=lbs_text_box.get("1.0", "end-1c").replace(' ', ''))
 
-        # chosen_k = StringVar(self.root)
-        # chosen_k.set("1")
         lbs_text_box = Text(self.root, bg="grey")
         lbs_text_box.config(height=1, width=3)
         lbs_text_box.place(x=822, y=250)
-
-        # chosen_heu = StringVar(self.root)
-        # chosen_heu.set("0")
-        # astar_heus = ["1", "2"]
-        # astar_heus_menu = OptionMenu(self.root, chosen_heu, *astar_heus)
-        # astar_heus_menu.config(height=1, width=1)
-        # astar_heus_menu.place(x=815, y=245)
-
-        # k_options = [str(x) for x in range(1, self.board.num_rows * self.board.num_cols + 1)]
-        # lbs_option_menu = OptionMenu(self.root, chosen_k, *k_options)
-        # lbs_option_menu.config(height=1, width=1)
-        # lbs_option_menu.place(x=810, y=305)
 
         lbs_button = Button(self.root, text="LBS", command=run_lbs)
         lbs_button.config(height=1, width=10)
@@ -162,7 +139,6 @@ class GUI:
             check_buttons.append(fc_check)
             check_buttons.append(ac_check)
             check_buttons.append(run_csp_button)
-            # self.__cur_game.run(CSP_P)
 
         select_csp_button = Button(self.root, text="CSP", command=select_csps)
         select_csp_button.config(height=1, width=10)
@@ -173,7 +149,6 @@ class GUI:
 
         def exit_game():
             del self.__cur_game
-            # del self
             exit(1)
 
         exit_button = Button(self.root, text="exit", command=exit_game, background='red')
