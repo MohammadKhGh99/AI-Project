@@ -346,6 +346,7 @@ class Game:
                 resulted_board = search.local_beam_search(problem=lbs_problem, k=k)
             elif solve_type == CSP_P:
                 print("CSP")
+                print(csps)
                 resulted_board = csp.run_CSP(self.board, types_of_csps=csps, same_board=self.ran_before)
                 self.ran_before = True
 
@@ -359,14 +360,16 @@ class Game:
         else:
             result = False
 
+        if not result:
+            print(solve_type)
         if solve_type not in self.times_dict.keys():
             if solve_type == CSP_P:
-                self.times_dict[(solve_type, *self.csps, result)] = [all_time]
+                self.times_dict[(solve_type, *csps, result)] = [all_time]
             else:
                 self.times_dict[(solve_type, result)] = [all_time]
         else:
             if solve_type == CSP_P:
-                self.times_dict[(solve_type, *self.csps, result)].append(all_time)
+                self.times_dict[(solve_type, *csps, result)].append(all_time)
             else:
                 self.times_dict[(solve_type, result)].append(all_time)
 
@@ -654,7 +657,7 @@ def main():
 if __name__ == "__main__":
     main()
 
-    # # default running: python3 game.py
+    # default running: python3 game.py
     # how_to_run = input("Enter how do you want to run the program, gui or print:  ")
     # if how_to_run == "gui":
     #     default_board = input("Do you want to enter board size or use the default size (5x5): y/n ? ")
@@ -714,4 +717,4 @@ if __name__ == "__main__":
     #
     #     game = Game(size=(rows, columns), gui_or_print=PRINT)
     #     game.run(solve_type=ALGOS_SYS_DICT[solve_type], k=k, csps=csp_heus)
-
+    #

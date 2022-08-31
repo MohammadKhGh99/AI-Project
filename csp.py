@@ -138,7 +138,7 @@ class CSP:
 
         def conflict(var2):
             val2 = assignment.get(var2, None)
-            return val2 != None and not self.consistent2(var, val, var2, val2)
+            return val2 is not None and not self.consistent2(var, val, var2, val2)
 
         return self.count_matching(conflict, self.neighbors[var])
 
@@ -297,9 +297,6 @@ class CSP:
             domain_for_var = [val[0] for val in sorted_conflicts]
 
         return domain_for_var
-        #
-        # while domain_for_var:
-        #     yield domain_for_var.pop()
 
     def forward_check_old(self, variable, value, assignment):
         "Do forward checking for this assignment."
@@ -382,7 +379,6 @@ def get_variables_and_domains(board):
         variables.append(var)
         domains[var] = pos_col
 
-    # return variables, domains
     return variables, domains
 
 
@@ -472,7 +468,6 @@ def get_constraints_boundaries(board, constraint_type):
 
             old_cluster_end_pos -= con_reverse.length
             possible_positions[con_reverse][1] = old_cluster_end_pos
-            # old_cluster_end_pos = con_reverse.largest_most_left_pixel
             old_con_color = con_reverse.color
 
         all_positions_for_constraint_list.append(possible_positions)
@@ -502,7 +497,6 @@ def get_constrains_and_neighbors(board):
     for col_idx in range(len(board.cols_constraints)):
         temp_variable = (COLUMNS, col_idx)
         neighbors[temp_variable] = rows_constraints
-        # constraints.append(RowColumnConstraint(temp_variable, *rows_constraints))
 
     return constraints, neighbors
 
@@ -527,8 +521,6 @@ def run_CSP(board, same_board, types_of_csps=None):
     if types_of_csps is None:
         types_of_csps = set()
     cur_csp.backtracking_search(types_of_csps, same_board)
-    # if res:
-    #     print_result(res, str("Normal"))
 
     return cur_csp.board
 

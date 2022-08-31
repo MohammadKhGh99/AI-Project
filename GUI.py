@@ -1,9 +1,9 @@
 # this file contains the gui code to represent our solving process.
-import os
 from tkinter import messagebox
 from copy import deepcopy
 from config import *
 from tkinter import *
+
 
 class GUI:
     def __init__(self, board=None, title="Two Colors Nonogram Game", window_width=GUI_WIDTH, window_height=GUI_HEIGHT,
@@ -24,20 +24,18 @@ class GUI:
                              highlightbackground='black')
         # self.canvas.pack(anchor='n', side=LEFT)
         self.canvas.place(x=10, y=40)
-        self.__flag = False
-        self.board = None
+        # self.__flag = False
+        # self.board = None
 
         # def play_sound():
         #     if not self.__flag and self.board is not None:
         #         self.__flag = True
-        #         os.system(r'gui_files\background_music.wav')
-        #         # return PlaySound(r'gui_files\background_music.wav', SND_ALIAS | SND_ASYNC)
+        #         return PlaySound(r'gui_files\background_music.wav', SND_ALIAS | SND_ASYNC)
         #     else:
         #         self.__flag = False
-        #         os.system('')
         #         return PlaySound(None, SND_PURGE)
         # play_sound()
-        # # sound_icon = PhotoImage(file=r'gui_files\test.png')
+        # sound_icon = PhotoImage(file=r'gui_files\test.png')
         # sound_button = Button(self.root, text="sound", command=play_sound)
         # sound_button.config(height=1, width=5)
         # sound_button.place(x=950, y=1)

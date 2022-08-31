@@ -38,7 +38,7 @@ CSP_P = 5
 
 ALGOS_DICT = {BRUTE: "Brute Force", BFS: "BFS", DFS: "DFS", ASTAR: "A*", LBS: "LBS", CSP_P: "CSP"}
 
-ALL_ALGOS = [BRUTE, BFS, DFS, ASTAR, LBS, CSP_P]
+ALL_ALGOS = [BRUTE, BFS, DFS, LBS, CSP_P]
 
 IS_GUI = True
 PRINT = False
@@ -48,7 +48,7 @@ HARD = False
 
 COLORS_N_DICT = {EMPTY: ' ', WHITE: 'w', BLACK: 'b', RED: 'r'}
 
-LOCS_DICT = {BRUTE: (865, 65), DFS: (865, 125), BFS: (865, 185), ASTAR: (865, 245), LBS: (865, 305), CSP_P: (865, 365)}
+LOCS_DICT = {BRUTE: (865, 65), DFS: (865, 125), BFS: (865, 185), LBS: (865, 245), CSP_P: (865, 310)}
 
 # CSP TYPES #:
 MRV = 1
