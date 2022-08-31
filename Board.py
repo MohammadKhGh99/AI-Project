@@ -3,7 +3,6 @@ import time
 from GUI import GUI
 from config import *
 from typing import List
-from copy import deepcopy
 
 
 class Cell:
@@ -301,9 +300,17 @@ class Board:
         return True if this move works and legit, false otherwise
         IMPORTANT NOTE: this doesn't show that this step is correct, it just checks if it could be there.
         """
+        if flipped:
+            constraints_for_row = self.cols_constraints[row_id]
+        else:
+            constraints_for_row = self.rows_constraints[row_id]
 
-        constraints_for_row = self.rows_constraints[row_id] if not flipped else self.cols_constraints[row_id]
-        current_row = self.flipped[row_id] if flipped else self.board[row_id]
+        # constraints_for_row = self.rows_constraints[row_id] if not flipped else self.cols_constraints[row_id]
+        if flipped:
+            current_row = self.flipped[row_id]
+        else:
+            current_row = self.board[row_id]
+        # current_row = self.flipped[row_id] if flipped else self.board[row_id]
 
         # constraint:
         curr_constraint_id = 0

@@ -1,5 +1,4 @@
 # this file contains the gui code to represent our solving process.
-import time as t
 from tkinter import messagebox
 from copy import deepcopy
 from config import *
@@ -236,6 +235,9 @@ class GUI:
     def failed_msg(self):
         messagebox.showerror('Failed', 'You didn\'t find the solution')
 
+    def timeout_msg(self):
+        messagebox.showerror('Timeout', 'Timeout Reached!')
+
     def success_time(self, solve_type, timing):
         if solve_type in self.labels.keys():
             self.labels[solve_type].destroy()
@@ -243,7 +245,7 @@ class GUI:
 
         loc = LOCS_DICT[solve_type]
         label = Label(self.root, text=str(timing), bg='light green')
-        label.place(x=loc[0] - 30, y=loc[1] + 27)
+        label.place(x=loc[0] - 30, y=loc[1] + 33)
         self.labels[solve_type] = label
 
     def failure_time(self, solve_type, timing):
@@ -252,5 +254,16 @@ class GUI:
             self.labels.pop(solve_type)
         loc = LOCS_DICT[solve_type]
         label = Label(self.root, text=str(timing), bg='red')
-        label.place(x=loc[0] - 30, y=loc[1] + 30)
+        label.place(x=loc[0] - 30, y=loc[1] + 33)
         self.labels[solve_type] = label
+
+    def timeout_time(self, solve_type):
+        if solve_type in self.labels.keys():
+            self.labels[solve_type].destroy()
+            self.labels.pop(solve_type)
+        loc = LOCS_DICT[solve_type]
+        label = Label(self.root, text="Timeout", bg='red')
+        label.place(x=loc[0] - 30, y=loc[1] + 33)
+        self.labels[solve_type] = label
+
+

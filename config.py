@@ -61,3 +61,5 @@ ALL_CSPS = {1, 2, 3, 4, 5}
 
 NULL_HEU = 0
 OUR_HEU = 1
+
+ALGOS_SYS_DICT = {"brute": BRUTE, "bfs": BFS, "dfs": DFS, "astar": ASTAR, "lbs": LBS, "csp": CSP_P}

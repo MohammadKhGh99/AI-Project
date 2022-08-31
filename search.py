@@ -67,9 +67,11 @@ def search_helper(problem, actions, search_type=DFS):
     problem.board.move_to_the_next_cell()
     get_successors = True
     for move in actions:
+        if time.time() - Board.Board.different_time - Board.Board.before_time >= 180:
+            return -1
         # Try to fill the move on the board, and check if it legal.
         problem.board.fill(move.row, move.col, move.color, search_type)
-        if not problem.board.check_move(move.col, move.row):
+        if not problem.board.check_move(move.row, move.col):
             get_successors = False
             problem.board.back_to_the_prev_cell()
             problem.board.filled_cells -= 1
@@ -94,14 +96,16 @@ def depth_first_search(problem):
         current = fringe.pop()
         problem.board = current[0]
         gui_helper(current[0])
-        if search_helper(problem, current[1]):
+        if search_helper(problem, current[1]) == -1:
+            return -1
+        elif search_helper(problem, current[1]):
             # Get the successors of the current board, if it is not the goal state.
             if problem.is_goal_state(current[0]):
                 gui_helper(current[0])
                 return current[0]
             for child in problem.get_successors(current[0]):
                 fringe.push((child[0], child[1]))
-    return -1  # No Solution
+    return None  # No Solution
 
 
 def bfs_helper(problem, depth):
@@ -111,7 +115,10 @@ def bfs_helper(problem, depth):
         return None
 
     for child in problem.get_successors(problem.board):
-        if search_helper(problem, child[1], BFS):
+
+        if search_helper(problem, child[1], BFS) == -1:
+            return -1
+        elif search_helper(problem, child[1], BFS):
             # Get the successors of the current board, if it is not the goal state.
             state = bfs_helper(problem, depth - 1)
             if state is not None:
@@ -127,7 +134,10 @@ def breadth_first_search(problem):
     problem.board.move_to_the_next_cell()
     depth = problem.board.num_cols * problem.board.num_rows
     for i in range(depth + 1):
+        print(f"index: {i}")
         state = bfs_helper(problem, i)
+        if state == -1:
+            return -1
         if depth == i:
             gui_helper(state)
         if state is not None:
@@ -153,7 +163,9 @@ def a_star_search(problem, heuristic=null_heuristic):
         current = fringe.pop()
         problem.cost = current.cost
         gui_helper(current.state)
-        if search_helper(problem, current.actions, current.actions):
+        if search_helper(problem, current.actions, search_type=ASTAR) == -1:
+            return -1
+        elif search_helper(problem, current.actions, search_type=ASTAR):
             # Get the successors of the current board, if it is not the goal state.
             if problem.is_goal_state(current.state):
                 gui_helper(current.state)
@@ -162,7 +174,7 @@ def a_star_search(problem, heuristic=null_heuristic):
                 child_cost = problem.get_cost_of_actions(child[1])
                 heuristic_cost = child_cost + heuristic(child[1][0], problem)  # TODO
                 fringe.push(StateAndActions(child[0], child[1], heuristic_cost), heuristic_cost)
-    return -1  # No Solution
+    return None  # No Solution
 
 
 def local_beam_search_helper(problem, k_states, k):
@@ -180,7 +192,9 @@ def local_beam_search_helper(problem, k_states, k):
                 if (move_coordinates in current.initial_cells) and (
                         successor[1][0].color != problem.board.board[move_coordinates[0]][move_coordinates[1]].color):
                     continue
-                if search_helper(problem, successor[1]):
+                if search_helper(problem, successor[1]) == -1:
+                    return -1
+                elif search_helper(problem, successor[1]):
                     if problem.is_goal_state(problem.board):
                         gui_helper(problem.board)
                         return problem.board
@@ -249,12 +263,12 @@ def local_beam_search(problem, k):
             return current.state
         is_legal = True
         for cell in current.initial_cells:
-            if not problem.board.check_move(cell[1], cell[0]):
+            if not problem.board.check_move(cell[0], cell[1]):
                 is_legal = False
                 break
         if is_legal:
             legal_k_states.append(current)
-    print(len(legal_k_states))
+    print(f"Legal States: {len(legal_k_states)}")
     return local_beam_search_helper(problem, legal_k_states, k)  # , value_function)
 
 
@@ -262,6 +276,7 @@ def local_beam_search(problem, k):
 bfs = breadth_first_search
 dfs = depth_first_search
 astar = a_star_search
+
 
 # import time
 #
