@@ -78,6 +78,7 @@ class Board:
         self.current_cell = Cell(0, -1)
         self.current_row_constraint = -1
         self.filled_cells = 0
+        self.filling_row_order = []
 
         self.rects = []
         self.rects_shapes = []
@@ -106,11 +107,12 @@ class Board:
         for r in range(self.num_rows):
             for c in range(self.num_cols):
                 self.board[r][c].color = EMPTY
-                self.flipped[r][c].color = EMPTY
+                self.flipped[c][r].color = EMPTY
                 self.moves = []
                 self.current_cell = Cell(0, -1)
                 self.current_row_constraint = -1
                 self.filled_cells = 0
+                self.filling_row_order = []
                 if Board.gui:
                     Board.gui.board.board[r][c].color = EMPTY
                     Board.gui.board.cells_locations = []
@@ -407,6 +409,8 @@ class Board:
                 else:
                     raise Exception("this is an impossible situation, hmmmmmm")
 
+            elif not problem_type and empty_flag and current_row[0].color == EMPTY:
+                return True
             else:
                 return False
 
