@@ -196,7 +196,7 @@ class Board:
                 # this done to not include the gui time in the final time of the running algorithm
                 Board.different_time += (time.time() - before)
 
-            if Board.gui is not None:
+            if Board.gui is not None and self.board[r][c] not in self.rects:
                 self.rects.append(self.board[r][c])
             return True
         return False

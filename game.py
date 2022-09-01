@@ -696,6 +696,7 @@ def main():
     # default running: python3 game.py
     how_to_run = input("Enter how do you want to run the program, gui or print:  ")
     if how_to_run == "gui":
+        Game.first_one = True
         default_board = input("Do you want to enter board size or use the default size (5x5): y/n ? ")
         if default_board == 'n':
             game = Game(gui_or_print=IS_GUI)

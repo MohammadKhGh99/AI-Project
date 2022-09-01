@@ -89,7 +89,9 @@ class CSP:
 
         if self.curr_domains:
             if FC in self.csp_types:
-                self.forward_check(var, val, assignment)
+                res = self.forward_check(var, val, assignment)
+                if res == -1:
+                    return -1
 
     def unassign(self, var, assignment):
         """ delete the assigned value from this variable"""
@@ -190,7 +192,9 @@ class CSP:
             # check if there is a conflicts between variables and assignments
             if FC in self.csp_types or self.nconflicts2(variable, value, assignment) == 0:
                 # perfect! no conflict, assign the value to variable
-                self.assign(variable, value, assignment)
+                res = self.assign(variable, value, assignment)
+                if res == -1:
+                    return -1
 
                 # backtrack baby
                 result = self.backtracking_search_rec(assignment)
@@ -268,6 +272,8 @@ class CSP:
             for other_variable in self.neighbors[variable]:
                 if other_variable not in assignment:
                     for other_value in self.curr_domains[other_variable][:]:
+                        if (time.time() - Board.Board.different_time - Board.Board.before_time) >= 180:
+                            return -1
                         if not self.consistent2(variable, value, other_variable, other_value):
                             self.curr_domains[other_variable].remove(other_value)
                             self.pruned[variable].append((other_variable, other_value))
