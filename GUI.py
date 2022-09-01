@@ -1,4 +1,3 @@
-# this file contains the gui code to represent our solving process.
 from tkinter import messagebox
 from copy import deepcopy
 from config import *
@@ -6,6 +5,9 @@ from tkinter import *
 
 
 class GUI:
+    """
+    This class handle the gui and all its features.
+    """
     def __init__(self, board=None, title="Two Colors Nonogram Game", window_width=GUI_WIDTH, window_height=GUI_HEIGHT,
                  cur_game=None):
         self.__cur_game = cur_game
@@ -23,6 +25,10 @@ class GUI:
         self.canvas = Canvas(self.root, width=self.canvas_width, height=self.canvas_height, bg="white",
                              highlightbackground='black')
         self.canvas.place(x=10, y=40)
+
+        # this adds a sound button to the gui, when clicked a music will be played, but we have removed it because it
+        # won't play on linux, and we don't know if you will run it on linux or not so, if you're going to run
+        # the program on Windows remove the hashtags to add this nice feature.
 
         # self.__flag = False
         # self.board = None
@@ -45,8 +51,35 @@ class GUI:
         self.create_board(board)
         self.labels = dict()
 
+        rows_text = Text(self.canvas, bg="grey")
+        rows_text.config(height=1, width=3)
+        rows_text.place(x=100, y=50)
+
+        columns_text = Text(self.canvas, bg="grey")
+        columns_text.config(height=1, width=3)
+        columns_text.place(x=140, y=50)
+
         def new_game():
-            self.__cur_game = self.__cur_game.new_game(self.__cur_game)
+            try:
+                tmp1 = rows_text.get("1.0", "end-1c").replace(' ', '').strip()
+                tmp2 = columns_text.get("1.0", "end-1c").replace(' ', '').strip()
+                if tmp1 != '' and tmp2 != '':
+                    rows_num = int(tmp1)
+                    columns_num = int(tmp2)
+                elif tmp1 == '' and tmp2 != '':
+                    rows_num = self.__cur_game.board.num_rows
+                    columns_num = int(tmp2)
+                elif tmp1 != '' and tmp2 == '':
+                    rows_num = int(tmp1)
+                    columns_num = self.__cur_game.board.num_cols
+                else:
+                    rows_num = self.__cur_game.board.num_rows
+                    columns_num = self.__cur_game.board.num_cols
+            except Exception:
+                rows_num = self.__cur_game.board.num_rows
+                columns_num = self.__cur_game.board.num_cols
+            self.__cur_game = self.__cur_game.new_game(self.__cur_game, size=(rows_num, columns_num))
+
 
         new_game_button = Button(self.canvas, text="new game", command=new_game)
         new_game_button.config(height=1, width=8)
@@ -92,7 +125,7 @@ class GUI:
         bfs_button.place(x=865, y=185)
 
         def run_lbs():
-            self.__cur_game.run(LBS, k=lbs_text_box.get("1.0", "end-1c").replace(' ', ''))
+            self.__cur_game.run(LBS, k=lbs_text_box.get("1.0", "end-1c").replace(' ', '').strip())
 
         lbs_text_box = Text(self.root, bg="grey")
         lbs_text_box.config(height=1, width=3)
@@ -148,8 +181,7 @@ class GUI:
             self.__cur_game.run(CSP_P, csps=self.__cur_game.csps)
 
         def exit_game():
-            del self.__cur_game
-            exit(1)
+            self.root.destroy()
 
         exit_button = Button(self.root, text="exit", command=exit_game, background='red')
         exit_button.config(height=1, width=4)
@@ -159,7 +191,7 @@ class GUI:
         self.board = deepcopy(board)
 
         x, y = 260, 230
-        tmp = min((self.canvas_height - x) // self.board.num_rows, (self.canvas_width - y) // self.board.num_cols)
+        tmp = min((self.canvas_height - y) // self.board.num_rows, (self.canvas_width - x) // self.board.num_cols)
         col_width, row_width = tmp, tmp
 
         self.board_rectangles_locs = []

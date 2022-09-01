@@ -173,47 +173,6 @@ class CSP:
             self.AC3(None)
         return self.backtracking_search_rec({})
 
-    def backtracking_search_rec_old(self, assignment=None):
-        """ this is the recursive backtracking search"""
-        # assignment is complete if every variable is assigned (our base case)
-        if assignment is None:
-            assignment = {}
-        if len(assignment) == len(self.variables):
-            return assignment
-
-        # get the first variable in the CSP but not in the assignment
-        variable = self.select_unassigned_variable(assignment)
-        # get every possible domain value that are in order for this unassigned variable
-        for value in self.order_domain_values(variable, assignment):
-            # check if there is a conflicts between variables and assignments
-            if FC in self.csp_types and value not in self.curr_domains[variable]:
-                continue
-            if FC in self.csp_types or self.nconflicts2(variable, value, assignment) == 0:
-                # perfect! no conflict, assign the value to variable
-                self.assign(variable, value, assignment)
-                no_solution_flag_FC = False
-                if FC in self.csp_types:
-                    # check forward if this helps us or there is no solution
-                    for var in self.variables:
-                        if len(self.curr_domains[var]) == 0 and var != variable:
-                            no_solution_flag_FC = True
-                            break
-                # backtrack baby
-                if not no_solution_flag_FC:
-                    result = self.backtracking_search_rec(assignment)
-                else:
-                    # this was a bad value, reverse the pruning now:
-                    for tuple_pruned in self.pruned[variable]:
-                        self.curr_domains[tuple_pruned[0]].append(tuple_pruned[1])
-                    self.pruned[variable] = []
-                    continue
-                # if we didn't find the result, we will end up backtracking
-                if result is not None:
-                    return result
-            # this might be a failure assigning, but don't give up, we will try again!
-            self.unassign(variable, assignment)
-        return None
-
     def backtracking_search_rec(self, assignment=None):
         """ this is the recursive backtracking search"""
         # assignment is complete if every variable is assigned (our base case)
@@ -301,25 +260,6 @@ class CSP:
             domain_for_var = [val[0] for val in sorted_conflicts]
 
         return domain_for_var
-
-    def forward_check_old(self, variable, value, assignment):
-        "Do forward checking for this assignment."
-        if self.curr_domains:
-            # Restore prunings from previous value of var
-            for (other_variable, other_value) in self.pruned[variable]:
-                self.curr_domains[other_variable].append(other_value)
-            self.pruned[variable] = []
-            # Prune any other other_variable=other_value assignment that conflict with variable=value
-            temp_assignment = {variable: value}
-            for other_variable in self.neighbors[variable]:
-                if other_variable not in assignment:
-                    temp_assignment[other_variable] = None
-                    for other_value in self.curr_domains[other_variable][:]:
-                        temp_assignment[other_variable] = other_value
-                        if not self.consistent(variable, temp_assignment):
-                            self.curr_domains[other_variable].remove(other_value)
-                            self.pruned[variable].append((other_variable, other_value))
-                    temp_assignment.pop(other_variable, None)
 
     def forward_check(self, variable, value, assignment):
         "Do forward checking for this assignment."
@@ -532,6 +472,7 @@ def run_CSP(board, same_board, types_of_csps=None):
 
     return cur_csp.board
 
+# for testing csp
 # ------------------------
 #
 # def test_all_new(game):
@@ -550,9 +491,7 @@ def run_CSP(board, same_board, types_of_csps=None):
 #
 #     all_csps_results = []
 #     for type_of_csp, csp in new_dict_all.items():
-#         # TODO - time start
 #         res = csp[1].backtracking_search(csp[0])
-#         # TODO - time finish
 #         if res:
 #             all_csps_results.append(print_result(res, type_of_csp))
 #         else:

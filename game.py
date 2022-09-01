@@ -1,6 +1,7 @@
 import itertools
 import random
 import sys
+import tkinter
 from copy import deepcopy
 import Board
 import agent
@@ -88,16 +89,18 @@ class Game:
             Board.start_gui(self.board)
 
     @staticmethod
-    def new_game(cur_game):
+    def new_game(cur_game, size=None):
         Board.gui.root.destroy()
         Board.gui = None
-        new_game_object = Game(csv_file=cur_game.csv_file, rows_constraints=cur_game.rows_constraints,
-                               cols_constraints=cur_game.cols_constraints, size=cur_game.size,
+        csv_file = cur_game.csv_file
+        if size is not None:
+            csv_file = None
+        new_game_object = Game(csv_file=csv_file, rows_constraints=cur_game.rows_constraints,
+                               cols_constraints=cur_game.cols_constraints, size=size,
                                always_solvable=cur_game.always_solvable, rows_or_cols=cur_game.rows_or_cols,
                                gui_or_print=cur_game.gui_or_print, difficulty=cur_game.difficulty, csps=cur_game.csps)
         if Board.gui is None:
             Board.start_gui(new_game_object.board)
-        # Game.times_lst = []
         Game.first_one = True
         return new_game_object
 
@@ -123,6 +126,10 @@ class Game:
         """
         with open(csv_file, 'r') as f:
             all_lines = f.readlines()
+
+        colors = all_lines[0][3:6]
+        if colors not in NONO_COLORS:
+            raise Exception("Wrong colors input!")
 
         lines = [line for line in all_lines if line.replace(' ', '') != '']
 
@@ -320,85 +327,91 @@ class Game:
         cur_gui = self.board.gui
 
         Board.before_time = time.time()
-        if solve_type == BRUTE:
-            print("Brute Force")
-            result = agent.BruteForce(self.board).brute_force()
-            resulted_board = result.board if result else None
-        else:
-            bfs_problem = agent.NonogramCellsProblem(self.board, BFS)
-            lbs_problem = agent.NonogramCellsProblem(self.board, LBS)
-            dfs_problem = agent.NonogramCellsProblem(self.board, DFS)
-            astar_problem = agent.NonogramCellsProblem(self.board, ASTAR)
-            if solve_type == BFS:
-                print("BFS")
-                resulted_board = search.breadth_first_search(problem=bfs_problem)
-            elif solve_type == DFS:
-                print("DFS")
-                resulted_board = search.depth_first_search(problem=dfs_problem)
-            elif solve_type == LBS:
-                print("LBS")
-                k = 1 if k == '' else int(k)
-                resulted_board = search.local_beam_search(problem=lbs_problem, k=k)
-            elif solve_type == CSP_P:
-                print("CSP")
-                resulted_board = csp.run_CSP(self.board, types_of_csps=csps, same_board=self.ran_before)
-                self.ran_before = True
-
-        after = time.time()
-        all_time = after - Board.before_time - Board.different_time
-
-        if resulted_board == -1:
-            result = -1
-        elif resulted_board is not None:
-            result = True
-        else:
-            result = False
-
-
-        if solve_type not in self.times_dict.keys():
-            if solve_type == CSP_P:
-                self.times_dict[(solve_type, *csps, result)] = [all_time]
-            elif solve_type == LBS:
-                self.times_dict[(solve_type, k, result)] = [all_time]
+        try:
+            if solve_type == BRUTE:
+                print("Brute Force")
+                res = agent.BruteForce(self.board).brute_force()
+                resulted_board = res.board if res else None
             else:
-                self.times_dict[(solve_type, result)] = [all_time]
-        else:
-            if solve_type == CSP_P:
-                self.times_dict[(solve_type, *csps, result)].append(all_time)
-            elif solve_type == LBS:
-                self.times_dict[(solve_type, k, result)].append(all_time)
+                bfs_problem = agent.NonogramCellsProblem(self.board, BFS)
+                lbs_problem = agent.NonogramCellsProblem(self.board, LBS)
+                dfs_problem = agent.NonogramCellsProblem(self.board, DFS)
+                if solve_type == BFS:
+                    print("BFS")
+                    resulted_board = search.breadth_first_search(problem=bfs_problem)
+                elif solve_type == DFS:
+                    print("DFS")
+                    resulted_board = search.depth_first_search(problem=dfs_problem)
+                elif solve_type == LBS:
+                    print("LBS")
+                    k = 1 if k == '' else int(k)
+                    resulted_board = search.local_beam_search(problem=lbs_problem, k=k)
+                elif solve_type == CSP_P:
+                    print("CSP")
+                    resulted_board = csp.run_CSP(self.board, types_of_csps=csps, same_board=self.ran_before)
+                    self.ran_before = True
+
+            after = time.time()
+            all_time = after - Board.before_time - Board.different_time
+
+            if resulted_board == -1:
+                result = -1
+            elif resulted_board is not None:
+                result = True
             else:
-                self.times_dict[(solve_type, result)].append(all_time)
+                result = False
 
-        if not test:
-            if self.gui_or_print == IS_GUI:
-                if resulted_board == -1:
-                    cur_gui.timeout_time(solve_type)
-                    Board.gui.timeout_msg()
-                elif resulted_board is not None:
-                    # show time of the running algorithm
-                    resulted_board.gui.success_time(solve_type, all_time)
-                    Board.gui.success_msg()
+            if solve_type not in self.times_dict.keys():
+                if solve_type == CSP_P:
+                    self.times_dict[(solve_type, *csps, result)] = [all_time]
+                elif solve_type == LBS:
+                    self.times_dict[(solve_type, k, result)] = [all_time]
                 else:
-                    cur_gui.failure_time(solve_type, all_time)
-                    Board.gui.failed_msg()
-                # to keep the window running
-                Board.gui.root.mainloop()
-            elif self.gui_or_print == PRINT:
-                if resulted_board == -1:
-                    print("Timeout Reached!", file=sys.stderr)
-                    print("End")
-                elif resulted_board is not None:
-                    print(f"Success!\nYou Got the Solution, Time Taken: {all_time}")
-                    print("This is the resulted board:")
-                    resulted_board.print_board()
-                    print("End")
+                    self.times_dict[(solve_type, result)] = [all_time]
+            else:
+                if solve_type == CSP_P:
+                    self.times_dict[(solve_type, *csps, result)].append(all_time)
+                elif solve_type == LBS:
+                    self.times_dict[(solve_type, k, result)].append(all_time)
                 else:
-                    print(f"Failure!\nYou didn\'t find the Solution, Time Taken: {all_time}", file=sys.stderr)
-                    print("End")
+                    self.times_dict[(solve_type, result)].append(all_time)
+
+            if not test:
+                if self.gui_or_print == IS_GUI:
+                    if resulted_board == -1:
+                        cur_gui.timeout_time(solve_type)
+                        Board.gui.timeout_msg()
+                    elif resulted_board is not None:
+                        # show time of the running algorithm
+                        resulted_board.gui.success_time(solve_type, all_time)
+                        Board.gui.success_msg()
+                    else:
+                        cur_gui.failure_time(solve_type, all_time)
+                        Board.gui.failed_msg()
+                    # to keep the window running
+                    Board.gui.root.mainloop()
+                elif self.gui_or_print == PRINT:
+                    if resulted_board == -1:
+                        print("Timeout Reached!", file=sys.stderr)
+                        print("End")
+                    elif resulted_board is not None:
+                        print(f"Success!\nYou Got the Solution, Time Taken: {all_time}")
+                        print("This is the resulted board:")
+                        resulted_board.print_board()
+                        print("End")
+                    else:
+                        print(f"Failure!\nYou didn\'t find the Solution, Time Taken: {all_time}", file=sys.stderr)
+                        print("End")
+                    new_game_or_not = input("Do you want to start a new game? y/n ")
+                    if new_game_or_not == 'y':
+                        main()
+                    else:
+                        exit(0)
+        except tkinter.TclError:
+            exit(0)
 
 
-def main():
+def testing():
     # All combinations of all the csp's heuristics
     combinations = [list(itertools.combinations(ALL_CSPS, i)) for i in range(1, len(ALL_CSPS) + 1)]
     combs = []
@@ -681,92 +694,70 @@ def main():
     print(hard_15_times)
 
 
+def main():
+    # default running: python3 game.py
+    how_to_run = input("Enter how do you want to run the program, gui or print:  ")
+    if how_to_run == "gui":
+        default_board = input("Do you want to enter board size or use the default size (5x5): y/n ? ")
+        if default_board == 'n':
+            game = Game(gui_or_print=IS_GUI)
+        elif default_board == 'y':
+            rows, columns = input("Enter size m,n  (m=rows n=columns): ").split(',')
+            try:
+                rows = int(rows)
+                columns = int(columns)
+            except Exception:
+                exit(1)
+            game = Game(size=(rows, columns), gui_or_print=IS_GUI)
+        else:
+            exit(1)
+    elif how_to_run == 'print':
+        default_board = input("Do you want to enter board size or use the default size (5x5): y/n ? ")
+        rows, columns = 5, 5
+        if default_board == 'y':
+            rows, columns = input("Enter size m,n  (m=rows n=columns): ").split(',')
+            try:
+                rows = int(rows)
+                columns = int(columns)
+            except Exception:
+                exit(1)
+        else:
+            exit(1)
+        solve_type = input("Enter Which algorithm you want to run brute,bfs,dfs,lbs,csp: ")
+        k = 1
+        csp_heus = set()
+        if solve_type not in ALGOS_SYS_DICT.keys():
+            exit(1)
+        if ALGOS_SYS_DICT[solve_type] == LBS:
+            k = input("Enter the number of initial states for LBS (as a number): ")
+            try:
+                k = int(k)
+            except Exception:
+                exit(1)
+        elif ALGOS_SYS_DICT[solve_type] == CSP_P:
+            csps = input("Enter the csp heuristics mrv,degree,lcv,fc,ac (separated with comma without spaces): ").split(
+                ',')
+            csp_heus = set()
+            for cs in csps:
+                if cs == 'mrv':
+                    csp_heus.add(MRV)
+                elif cs == 'degree':
+                    csp_heus.add(DEGREE)
+                elif cs == 'lcv':
+                    csp_heus.add(LCV)
+                elif cs == 'fc':
+                    csp_heus.add(FC)
+                elif cs == 'ac':
+                    csp_heus.add(AC)
+
+        game = Game(size=(rows, columns), gui_or_print=PRINT)
+        game.run(solve_type=ALGOS_SYS_DICT[solve_type], k=k, csps=csp_heus)
+
+
 if __name__ == "__main__":
     main()
 
+    # testing()
+
     # game = Game(csv_file="example1.csv")
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    # # default running: python3 game.py
-    # how_to_run = input("Enter how do you want to run the program, gui or print:  ")
-    # if how_to_run == "gui":
-    #     default_board = input("Do you want to enter board size or use the default size (5x5): y/n ? ")
-    #     if default_board == 'n':
-    #         game = Game(gui_or_print=IS_GUI)
-    #     elif default_board == 'y':
-    #         rows, columns = input("Enter size m,n  (m=rows n=columns): ").split(',')
-    #         try:
-    #             rows = int(rows)
-    #             columns = int(columns)
-    #         except Exception:
-    #             exit(1)
-    #         game = Game(size=(rows, columns), gui_or_print=IS_GUI)
-    #     else:
-    #         exit(1)
-    # elif how_to_run == 'print':
-    #     default_board = input("Do you want to enter board size or use the default size (5x5): y/n ? ")
-    #     rows, columns = 5, 5
-    #     if default_board == 'y':
-    #         rows, columns = input("Enter size m,n  (m=rows n=columns): ").split(',')
-    #         try:
-    #             rows = int(rows)
-    #             columns = int(columns)
-    #         except Exception:
-    #             exit(1)
-    #     else:
-    #         exit(1)
-    #     solve_type = input("Enter Which algorithm you want to run brute,bfs,dfs,lbs,csp: ")
-    #     k = 1
-    #     csp_heus = set()
-    #     if solve_type not in ALGOS_SYS_DICT.keys():
-    #         exit(1)
-    #     if ALGOS_SYS_DICT[solve_type] == LBS:
-    #         k = input("Enter the number of initial states for LBS (as a number): ")
-    #         try:
-    #             k = int(k)
-    #         except Exception:
-    #             exit(1)
-    #     elif ALGOS_SYS_DICT[solve_type] == CSP_P:
-    #         csps = input("Enter the csp heuristics mrv,degree,lcv,fc,ac (separated with comma without spaces): ").split(',')
-    #         csp_heus = set()
-    #         for cs in csps:
-    #             if cs == 'mrv':
-    #                 csp_heus.add(MRV)
-    #             elif cs == 'degree':
-    #                 csp_heus.add(DEGREE)
-    #             elif cs == 'lcv':
-    #                 csp_heus.add(LCV)
-    #             elif cs == 'fc':
-    #                 csp_heus.add(FC)
-    #             elif cs == 'ac':
-    #                 csp_heus.add(AC)
-    #
-    #     game = Game(size=(rows, columns), gui_or_print=PRINT)
-    #     game.run(solve_type=ALGOS_SYS_DICT[solve_type], k=k, csps=csp_heus)
-    #

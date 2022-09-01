@@ -70,7 +70,6 @@ class NonogramCellsProblem(SearchProblem):
                         return False
             return True
         return self.board.current_cell.row == self.board.num_rows and self.board.current_cell.col == 0
-        # return self.board.current_cell.row == self.board.num_rows and self.board.current_cell.col == 0
 
     def get_successors(self, state):
         """
@@ -191,7 +190,7 @@ class NonogramConstraintsProblem(SearchProblem):
 
     def update_board(self, actions):
         """
-        Empty the the current row we want fill, and all the rows we filled after it in previous moves.
+        Empty the current row we want fill, and all the rows we filled after it in previous moves.
         """
         if len(actions[0]) > 0:
             current_row = actions[1]

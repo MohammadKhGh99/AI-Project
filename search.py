@@ -33,6 +33,7 @@ def gui_helper(board):
             Board.Board.gui.canvas.create_rectangle(temp[0], temp[1], temp[2], temp[3],
                                                     fill=COLORS_DICT[repr(board.board[r][c])], tags='rect')
         Board.Board.gui.root.update()
+        # this done to not include the gui time in the final time of the running algorithm
         Board.Board.different_time += (time.time() - bef)
 
 
@@ -47,6 +48,7 @@ def search_helper(problem, actions, search_type=DFS):
     problem.board.move_to_the_next_cell()
     get_successors = True
     for move in actions:
+        # if timeout reached terminate the algorithm
         if (time.time() - Board.Board.different_time - Board.Board.before_time) >= 180:
             return -1
         # Try to fill the move on the board, and check if it legal.
