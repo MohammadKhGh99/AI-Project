@@ -30,10 +30,8 @@ class Game:
         gui_or_print: do you want to present the result as gui or prints on the stdout.
         difficulty: HARD will make a random board with random colors values in each cell, EASY will make an easy random
                     board that will contain some continuous random cells with the same color.
-        solve_type: in which way do you want to solve the board, BRUTE, BFS, DFS, ASTAR or CSP_P.
         csps: if the way chosen was CSP_P here will be the types of csps that you want to solve the board by them.
-        expected constraints format: if BLACK_WHITE: ^\d+[bB](?:-\d+[bB])*$|^\d+(?:-\d+)*$    examples: 5b-8b, 12, 5-84
-                                     if COLORFUL: ^\d+[bBrR](?:-\d+[bBrR])*$    examples: 3b, 5r-15B.
+        expected constraints format: if COLORFUL: ^\d+[bBrR](?:-\d+[bBrR])*$    examples: 3b, 5r-15B.
 
         """
         self.csv_file = csv_file
@@ -55,7 +53,7 @@ class Game:
         if self.csv_file:
             """
             create a board from csv file.
-            in the first line: a variation of the colors 'b' 'r' 'w' or just 'b' 'w'
+            in the first line: a variation of the colors 'b' 'r' 'w'
             the second line: the columns constraints.
             the other lines: the rows constraints
             example:
