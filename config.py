@@ -27,7 +27,7 @@ GUI_FILES_PATH = r'.\FinalProject\\gui_files'
 
 SOUND = False
 
-COLORS_DICT = {'w': 'white', 'b': 'black', 'r': 'red', ' ': 'grey'}
+COLORS_DICT = {'w': 'white', 'b': 'black', 'r': 'red', ' ': 'white'}
 
 BRUTE = 0
 BFS = 1

@@ -127,58 +127,19 @@ class NonogramCellsProblem(SearchProblem):
             self.board.fill(current_row, current_col, EMPTY)
 
 
-# delete - No need for this class
-# class BFSProblem(SearchProblem):
-#     """
-#     Class that defining the nonogram game as a problem.
-#     """
-#
-#     def __init__(self, board):
-#         self.board = board
-#
-#     def get_start_state(self):
-#         return self.board
-#
-#     def is_goal_state(self, state):
-#         """
-#             Goal state when we reach the last cell (right bottom corner),
-#             and we find a legal fill for it.
-#         """
-#         return self.board.current_cell.row == self.board.num_rows and self.board.current_cell.col == 0
-#
-#     def get_successors(self, state):
-#         """
-#         Successors are all the 3 possible colors: white, red and black.
-#         Each successor is a cell, the cell we want to fill in the board.
-#         """
-#         successors = []
-#         if self.board.current_cell.row == self.board.num_rows:
-#             # We finished all the cells.
-#             return successors
-#
-#         for color in [WHITE, BLACK, RED]:
-#             actions = deepcopy(self.board.moves)
-#             cell = Cell(self.board.current_cell.row, self.board.current_cell.col, color)
-#             actions.append(cell)
-#             successors.append((self.board, actions))
-#         return successors
-#
-#     def get_cost_of_actions(self, actions):
-#         # Actions are a set of cell's coordinates we colored to get a new state.
-#         return
-
-
 class NonogramConstraintsProblem(SearchProblem):
     """
         Class that defining the nonogram game as a problem. Solving it by checking row by row.
     """
 
-    def __init__(self, board):
+    def __init__(self, board, heuristic_function=search.null_heuristic):
         self.board = board
         self.cost = 0
         self.constraints_combinations = csp.get_variables_and_domains(self.board)
+        self.heuristic_order = heuristic_function(self)
 
     def get_start_state(self):
+        # self.heuristic = self.heuristic_function(self)
         return [[], 0]
 
     def is_goal_state(self, state):
@@ -190,11 +151,16 @@ class NonogramConstraintsProblem(SearchProblem):
 
     def get_successors(self, state):
         successors = []
-        for i in range(self.board.num_rows):
-            if i not in self.board.filling_row_order:
-                for comb in self.constraints_combinations[1][(ROWS, i)]:
-                    successors.append((comb, i))
+        # for i in range(self.board.num_rows):
+        #     if i not in self.board.filling_row_order:
+        for row_index in self.heuristic_order:
+            if row_index not in self.board.filling_row_order:
+                for comb in self.constraints_combinations[1][(ROWS, row_index)]:
+                    successors.append((comb, row_index))
+                # self.board.filling_row_order.append(row_index)
                 return successors
+
+        return successors
 
     def get_cost_of_actions(self, actions):
         return self.cost - 1
@@ -205,17 +171,17 @@ class NonogramConstraintsProblem(SearchProblem):
         actions: tuple (list of colors, row number)
         """
         get_successors = True
-        i = 0
+        col = 0
         for color in actions[0]:
             # Try to fill the move on the board, and check if it legal.
-            self.board.fill(actions[1], i, color)
-            if not self.board.check_move(i, actions[1], SEARCH_PROBLEMS):
+            self.board.fill(actions[1], col, color, SEARCH_PROBLEMS)
+            if not self.board._check_move_helper_with_constraint_check(col, flipped=True, problem_type=SEARCH_PROBLEMS):
                 get_successors = False
                 for j in range(self.board.num_cols):
                     # Empty the current row.
-                    self.board.fill(actions[1], j, EMPTY)
+                    self.board.fill(actions[1], j, EMPTY, SEARCH_PROBLEMS)
                 break
-            i += 1
+            col += 1
         if get_successors and (len(actions[0]) > 0):
             self.board.filling_row_order.append(actions[1])
         return get_successors
@@ -231,7 +197,7 @@ class NonogramConstraintsProblem(SearchProblem):
                 for row in self.board.filling_row_order[index_in_list:]:
                     for col in range(self.board.num_cols):
                         # Empty all cells in these rows.
-                        self.board.fill(row, col, EMPTY)
+                        self.board.fill(row, col, EMPTY, SEARCH_PROBLEMS)
                 # Update the done rows list
                 self.board.filling_row_order = self.board.filling_row_order[:index_in_list]
 

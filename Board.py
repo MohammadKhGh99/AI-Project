@@ -200,29 +200,7 @@ class Board:
                 Board.gui.canvas.create_rectangle(loc, fill=COLORS_DICT[repr(self.board[j][i])], tags='rect')
         Board.gui.root.update()
 
-    def fill_n_cells(self, con_i, con_j, start_index, constraint_type=ROWS):
-        """
-        Function fill the board, in a valid way. It fills n cells according to the given constraint.
-        constraint_type: on which constraints list we will work: columns or rows.
-        con_i: the index of the working constraints group.
-        con_j: the index of the working constraint in the group.
-        start_index: from where to start to fill (row/column)
-        """
-        child = deepcopy(self)
-        if not constraint_type:
-            constraint = child.rows_constraints[con_i][con_j]
-            for i in range(start_index):
-                # Assign the cells that must be white.
-                if child.board[con_i][i].color == EMPTY:
-                    child.fill(con_i, i, WHITE)
-            for i in range(constraint.length):
-                if child.fill(con_i, i + start_index, constraint.color) \
-                        and child.check_move(i + start_index, con_i, problem_type=SEARCH_PROBLEMS):
-                    continue
-                else:
-                    return None
-        child.complete_constraints(con_i, con_j, constraint_type)
-        return child
+
 
     def init_board_print(self):
         self.to_print = ""
@@ -356,7 +334,7 @@ class Board:
                 empty_flag = True
                 blocked_color = EMPTY  # Nothing blocked after an empty cell.
                 cell_id += 1
-                continue
+                return True
 
             elif cell_color == WHITE and (must_color == WHITE or must_color == EMPTY):
                 # that's good
@@ -390,9 +368,7 @@ class Board:
                 elif curr_num_of_cells_to_fill == 0:
                     must_color = EMPTY  # nothing is a must
                     blocked_color = curr_constraint_color
-                    if not problem_type:  # if not brute force
-                        constraints_for_row[
-                            curr_constraint_id].completed = True  # Change the status for a future checks.
+
 
                     # move to next constraint
                     curr_constraint_id += 1
@@ -409,8 +385,8 @@ class Board:
                 else:
                     raise Exception("this is an impossible situation, hmmmmmm")
 
-            elif not problem_type and empty_flag and current_row[0].color == EMPTY:
-                return True
+            # elif not problem_type and empty_flag:
+            #     return True
             else:
                 return False
 
@@ -421,33 +397,14 @@ class Board:
 
         return False
 
-    def get_first_incomplete_constraint(self, constraint_type):
-        """
-        Find first incomplete constraint in columns or rows constraints.
-        constrain_type: on which constraints list we will work: columns or rows
-        Return the coordinates of the incomplete constraints, None, if all constraints are completed
-        """
-        constraints_group = self.cols_constraints if constraint_type else self.rows_constraints
+    def new_chek_column(self, col_id):
+        cells_column = self.flipped[col_id]
+        no_empty = True  # Flag to know if there is an empty cell in the current column.
 
-        for i in range(len(constraints_group)):
-            for j in range(len(constraints_group[i])):
-                if not constraints_group[i][j].completed:
-                    return i, j
-        return None
-
-    def get_next_row_constraint(self):
-        # TODO remove if we decided to not use it.
-        i = 0
-        for row_con in range(len(self.rows_constraints)):
-            previous_constraint = -1
-            for constraint in self.rows_constraints[row_con]:
-                if i == self.current_row_constraint:
-                    if self.current_cell.row != row_con:
-                        self.current_cell = self.board[row_con][previous_constraint + 1]
-                    return constraint
-                i += 1
-                previous_constraint += constraint.length
-        return None
+        for cell in cells_column:
+            if cell.color == EMPTY:
+                no_empty = False
+        return True
 
     def back_to_the_prev_cell(self):
         """This function change the current cell backward"""
@@ -472,15 +429,3 @@ class Board:
             self.current_cell = self.board[new_row][new_col]
         except IndexError:
             self.current_cell = Cell(new_row, new_col)
-
-    def complete_constraints(self, con_i, con_j, constraint_type=COLUMNS):
-        """
-        Function change the status of the given constraint to completed (True)
-        constraint_type: on which constraints list we will work: columns or rows.
-        con_i: the index of the working constraints group.
-        con_j: the index of the working constraint in the group.
-        """
-        if constraint_type:
-            self.cols_constraints[con_i][con_j].completed = True
-        else:
-            self.rows_constraints[con_i][con_j].completed = True

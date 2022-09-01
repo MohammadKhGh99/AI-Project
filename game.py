@@ -336,16 +336,17 @@ class Game:
             dfs_problem = agent.NonogramCellsProblem(self.board, DFS)
             astar_problem = agent.NonogramCellsProblem(self.board, ASTAR)
             # bfs_problem = agent.BFSProblem(self.board)
-            # nonogram_problem = agent.NonogramCellsProblem(self.board)
+            constraint_dfs = agent.NonogramConstraintsProblem(self.board)
+            constraint_astar = agent.NonogramConstraintsProblem(self.board, search.lowest_combinations_heuristic)
             if solve_type == BFS:
                 print("BFS")
                 resulted_board = search.breadth_first_search(problem=bfs_problem)
             elif solve_type == DFS:
                 print("DFS")
-                resulted_board = search.depth_first_search(problem=dfs_problem)
+                resulted_board = search.depth_first_search(problem=constraint_dfs)
             elif solve_type == ASTAR:
                 print("A*")
-                resulted_board = search.a_star_search(problem=astar_problem)
+                resulted_board = search.a_star_search(problem=constraint_astar)
             elif solve_type == LBS:
                 print("LBS")
                 resulted_board = search.local_beam_search(problem=lbs_problem, k=k)
@@ -457,10 +458,10 @@ if __name__ == "__main__":
     # main()
 
     # game = Game(colors=COLORFUL, size=(9, 9), difficulty=HARD, gui_or_print=IS_GUI)
-    # game = Game(colors=COLORFUL, size=(20, 20), difficulty=HARD, gui_or_print=IS_GUI)
-    # game = Game(csv_file='example1.csv')
-    game = Game(difficulty=HARD, size=(7, 7), gui_or_print=IS_GUI, csps=ALL_CSPS)
-    # game.run(CSP_P)
+    game = Game( size=(20, 20), difficulty=EASY, gui_or_print=PRINT)
+    # game = Game(csv_file='example1.csv', gui_or_print=IS_GUI)
+    # game = Game(difficulty=HARD, size=(7, 7), gui_or_print=IS_GUI, csps=ALL_CSPS)
+    game.run(ASTAR)
     # Brute Force can solve up to 31x31 boards - the others will come to maximum recursion depth Error
     # game = Game(colors=COLORFUL, size=(7, 7), difficulty=HARD, gui_or_print=IS_GUI, solve_type=BRUTE)
 

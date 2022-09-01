@@ -42,6 +42,7 @@ def depth_first_search(problem):
     while not fringe.isEmpty():
         current_actions = fringe.pop()  # actions to do
         problem.update_board(current_actions)  # Make board ready to be filled in this row.
+        # gui_helper(problem.board)
         if problem.do_move(current_actions):
             # Get the successors of the current board, if it is not the goal state.
             if problem.is_goal_state(problem.board):
@@ -82,27 +83,48 @@ def breadth_first_search(problem):
             return state
     return None
 
+def lowest_combinations_heuristic(problem):
+    lowest_order = []
+    for _ in range(problem.board.num_rows):
+        lowest_index = problem.board.num_rows
+        min_combinations = None
+        for i in range(problem.board.num_rows):
+            if i not in lowest_order:
+                num_of_combinations = len(problem.constraints_combinations[1][(ROWS, i)])
+                if min_combinations is None or num_of_combinations < min_combinations:
+                    lowest_index = i
+                    min_combinations = num_of_combinations
+        lowest_order.append(lowest_index)
+    return lowest_order
 
-# def a_star_search(problem, heuristic=null_heuristic):
-#     """
-#     Search the node that has the lowest combined cost and heuristic first.
-#     fringe = only moves we want to do, on the board.
-#     """
-#     fringe = util.Stack()
-#     problem.heuristic = problem.heuristic_function(problem)
-#     fringe.push(StateAndActions(problem.board, [[]], 0))
-#     while not fringe.isEmpty():
-#         current = fringe.pop()
-#         gui_helper(problem.board)
-#         problem.update_board(current.actions)
-#         # Get the successors of the current board, if it is not the goal state.
-#         if problem.do_move(current.actions):
-#             if problem.is_goal_state(problem.board):
-#                 return problem.board
-#             heuristic_cost = heuristic(problem)  # TODO
-#             for child in problem.get_successors(current.state):
-#                 fringe.push(StateAndActions(problem.board, child, 0))
-#     return -1  # No Solution
+def basic_heuristic(problem):
+    for row in reversed(range(problem.board.num_rows)):
+        if row not in problem.board.filling_row_order:
+            return row
+
+def null_heuristic(problem):
+    return [i for i in range(problem.board.num_rows)]
+
+
+def a_star_search(problem, heuristic=null_heuristic):
+    """
+    Search the node that has the lowest combined cost and heuristic first.
+    fringe = only moves we want to do, on the board.
+    """
+    problem.heuristic_function = heuristic
+    return depth_first_search(problem)
+    # fringe.push(StateAndActions(problem.board, [[]], 0))
+    # while not fringe.isEmpty():
+    #     current = fringe.pop()
+    #     gui_helper(problem.board)
+    #     problem.update_board(current.actions)
+    #     # Get the successors of the current board, if it is not the goal state.
+    #     if problem.do_move(current.actions):
+    #         if problem.is_goal_state(problem.board):
+    #             return problem.board
+    #         for child in problem.get_successors(current.state):
+    #             fringe.push(StateAndActions(problem.board, child, 0))
+    # return -1  # No Solution
 
 
 def local_beam_search_helper(problem, k_states, k):
