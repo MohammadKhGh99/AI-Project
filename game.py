@@ -125,10 +125,6 @@ class Game:
         with open(csv_file, 'r') as f:
             all_lines = f.readlines()
 
-        colors = all_lines[0][3:6]
-        if colors not in NONO_COLORS:
-            raise Exception("Wrong colors input!")
-
         lines = [line for line in all_lines if line.replace(' ', '') != '']
 
         # take the second row in csv file, the columns constraints and put each constraint in a list in a
@@ -416,7 +412,7 @@ def testing():
     for row in combinations:
         for com in row:
             combs.append(set(com))
-    print("\n🎉🤩 Wellcome To Two Colors Nonogram Game 🎉🤩\n")
+    print("\n🎉🤩 Wellcome To Duo Colors Nonogram Game 🤩🎉\n")
     # Finding which one of the algorithms is the fastest one in finding out that there is no solution.
     not_solvable_boards = [r".\cases to check\Not_solvable_1.csv", r".\cases to check\Not_solvable_2.csv",
                            r".\cases to check\Not_solvable_3.csv", r".\cases to check\Not_solvable_4.csv",
@@ -449,7 +445,7 @@ def testing():
                 easy_rows_times[k] = v
     easy_rows_times = {k: sum(v) / len(v) for k, v in easy_rows_times.items()}
 
-    print("Easy Mode (ROWS) Results:")
+    print("Easy Mode (ROWS) 7x7 Results:")
     print(easy_rows_times)
 
     easy_cols_times = dict()
@@ -479,7 +475,7 @@ def testing():
                 easy_cols_times[k] = v
     easy_cols_times = {k: sum(v) / len(v) for k, v in easy_cols_times.items()}
 
-    print("Easy Mode (COLUMNS) Results:")
+    print("Easy Mode (COLUMNS) 7x7 Results:")
     print(easy_cols_times)
 
     hard_5_times = dict()
@@ -610,11 +606,13 @@ def testing():
         n = my_game.board.num_cols * my_game.board.num_rows
         lbs_k = [1] + [(n // 2) * i for i in range(1, 5)]
         # testing with all the algorithms
-        for solve_type in ALL_ALGOS:
+        for solve_type in [CSP_P]:
             if solve_type == CSP_P:
                 # testing with all the combinations of the csp
                 for comb in combs:
-                    my_game.run(solve_type, csps=comb, test=True)
+                    if comb == {FC}:
+                        print(comb)
+                        my_game.run(solve_type, csps=comb, test=True)
             elif solve_type == LBS:
                 for k in lbs_k:
                     my_game.run(solve_type, k=k, test=True)
@@ -628,7 +626,7 @@ def testing():
                 not_solvable_times[k] = v
     not_solvable_times = {k: sum(v) / len(v) for k, v in not_solvable_times.items()}
 
-    print("Not Solvable Results:")
+    print("Not Solvable 7x7 Results:")
     print(not_solvable_times)
 
     hard_10_times = dict()
@@ -755,8 +753,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-    # testing()
-
-    # game = Game(csv_file="example1.csv")
-

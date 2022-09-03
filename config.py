@@ -7,6 +7,7 @@ NONO_COLORS = {"bwr", "brw", "wbr", "wrb", "rbw", "rwb"}
 COLORS = {'b', 'r'}
 COLORS_LST = [WHITE, BLACK, RED]
 COLORS_LST_WITHOUT_WHITE = [BLACK, RED]
+
 ROWS = False
 COLUMNS = True
 
@@ -24,7 +25,7 @@ BRUTE = 0
 BFS = 1
 DFS = 2
 LBS = 3
-CSP_P = 3
+CSP_P = 4
 
 ALGOS_DICT = {BRUTE: "Brute Force", BFS: "BFS", DFS: "DFS",  LBS: "LBS", CSP_P: "CSP"}
 

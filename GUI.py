@@ -8,14 +8,14 @@ class GUI:
     """
     This class handle the gui and all its features.
     """
-    def __init__(self, board=None, title="Two Colors Nonogram Game", window_width=GUI_WIDTH, window_height=GUI_HEIGHT,
+    def __init__(self, board=None, title="🎉🤩 Duo Color Nonogram Game 🤩🎉", window_width=GUI_WIDTH, window_height=GUI_HEIGHT,
                  cur_game=None):
         self.__cur_game = cur_game
 
         self.root = Tk()
         self.root.title(title)
         self.root.configure(background="white")
-        my_title = Label(self.root, text="Two Colors Nonogram Game", font=("times new roman", 20, "bold"), bg="white",
+        my_title = Label(self.root, text="🎉🤩 Duo Color Nonogram Game 🤩🎉", font=("times new roman", 20, "bold"), bg="white",
                          fg="black")
         my_title.pack(side=TOP)
         self.canvas_width = 800
@@ -79,7 +79,6 @@ class GUI:
                 rows_num = self.__cur_game.board.num_rows
                 columns_num = self.__cur_game.board.num_cols
             self.__cur_game = self.__cur_game.new_game(self.__cur_game, size=(rows_num, columns_num))
-
 
         new_game_button = Button(self.canvas, text="new game", command=new_game)
         new_game_button.config(height=1, width=8)

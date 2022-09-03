@@ -57,7 +57,7 @@ def search_helper(problem, actions, search_type=DFS):
             get_successors = False
             problem.board.back_to_the_prev_cell()
             problem.board.filled_cells -= 1
-            if search_type == DFS or search_type == ASTAR:
+            if search_type == DFS:
                 while problem.board.current_cell.color == WHITE:
                     problem.board.fill(problem.board.current_cell.row, problem.board.current_cell.col, EMPTY,
                                        search_type)

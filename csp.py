@@ -46,7 +46,9 @@ class RowColumnConstraint(ConstraintForVariable):
 
 
 class CSP:
-    """ a generic CSP class, that has the main things a CSP uses"""
+    """
+    a generic CSP class, that has the main things a CSP uses
+    """
 
     def __init__(self, variables, domains, neighbors, board):
         self.variables = variables  # A list of variables
@@ -61,24 +63,32 @@ class CSP:
         self.csp_types = set()
 
     def add_constraint(self, constraint: ConstraintForVariable) -> None:
-        """ fill the constraints for the variables"""
+        """
+        fill the constraints for the variables
+        """
         for variable in constraint.variables:
             self.constraints[variable].append(constraint)
 
     def consistent(self, variable, assignment):
-        """ check if the constraints being satisfied"""
+        """
+        check if the constraints being satisfied
+        """
         for constraint in self.constraints[variable]:
             if not constraint.satisfied(assignment):
                 return False
         return True
 
     def consistent2(self, variable, value, other_var, other_value):
-        """ if it is consistent (works), return True"""
+        """
+        if it is consistent (works), return True
+        """
         if value[other_var[1]] == other_value[variable[1]]:
             return True
 
     def assign(self, var, val, assignment):
-        """ assign a value to this variable"""
+        """
+        assign a value to this variable
+        """
         assignment[var] = val
         if var[0] == ROWS:
             for i in range(self.board.num_cols):
@@ -94,7 +104,9 @@ class CSP:
                     return -1
 
     def unassign(self, var, assignment):
-        """ delete the assigned value from this variable"""
+        """
+        delete the assigned value from this variable
+        """
         if var in assignment:
             if self.curr_domains:
                 self.curr_domains[var] = self.domains[var][:]
@@ -125,8 +137,9 @@ class CSP:
             del assignment[var]
 
     def nconflicts(self, variable, value, assignment):
-        "Return the number of conflicts var=val has with other variables."
-
+        """
+        Return the number of conflicts var=val has with other variables.
+        """
         def conflict(var2):
             val2 = assignment.get(var2, None)
             if val2 is not None:
@@ -137,8 +150,9 @@ class CSP:
         return self.count_matching(conflict, self.neighbors[variable])
 
     def nconflicts2(self, var, val, assignment):
-        "Return the number of conflicts var=val has with other variables."
-
+        """
+        Return the number of conflicts var=val has with other variables.
+        """
         def conflict(var2):
             val2 = assignment.get(var2, None)
             return val2 is not None and not self.consistent2(var, val, var2, val2)
@@ -146,11 +160,15 @@ class CSP:
         return self.count_matching(conflict, self.neighbors[var])
 
     def count_matching(self, condition, seq):
-        """Returns the amount of items in seq that return true from condition"""
+        """
+        Returns the amount of items in seq that return true from condition
+        """
         return sum(1 for item in seq if condition(item))
 
     def backtracking_search(self, csp_types, same_board):
-        """ this will initialize the backtracking as we please"""
+        """
+        this will initialize the backtracking as we please
+        """
         if same_board:
             self.board.clear_board()
 
@@ -176,7 +194,9 @@ class CSP:
         return self.backtracking_search_rec({})
 
     def backtracking_search_rec(self, assignment=None):
-        """ this is the recursive backtracking search"""
+        """
+        this is the recursive backtracking search
+        """
         # assignment is complete if every variable is assigned (our base case)
         if assignment is None:
             assignment = {}
@@ -266,9 +286,10 @@ class CSP:
         return domain_for_var
 
     def forward_check(self, variable, value, assignment):
-        "Do forward checking for this assignment."
+        """
+        Do forward checking for this assignment.
+        """
         if self.curr_domains:
-
             for other_variable in self.neighbors[variable]:
                 if other_variable not in assignment:
                     for other_value in self.curr_domains[other_variable][:]:
@@ -279,7 +300,9 @@ class CSP:
                             self.pruned[variable].append((other_variable, other_value))
 
     def AC3(self, queue):
-        """ applying the rules of Arc Consistency"""
+        """
+        applying the rules of Arc Consistency
+        """
         if queue is None:
             queue = [(curr_var, var_neighbor) for curr_var in self.variables for var_neighbor in
                      self.neighbors[curr_var]]
@@ -290,7 +313,9 @@ class CSP:
                     queue.append((another_neighbor, curr_var))
 
     def remove_inconsistent_values(self, variable, other_variable):
-        "a helper function for AC3 - Return true if we remove a value."
+        """
+        a helper function for AC3 - Return true if we remove a value.
+        """
         removed = False
         for value in self.curr_domains[variable][:]:
             # If variable=value conflicts with other_variable=other_value for every possible other_value, eliminate Xi=x
